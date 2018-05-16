@@ -1,6 +1,3 @@
-[submodule "raft.git"]
-	path = raft.git
-	url = https://ar104@github.com/ar104/raft
 [submodule "nvml"]
 	path = nvml
 	url = https://github.com/pmem/nvml
