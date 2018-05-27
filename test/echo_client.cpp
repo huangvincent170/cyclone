@@ -41,7 +41,7 @@
 #include <boost/property_tree/ptree.hpp>
 #include "../core/clock.hpp"
 #include "../core/logging.hpp"
-#include <libcyclone.hpp>
+#include "../core/libcyclone.hpp"
 #include <rte_launch.h>
 
 int driver(void *arg);

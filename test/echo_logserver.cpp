@@ -33,11 +33,11 @@
 
 #include<assert.h>
 #include<errno.h>
-#include<libcyclone.hpp>
 #include<string.h>
 #include<stdlib.h>
 #include "../core/logging.hpp"
 #include "../core/clock.hpp"
+#include "../core/libcyclone.hpp"
 #include<stdio.h>
 #include <time.h>
 #include<unistd.h>

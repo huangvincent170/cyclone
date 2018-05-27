@@ -33,7 +33,7 @@
 
 #include<assert.h>
 #include<errno.h>
-#include<libcyclone.hpp>
+#include "../core/libcyclone.hpp"
 #include<string.h>
 #include<stdlib.h>
 #include "../core/logging.hpp"
