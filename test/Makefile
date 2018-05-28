@@ -10,7 +10,7 @@ all: echo_server echo_client echo_client_multicore echo_logserver
 CXXFLAGS = -O3 -DBOOST_LOG_DYN_LINK
 #CXXFLAGS = -O1 -g -fno-omit-frame-pointer -DBOOST_LOG_DYN_LINK
 
-LIBS = -lc ../core/libcyclone.a ../raft/libcraft.a -lboost_system -lboost_date_time -L../nvml/src/debug  -lpmemobj -lpmem -lpthread -laio
+LIBS = -lc ../core/libcyclone.a ../raft/libcraft.a ../nvml/src/debug/libpmemobj.a ../nvml/src/debug/libpmem.a  -lboost_system -lboost_date_time -lpthread -laio
 #DPDK extras
 RTE_SDK=/root/dpdk-stable-16.11.1
 CXXFLAGS += -DDPDK_STACK
