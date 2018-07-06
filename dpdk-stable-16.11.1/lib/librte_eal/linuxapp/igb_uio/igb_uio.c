@@ -380,7 +380,7 @@ igbuio_pci_probe(struct pci_dev *dev, const struct pci_device_id *id)
 	case RTE_INTR_MODE_MSIX:
 		/* Only 1 msi-x vector needed */
 		msix_entry.entry = 0;
-		if (pci_enable_msix(dev, &msix_entry, 1) == 0) {
+		if (pci_enable_msix_range(dev, &msix_entry, 1,1) == 0) {
 			dev_dbg(&dev->dev, "using MSI-X");
 			udev->info.irq = msix_entry.vector;
 			udev->mode = RTE_INTR_MODE_MSIX;

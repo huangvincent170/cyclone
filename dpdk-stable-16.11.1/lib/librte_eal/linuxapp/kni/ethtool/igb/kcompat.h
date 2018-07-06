@@ -3933,4 +3933,12 @@ skb_set_hash(struct sk_buff *skb, __u32 hash, __always_unused int type)
 #define HAVE_VF_VLAN_PROTO
 #endif /* >= 4.9.0 */
 
+#if LINUX_VERSION_CODE < KERNEL_VERSION(4, 8, 0)
+#define HAVE_PCI_ENABLE_MSIX
+#endif
+
+#if defined(timer_setup) && defined(from_timer)
+#define HAVE_TIMER_SETUP
+#endif
+
 #endif /* _KCOMPAT_H_ */
