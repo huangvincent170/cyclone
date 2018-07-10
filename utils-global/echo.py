@@ -6,8 +6,10 @@ def launch_cmds_server_gen(f, q, r, m, quorums, replicas, clients, ports):
     cmd=''
     if os.environ.has_key('RBT_SLEEP_USEC'):
         cmd=cmd + 'RBT_SLEEP_USEC=' + os.environ.get('RBT_SLEEP_USEC') + ' '
+    cmd=cmd + ' echo passwd | sudo -S '
     cmd=cmd + ' PMEM_IS_PMEM_FORCE=1 '
-    cmd=cmd + 'echo_logserver '
+    cmd=cmd + ' LD_LIBRARY_PATH=/usr/lib:/usr/local/lib '
+    cmd=cmd + '/home/pfernando/cyclone/cyclone.git/test/echo_server '
     cmd=cmd + str(r) + ' '
     cmd=cmd + str(m) + ' '
     cmd=cmd + str(clients) + ' '
@@ -38,7 +40,9 @@ def launch_cmds_client_gen(f, m, c, quorums, replicas, clients, machines, ports)
                 cmd=cmd + 'QUORUMS_ACTIVE=' + os.environ.get('QUORUMS_ACTIVE') + ' '    
             if os.environ.has_key('ACTIVE'):
                 cmd=cmd + 'ACTIVE=' + os.environ.get('ACTIVE') + ' '
-            cmd=cmd + 'echo_client_multicore '
+            cmd=cmd + 'echo passwd | sudo -S '
+            cmd=cmd + ' LD_LIBRARY_PATH=/usr/lib:/usr/local/lib '
+            cmd=cmd + '/home/pfernando/cyclone/cyclone.git/test/echo_client '
             cmd=cmd + str(c_start) + ' '
             cmd=cmd + str(c_stop) + ' '
             cmd=cmd + str(m) + ' '
