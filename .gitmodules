@@ -9,3 +9,6 @@
 [submodule "pmemkv"]
 	path = pmemkv
 	url = https://github.com/pmem/pmemkv.git
+[submodule "pmdk"]
+	path = pmdk
+	url = https://github.com/pmem/pmdk.git
