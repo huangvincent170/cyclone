@@ -2,11 +2,10 @@
 	path = nvml
 	url = https://github.com/pmem/nvml
 
-[submodule "pmemkv"]
-	path = pmemkv
-	url = https://github.com/pmem/pmemkv
-
 [submodule "pmemkv-tools"]
 	path = pmemkv-tools
-	url = https://github.com/RobDickinson/pmemkv-tools
+	url = https://github.com/RobDickinson/pmemkv-tools.git
 
+[submodule "pmemkv"]
+	path = pmemkv
+	url = https://github.com/pmem/pmemkv.git
