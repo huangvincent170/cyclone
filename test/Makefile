@@ -5,7 +5,7 @@ counter_coordinator_driver counter_driver_mt counter_driver_noop_mt
 #all: echo_server echo_client echo_client_multicore rocksdb_client fb_client rocksdb_client_multicore rocksdb_merge_client echo_logserver rocksdb_server\
  rocksdb_merge_server rocksdb_loader fb_loader rocksdb_checkpoint fb_server
 
-all: echo_server echo_client echo_client_multicore echo_logserver
+all: echo_server echo_client pmemkv_server pmemkv_client
 
 CXXFLAGS = -O3 -DBOOST_LOG_DYN_LINK
 #CXXFLAGS = -O1 -g -fno-omit-frame-pointer -DBOOST_LOG_DYN_LINK
@@ -22,6 +22,13 @@ ROCKS_HOME=/root/cyclone/rocksdb
 ROCKS_CXXFLAGS=-std=c++11 -I//root/cyclone/rocksdb/include/ -L/root/cyclone/rocksdb -DROCKSDB_PLATFORM_POSIX -DROCKSDB_LIB_IO_POSIX  -DOS_LINUX -fno-builtin-memcmp -DROCKSDB_FALLOCATE_PRESENT -DSNAPPY -DGFLAGS=gflags -DZLIB -DBZIP2 -DZSTD -DNUMA -DROCKSDB_MALLOC_USABLE_SIZE -DROCKSDB_PTHREAD_ADAPTIVE_MUTEX -DROCKSDB_BACKTRACE -march=native  "-DROCKSDB_JEMALLOC"
 ROCKS_LIBS += ${ROCKS_HOME}/librocksdb.a ${ROCKS_HOME}/libbz2.a ${ROCKS_HOME}/libz.a ${ROCKS_HOME}/libsnappy.a -lsnappy -lgflags -lz -lbz2 -lzstd 
 
+
+#pmemkv
+PMEMKV_HOME=
+PMEMKV_CXXFLAGS=
+PMEMKV_LIBS=
+
+
 #BOOST_THREAD_LIB=-lboost_thread-mt
 BOOST_THREAD_LIB=-lboost_thread
 
@@ -30,6 +37,9 @@ echo_server:echo_server.cpp
 
 echo_logserver:echo_logserver.cpp
 	$(CXX) $(CXXFLAGS) echo_logserver.cpp $(BOOST_THREAD_LIB) $(LIBS) -o $@
+
+pmemkv_server:pmemkv_server.cpp
+	$(CXX) $(CXXFLAGS) $(PMEMKV_CXXFLAGS) pmemkv_server.cpp $(BOOST_THREAD_LIB) $(LIBS) $(PMEMKV_LIBS) -o $@
 
 rocksdb_server:rocksdb_server.cpp
 	$(CXX) $(CXXFLAGS) $(ROCKS_CXXFLAGS) rocksdb_server.cpp $(BOOST_THREAD_LIB) $(LIBS) $(ROCKS_LIBS) -o $@
@@ -51,6 +61,9 @@ rocksdb_checkpoint:rocksdb_checkpoint.cpp
 
 echo_client:echo_client.cpp 
 	$(CXX) $(CXXFLAGS) echo_client.cpp $(BOOST_THREAD_LIB) $(LIBS) -o $@
+
+pmemkv_client:pmemkv_client.cpp
+	$(CXX) $(CXXFLAGS) pmemkv_client.cpp $(BOOST_THREAD_LIB) $(LIBS) -o $@
 
 rocksdb_client:rocksdb_client.cpp 
 	$(CXX) $(CXXFLAGS) rocksdb_client.cpp $(BOOST_THREAD_LIB) $(LIBS) -o $@
