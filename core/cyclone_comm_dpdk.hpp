@@ -491,8 +491,16 @@ static void dpdk_context_init(dpdk_context_t *context,
 {
   int ret;
   
-  char* fake_argv[1] = {(char *)"./fake"};
+  /* char* fake_argv[] = {(char *)"./fake",
+			(char *)"-m",
+			(char *)"1024",
+			(char *)"--huge-dir",
+			(char *)"/mnt/pmem0p1",
+  			(char *)"--log-level=8"};
+*/
 
+
+  char* fake_argv[] = {(char *)"./fake"};
   struct rte_eth_dev_info dev_info;
   struct rte_eth_txconf *txconf;
   unsigned long max_req_size;
@@ -503,6 +511,7 @@ static void dpdk_context_init(dpdk_context_t *context,
   BOOST_LOG_TRIVIAL(info) << "PORTS = " << context->ports;
 
   /* init EAL */
+  //ret = rte_eal_init(6, fake_argv);
   ret = rte_eal_init(1, fake_argv);
   if (ret < 0)
     rte_exit(EXIT_FAILURE, "Invalid EAL arguments\n");
