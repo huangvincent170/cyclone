@@ -5,12 +5,13 @@ counter_coordinator_driver counter_driver_mt counter_driver_noop_mt
 #all: echo_server echo_client echo_client_multicore rocksdb_client fb_client rocksdb_client_multicore rocksdb_merge_client echo_logserver rocksdb_server\
  rocksdb_merge_server rocksdb_loader fb_loader rocksdb_checkpoint fb_server
 
-all: echo_server echo_client pmemkv_server pmemkv_client
+#all: echo_server echo_client pmemkv_server pmemkv_client
+all: pmemkv_client pmemkv_server
 
 CXXFLAGS = -O3 -DBOOST_LOG_DYN_LINK
 #CXXFLAGS = -O1 -g -fno-omit-frame-pointer -DBOOST_LOG_DYN_LINK
 
-LIBS = -lc ../core/libcyclone.a ../raft/libcraft.a ../nvml/src/debug/libpmemobj.a ../nvml/src/debug/libpmem.a  -lboost_system -lboost_date_time -lpthread -laio
+LIBS = -lc ../core/libcyclone.a ../raft/libcraft.a ../pmdk/src/debug/libpmemobj.a ../pmdk/src/debug/libpmem.a -lndctl -ldaxctl -lboost_system -lboost_date_time -lpthread -laio
 #DPDK extras
 RTE_SDK=../../../dpdk
 CXXFLAGS += -DDPDK_STACK
@@ -24,10 +25,9 @@ ROCKS_LIBS += ${ROCKS_HOME}/librocksdb.a ${ROCKS_HOME}/libbz2.a ${ROCKS_HOME}/li
 
 
 #pmemkv
-PMEMKV_HOME=
-PMEMKV_CXXFLAGS=
-PMEMKV_LIBS=
-
+PMEMKV_HOME=../pmemkv
+PMEMKV_CXXFLAGS=-std=c++11 -I${PMEMKV_HOME}/src 
+PMEMKV_LIBS=  ${PMEMKV_HOME}/bin/libpmemkv.so
 
 #BOOST_THREAD_LIB=-lboost_thread-mt
 BOOST_THREAD_LIB=-lboost_thread
