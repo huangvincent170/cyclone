@@ -8,11 +8,11 @@
 #include <assert.h>
 #include <boost/property_tree/ini_parser.hpp>
 #include <boost/property_tree/ptree.hpp>
-#include "../core/clock.hpp"
-#include "../core/logging.hpp"
-#include <libcyclone.hpp>
 #include <rte_launch.h>
 
+#include "../core/logging.hpp"
+#include "../core/clock.hpp"
+#include "../core/libcyclone.hpp"
 #include "pmemkv.hpp"
 
 int driver(void *arg);

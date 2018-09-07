@@ -33,15 +33,16 @@
 
 #include<assert.h>
 #include<errno.h>
-#include<libcyclone.hpp>
 #include<string.h>
 #include<stdlib.h>
-#include "../core/logging.hpp"
-#include "../core/clock.hpp"
 #include<stdio.h>
 #include <time.h>
 #include<unistd.h>
 
+#include "../core/libcyclone.hpp"
+#include "../core/logging.hpp"
+#include "../core/clock.hpp"
+#include "libpmemkv.h"
 #include "pmemkv.hpp"
 
 static void *logs[executor_threads];
@@ -58,22 +59,22 @@ void callback(const unsigned char *data,
 	pmemkv_t *pmemkv = (pmemkv_t *) data;
 	KVStatus s;
 	if(pmemkv->op == OP_PUT){
-		s = kv_->Put(pmemkv->key,pmemkv->value);
+		s = kv_->Put(std::to_string(pmemkv->key),std::string(pmemkv->value));
 		if(s != OK){
-			BOOST_LOG_TRIVIAL(error) << "Out of space at key : " << std::string(pmemkv->key);
+			BOOST_LOG_TRIVIAL(error) << "Out of space at key : " << std::to_string(pmemkv->key);
 			exit(1);
 		}	
-	memcpy(pmemkv_back->ret_value, data , len);
+	memcpy(cookie->ret_value, data , len);
 
 	}else if(pmemkv->op == OP_GET){
 		pmemkv_t *pmemkv_back = (pmemkv_t *) cookie->ret_value;
 		std::string value;
-		s = kv_->Get(pmemkv->key, &value);	
+		s = kv_->Get(std::to_string(pmemkv->key), &value);	
 		if(s != OK){
 			pmemkv_back->key = ULONG_MAX;
 		}else{
 			pmemkv_back->key = pmemkv->key;
-			memcpy(pmemkv_back->ret_value,value.c_str() , value_sz);
+			memcpy(pmemkv_back->value,value.c_str() , value_sz);
 		}
 
 	}else{
@@ -111,7 +112,7 @@ void opendb()
 	kv_ = pmemkv::KVEngine::Open(KV_ENGINE, KV_NAME, db_size);
 	if (kv_ == nullptr)
 	{
-		BOOST_LOG_TRIVIAL(fatal) << "Cannot open db (%s) with %i GB capacity\n", );
+		BOOST_LOG_TRIVIAL(fatal) << "Cannot open db" << std::string(KV_NAME) << std::to_string(db_size);
 		exit(-1);
 	}
 }
