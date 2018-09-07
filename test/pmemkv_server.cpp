@@ -78,8 +78,8 @@ void callback(const unsigned char *data,
 		}
 
 	}else{
-		BOOST_LOG_TRIVIAL(fatal) << "wrong key-op";
-		exit(1);
+		BOOST_LOG_TRIVIAL(fatal) << "wrong key-op : "<< pmemkv->op
+			<< "key : "<<pmemkv->key;
 	}
 }
 
@@ -109,10 +109,11 @@ void opendb()
 {
 	assert(kv_ == NULL);
 	size_t db_size = (size_t)(1024 * 1024 * 1024 * DB_SIZE_IN_GB);
-	kv_ = pmemkv::KVEngine::Open(KV_ENGINE, KV_NAME, db_size);
+	kv_ = pmemkv::KVEngine::Open(KV_ENGINE, PMEM_KV, db_size);
 	if (kv_ == nullptr)
 	{
-		BOOST_LOG_TRIVIAL(fatal) << "Cannot open db" << std::string(KV_NAME) << std::to_string(db_size);
+		BOOST_LOG_TRIVIAL(fatal) << "Cannot open db "<< std::string(PMEM_KV)
+			<< "with size "<< std::to_string(DB_SIZE_IN_GB);
 		exit(-1);
 	}
 }
@@ -130,12 +131,15 @@ int main(int argc, char *argv[])
 	                     atoi(argv[6]),
 	                     atoi(argv[2]),
 	                     atoi(argv[6]) + num_queues * num_quorums + executor_threads);
+
 	opendb();
+
 	dispatcher_start(argv[4],
 	                 argv[5],
 	                 &rpc_callbacks,
 	                 server_id,
 	                 atoi(argv[2]),
 	                 atoi(argv[3]));
+
 }
 
