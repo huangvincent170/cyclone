@@ -96,6 +96,19 @@ int main(int argc, char *argv[])
   memset(marks, 0, executor_threads*sizeof(unsigned long));
   memset(completions, 0, executor_threads*sizeof(unsigned long));
   int server_id = atoi(argv[1]);
+/*
+
+//gdb attach debug
+{
+    int i = 0;
+    char hostname[256];
+    gethostname(hostname, sizeof(hostname));
+    printf("PID %d on %s ready for attach\n", getpid(), hostname);
+    fflush(stdout);
+    while (0 == i)
+        sleep(5);
+}
+*/
   cyclone_network_init(argv[4],
 		       atoi(argv[6]),
 		       atoi(argv[2]),
