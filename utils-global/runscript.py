@@ -10,27 +10,34 @@ DBG=1
 
 __gen_dir= 'gen_configs'
 __deploy_dir = '/home/pfernando/cyclone'
-
+__home = '/home/pradeep/cyclone/utils-global'
 
 #workloads
 __echo = 'echo'
 __pmemkv = 'pmemkv'
+
+#memory types
+__dram = 'dram'
+__nvram = 'nvram'
 
 
 wl=[]
 wl.append(__echo)
 wl.append(__pmemkv)
 
-
+ml=[]
+ml.append(__dram)
+ml.append(__nvram)
 
 parser = argparse.ArgumentParser(prog="runscript", description="script to run cyclone for numbers")
 parser.add_argument('-g', dest='gen', action='store_true', default=False, help="generate config")
 parser.add_argument('-b', dest='build', action='store_true', default=False, help="build cyclone client/server binaries")
 parser.add_argument('-d', dest='deploy', action='store_true', default=False, help="deploy configs")
-parser.add_argument('-c', dest='build', action='store_true', default=False, help="clean env after a run")
-parser.add_argument('-run', dest='build', action='store_true', default=False, help="run experiment")
-parser.add_argument('-stop', dest='build', action='store_true', default=False, help="stop experiment")
+parser.add_argument('-c', dest='clean', action='store_true', default=False, help="clean env after a run")
+parser.add_argument('-run', dest='run', action='store_true', default=False, help="run experiment")
+parser.add_argument('-stop', dest='stop', action='store_true', default=False, help="stop experiment")
 parser.add_argument('-w', dest='workload', default=__empty , help='workload name, eg: echo, pmemkv', choices=wl)
+parser.add_argument('-m', dest='memtype', default=__empty , help='memory type', choices=ml)
 
 try:
     args = parser.parse_args()
@@ -106,8 +113,29 @@ def generate(args):
 
 
 #build the cyclone binaries and copy them over to participating machines
-def deploy_bin():
+def deploy_bin(args):
+    w = args.workload
+    m = args.memtype
     print 'building cyclone binaries'
+    cd('../core')
+    #cleaning and building core component
+    cmd = 'make clean'
+    sh(cmd)
+    cmd = 'make'
+    sh(cmd)
+    cd(__home)
+
+    cd('../test')
+    cmd = 'make clean'
+    sh(cmd)
+    cmd = 'make ' + w
+    cd(__home)
+
+    #now copy the binaries over
+    cmd ='./copy_binaries '
+    cmd += __gen_dir + ' ' + __deploy_dir
+    msg(cmd)
+    sh(cmd)
 
 # this should include both config copy and binary copy
 def deploy_configs():
@@ -143,3 +171,16 @@ def gather_output():
     #version the ouput and move it to results dir
 
 
+if __name__ == '__main__':
+
+    c = args.clean
+    r = args.run
+    s = args.stop
+    h = args.help
+    b = args.build
+
+    if b == True:
+        deploy_bin(args)
+
+    if h is True:
+        help()
