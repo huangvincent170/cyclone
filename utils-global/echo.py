@@ -4,9 +4,12 @@ def launch_cmds_startup():
 
 def launch_cmds_server_gen(f, q, r, m, quorums, replicas, clients, ports):
     cmd=''
+    passwd='' 
     if os.environ.has_key('RBT_SLEEP_USEC'):
         cmd=cmd + 'RBT_SLEEP_USEC=' + os.environ.get('RBT_SLEEP_USEC') + ' '
-    cmd=cmd + ' echo passwd | sudo -S '
+    if os.environ.has_key('CYCLONE_PASS'):
+        passwd=os.environ.get('CYCLONE_PASS')
+    cmd=cmd + ' echo ' + passwd ' | sudo -S '
     cmd=cmd + ' PMEM_IS_PMEM_FORCE=1 '
     cmd=cmd + ' LD_LIBRARY_PATH=/usr/lib:/usr/local/lib '
     cmd=cmd + '/home/pfernando/cyclone/cyclone.git/test/echo_server '
@@ -21,6 +24,7 @@ def launch_cmds_preload_gen(f, m, c, quorums, replicas, clients, machines, ports
 
 
 def launch_cmds_client_gen(f, m, c, quorums, replicas, clients, machines, ports):
+    passwd=''
     if m >= replicas:
         client_machines=machines-replicas
         if client_machines > clients:
@@ -40,7 +44,9 @@ def launch_cmds_client_gen(f, m, c, quorums, replicas, clients, machines, ports)
                 cmd=cmd + 'QUORUMS_ACTIVE=' + os.environ.get('QUORUMS_ACTIVE') + ' '    
             if os.environ.has_key('ACTIVE'):
                 cmd=cmd + 'ACTIVE=' + os.environ.get('ACTIVE') + ' '
-            cmd=cmd + 'echo passwd | sudo -S '
+            if os.environ.has_key('CYCLONE_PASS'):
+                passwd=os.environ.get('CYCLONE_PASS')
+            cmd=cmd + 'echo '+ passwd +' | sudo -S '
             cmd=cmd + ' LD_LIBRARY_PATH=/usr/lib:/usr/local/lib '
             cmd=cmd + '/home/pfernando/cyclone/cyclone.git/test/echo_client '
             cmd=cmd + str(c_start) + ' '
@@ -53,11 +59,8 @@ def launch_cmds_client_gen(f, m, c, quorums, replicas, clients, machines, ports)
             f.write(cmd)
         
 def killall_cmds_gen(f):
-    f.write('killall -9 echo_server\n')
-    f.write('killall -9 echo_logserver\n')
-    f.write('killall -9 counter_loader\n')
-    f.write('killall -9 counter_driver\n')
-    f.write('killall -9 counter_coordinator\n')
-    f.write('killall -9 counter_driver_mt\n')
-    f.write('killall -9 echo_client\n')
-    f.write('killall -9 echo_client_multicore\n')
+    passwd=''
+    if os.environ.has_key('CYCLONE_PASS'):
+        passwd=os.environ.get('CYCLONE_PASS')
+    f.write('echo ' + passwd + ' | sudo -S pkill echo_server\n')
+    f.write('echo ' + passwd + ' | sudo -S pkill echo_client\n')
