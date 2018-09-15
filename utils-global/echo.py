@@ -9,7 +9,7 @@ def launch_cmds_server_gen(f, q, r, m, quorums, replicas, clients, ports):
         cmd=cmd + 'RBT_SLEEP_USEC=' + os.environ.get('RBT_SLEEP_USEC') + ' '
     if os.environ.has_key('CYCLONE_PASS'):
         passwd=os.environ.get('CYCLONE_PASS')
-    cmd=cmd + ' echo ' + passwd ' | sudo -S '
+    cmd=cmd + ' echo ' + passwd + ' | sudo -S '
     cmd=cmd + ' PMEM_IS_PMEM_FORCE=1 '
     cmd=cmd + ' LD_LIBRARY_PATH=/usr/lib:/usr/local/lib '
     cmd=cmd + '/home/pfernando/cyclone/cyclone.git/test/echo_server '

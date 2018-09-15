@@ -11,8 +11,9 @@ do
     if [ -d "$i" ] ; then
 	node=$(basename $i)
 	ip=`cat ${i}/ip_address`
-	if [ -f "$i/launch_clients" && ! -f "$i/launch_servers" ] ; then
-		scp ${ip}:${deploy_dir}/${node}/client.log0  results/client_${ip}.log
+	if [[ -f "$i/launch_clients" ]] && [[ ! -f "$i/launch_servers" ]] ; then
+		echo "copy back logs"
+		scp ${ip}:${deploy_dir}/${node}/client_log0  results/client_${ip}.log
 	fi
     fi
 done
