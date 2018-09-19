@@ -245,7 +245,116 @@ typedef struct rpc_client_st {
     *response = (void *)(packet_in + 1);
     return (int)(resp_sz - sizeof(rpc_t));
   }
+
+
+  int make_rpc_async(void *payload, int sz, void (*cb)(), unsigned long core_mask, int flags)
+  {
+		int retcode;
+    int resp_sz;
+    int quorum_id = choose_quorum(core_mask);
+
+			//admission control
+			if(get_inflight() > )
+				return ASYNC_MAX_INFLIGHT;
+
+      // Make request
+      packet_out->code        = RPC_REQ;
+      packet_out->flags       = flags;
+      packet_out->core_mask   = core_mask;
+      packet_out->client_port = me_queue;
+      packet_out->channel_seq = channel_seq++;
+      packet_out->client_id   = me;
+      packet_out->requestor   = me_mc;
+      if((core_mask & (core_mask - 1)) != 0) {
+				char *user_data = (char *)(packet_out + 1);
+				memcpy(user_data, terms, num_quorums*sizeof(unsigned int));
+				user_data += num_quorums*sizeof(unsigned int);
+				user_data += sizeof(ic_rdv_t);
+				memcpy(user_data, payload, sz);
+				packet_out->payload_sz  = num_quorums*sizeof(unsigned int) + sizeof(ic_rdv_t) + sz;
+				unsigned int pkt_sz =  packet_out->payload_sz + sizeof(rpc_t);
+				//to lstnr
+				send_to_server(packet_out, pkt_sz, quorum_id);
+      } else {
+				packet_out->payload_sz = sz;
+				memcpy(packet_out + 1, payload, sz);
+
+				//to lstnr
+				send_to_server(packet_out, sizeof(rpc_t) + sz, quorum_id);
+      }
+			return ASYNC_SEND_SUCCESS;
+  }
+
 } rpc_client_t;
+
+/* we maintain a response poll loop for each client */
+typedef struct clntresponse_monitor_t_{
+
+void operator()(){
+	unsigned long mark = rte_get_tsc_cycles();
+	double tsc_mhz = (rte_get_tsc_hz()/1000000.0);
+	unsigned long PERIODICITY_CYCLES = PERIODICITY*tsc_mhz;
+	unsigned long LOOP_TO_CYCLES     = ASYNC__TIMEOUT*tsc_mhz;
+	unsigned long elapsed_time;
+	current = NULL;
+	resp_sz = cyclone_rx_burst(global_dpdk_context,
+				   0,
+				   me_queue,
+				   buf,
+				   (unsigned char *)packet_in,
+				   MSG_MAXSIZE,
+				   timeout_msec*1000);
+
+	elapsed_time = rte_get_tsc_cycles() - mark;
+	if(elapsed_time >= LOOP_TO_CYCLES) {
+		BOOST_LOG_TRIVIAL(warning) << "Client " 
+			<< " event loop too long cycles = " << elapsed_time;
+	}
+	/* attend to next sent message */
+	if(current == NULL && (rte_ring_sc_dequeue() != 0) ){
+		continue; // no sent msgs
+	}
+	// see if we have timed out
+	
+
+	// lookup received msgs
+	
+
+
+
+	current = NULL; // on to next one
+	exec();
+}
+
+}clntresponse_monitor_t;
+
+/* launch thread on lcores, bind receive path for tx queues */
+void cyclone_launch_clients()
+{
+			int e = rte_eal_remote_launch(driver, dargs_array[me-client_id_start], 1 + me - client_id_start);
+	    if(e != 0) {
+			  BOOST_LOG_TRIVIAL(fatal) << "Failed to launch driver on remote lcore";
+				exit(-1);
+			rte_eal_mp_wait_lcore();
+}
+//TODO: figure out a proper place for these struct rte_ring *to_lstnr;	
+volatile char msg_inflight; // inflight async messages
+unsigned long async_max_inflight;
+
+void add_inflight()
+{
+	__sync_fetch_and_add(&msg_inflight, 1);
+}
+
+void sub_inflight()
+{
+	__sync_fetch_and_sub(&msg_inflight, 1);
+}
+
+char get_inflight()
+{
+	return msg_inflight;
+}
 
 
 void* cyclone_client_init(int client_id,
@@ -253,7 +362,7 @@ void* cyclone_client_init(int client_id,
 			  int client_queue,
 			  const char *config_cluster,
 			  int server_ports,
-			  const char *config_quorum)
+			  const char *config_quorum,unsigned int flags)
 {
   rpc_client_t * client = new rpc_client_t();
   boost::property_tree::ptree pt_cluster;
@@ -280,12 +389,38 @@ void* cyclone_client_init(int client_id,
   buf = new char[MSG_MAXSIZE];
   client->packet_rep = (msg_t *)buf;
   client->replicas = pt_quorum.get<int>("quorum.replicas");
+	if(flags & CLIENT_ASYNC){
+		//initialize comm rings for listerner thread interation
+		char ringname[50];
+		snprintf(ringname,50,"TO_LSTNR");
+		to_lstnr = rte_ring_create(ringname,
+							 65536,
+							 rte_socket_id(),
+							 RING_F_SC_DEQ);
+	}		
   client->channel_seq = client_queue*client_mc*rtc_clock::current_time();
   for(int i=0;i<num_quorums;i++) {
     client->server = 0;
     client->update_server("Initialization");
   }
   return (void *)client;
+}
+
+
+int make_rpc_async(void *handle, 
+		void *payload, 
+		int sz, void (*cb)(), 
+		unsigned core_mask, 
+		int flags)
+{
+  rpc_client_t *client = (rpc_client_t *)handle;
+  if(sz > DISP_MAX_MSGSIZE) {
+    BOOST_LOG_TRIVIAL(fatal) << "rpc call params too large "
+			     << " param size =  " << sz
+			     << " DISP_MAX_MSGSIZE = " << DISP_MAX_MSGSIZE;
+    exit(-1);
+  }
+  return client->make_rpc_async(payload, sz, cb, core_mask, flags);
 }
 
 int make_rpc(void *handle,

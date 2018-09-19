@@ -42,6 +42,11 @@ static const int R_BUFS = 1023;
 static const unsigned int MAX_CLIENTS = 1024U*1024U;
 static const char MAX_INFLIGHT = 1;
 
+
+//client flags
+static const unsigned int CLIENT_SYNC = 1<<0;
+static const unsigned int CLIENT_ASYNC= 1<<1;
+
 static int core_to_quorum(int core_id)
 {
   return core_id % num_quorums;
