@@ -77,7 +77,7 @@ typedef struct rpc_client_st {
     return resp_sz;
   }
 
-  void send_to_server(rpc_t *pkt, int sz, int quorum_id)
+  void send_to_server(rpc_t *pkt, int sz, int quorum_id, int flags)
   {
     rte_mbuf *mb = rte_pktmbuf_alloc(global_dpdk_context->mempools[me_queue]);
     if(mb == NULL) {
@@ -91,6 +91,11 @@ typedef struct rpc_client_st {
 				    mb,
 				    pkt,
 				    sz);
+		if((flags & ASYNC_REQUEST) && 
+				rte_ring_sp_enqueue(to_quorums[q], (void *)m) == -ENOBUFS ){
+				BOOST_LOG_TRIVIAL(fatal) << "Failed to enqueue listner queue";	
+				exit(-1);
+		}
     int e = cyclone_tx(global_dpdk_context, mb, me_queue);
     if(e) {
       BOOST_LOG_TRIVIAL(warning) << "Client failed to send to server";
@@ -266,21 +271,11 @@ typedef struct rpc_client_st {
       packet_out->client_id   = me;
       packet_out->requestor   = me_mc;
       if((core_mask & (core_mask - 1)) != 0) {
-				char *user_data = (char *)(packet_out + 1);
-				memcpy(user_data, terms, num_quorums*sizeof(unsigned int));
-				user_data += num_quorums*sizeof(unsigned int);
-				user_data += sizeof(ic_rdv_t);
-				memcpy(user_data, payload, sz);
-				packet_out->payload_sz  = num_quorums*sizeof(unsigned int) + sizeof(ic_rdv_t) + sz;
-				unsigned int pkt_sz =  packet_out->payload_sz + sizeof(rpc_t);
-				//to lstnr
-				send_to_server(packet_out, pkt_sz, quorum_id);
-      } else {
+				BOOST_LOG_TRIVIAL(info) << "gang operations not supported";	      
+			} else {
 				packet_out->payload_sz = sz;
 				memcpy(packet_out + 1, payload, sz);
-
-				//to lstnr
-				send_to_server(packet_out, sizeof(rpc_t) + sz, quorum_id);
+				send_to_server(packet_out, sizeof(rpc_t) + sz, quorum_id,flags);
       }
 			return ASYNC_SEND_SUCCESS;
   }
@@ -296,7 +291,8 @@ void operator()(){
 	unsigned long PERIODICITY_CYCLES = PERIODICITY*tsc_mhz;
 	unsigned long LOOP_TO_CYCLES     = ASYNC__TIMEOUT*tsc_mhz;
 	unsigned long elapsed_time;
-	current = NULL;
+	rte_mbuf *curr_m = NULL;
+	while(!terminate){
 	resp_sz = cyclone_rx_burst(global_dpdk_context,
 				   0,
 				   me_queue,
@@ -304,6 +300,7 @@ void operator()(){
 				   (unsigned char *)packet_in,
 				   MSG_MAXSIZE,
 				   timeout_msec*1000);
+	//admission control based on seq no. incoming seq-number should be >= current msg
 
 	elapsed_time = rte_get_tsc_cycles() - mark;
 	if(elapsed_time >= LOOP_TO_CYCLES) {
@@ -311,32 +308,44 @@ void operator()(){
 			<< " event loop too long cycles = " << elapsed_time;
 	}
 	/* attend to next sent message */
-	if(current == NULL && (rte_ring_sc_dequeue() != 0) ){
+	if(curr_m == NULL && (rte_ring_sc_dequeue(to_lstnr,(void **)&cur_m) != 0) ){
 		continue; // no sent msgs
 	}
-	// see if we have timed out
-	
-
+  elapsed_time = rte_get_tsc_cycles - cur_m->sent_time;	
+	if(elapsed_time >= ASYNC__TIMEOUT){
+		BOOST_LOG_TRIVIAL(debug) << "message timeout";
+		rte_pktmbuf_free(cur_m);
+		//TOO:update server
+		curr_m->cb();
+	}
 	// lookup received msgs
-	
+	if(current message not found )
+		continue;
+	else{	
+		rte_pktmbuf_free(cur_m);
+		curr_m->cb();
 
-
+	}
 
 	current = NULL; // on to next one
-	exec();
+	}
 }
 
 }clntresponse_monitor_t;
 
-/* launch thread on lcores, bind receive path for tx queues */
-void cyclone_launch_clients()
+/* launch common receiver loop */
+void cyclone_client_launch(int client_id)
 {
 			int e = rte_eal_remote_launch(driver, dargs_array[me-client_id_start], 1 + me - client_id_start);
 	    if(e != 0) {
+			  BOOST_LOG_TRIVIAL(fatal) << "Failed to launch receiver on remote lcore";
+				exit(-1);
+			e = rte_eal_remote_launch(driver, dargs_array[me-client_id_start], 1 + me - client_id_start);
+	    if(e != 0) {
 			  BOOST_LOG_TRIVIAL(fatal) << "Failed to launch driver on remote lcore";
 				exit(-1);
-			rte_eal_mp_wait_lcore();
 }
+
 //TODO: figure out a proper place for these struct rte_ring *to_lstnr;	
 volatile char msg_inflight; // inflight async messages
 unsigned long async_max_inflight;
