@@ -14,7 +14,7 @@ extern dpdk_context_t *global_dpdk_context;
 typedef struct rpc_client_st {
   int me;
   int me_mc;
-  int me_queue;
+  int me_queue;  // synch rcv queue
   quorum_switch *router;
   rpc_t *packet_out;
   rpc_t *packet_out_aux;
@@ -26,6 +26,14 @@ typedef struct rpc_client_st {
   dpdk_rx_buffer_t *buf;
   int server_ports;
   unsigned int *terms;
+
+	//async client
+	int me_aqueue;
+  unsigned long channel_aseq;
+	struct rte_ring *to_lstnr;	
+	volatile char msg_inflight;
+	unsigned long async_max_inflight;
+	struct async_listener_t_ *lstnr;
 
   int quorum_q(int quorum_id, int q)
   {
@@ -91,14 +99,19 @@ typedef struct rpc_client_st {
 				    mb,
 				    pkt,
 				    sz);
-		if((flags & ASYNC_REQUEST) && 
-				rte_ring_sp_enqueue(to_quorums[q], (void *)m) == -ENOBUFS ){
+
+		if(flags & ASYNC_REQUEST){
+			if(rte_ring_sp_enqueue(to_lstnr, (void *)m) == -ENOBUFS ){
 				BOOST_LOG_TRIVIAL(fatal) << "Failed to enqueue listner queue";	
 				exit(-1);
-		}
-    int e = cyclone_tx(global_dpdk_context, mb, me_queue);
-    if(e) {
-      BOOST_LOG_TRIVIAL(warning) << "Client failed to send to server";
+			}
+			int e = cyclone_tx(global_dpdk_context, mb, me_aqueue);
+			if(e) 
+				BOOST_LOG_TRIVIAL(warning) << "Client failed to send async request to server";
+		}else{
+			int e = cyclone_tx(global_dpdk_context, mb, me_queue);
+			if(e) 
+				BOOST_LOG_TRIVIAL(warning) << "Client failed to send sync request to server";
     }
   }
 
@@ -259,15 +272,15 @@ typedef struct rpc_client_st {
     int quorum_id = choose_quorum(core_mask);
 
 			//admission control
-			if(get_inflight() > )
+			if(get_inflight() >= async_max_inflight)
 				return ASYNC_MAX_INFLIGHT;
 
       // Make request
       packet_out->code        = RPC_REQ;
       packet_out->flags       = flags;
       packet_out->core_mask   = core_mask;
-      packet_out->client_port = me_queue;
-      packet_out->channel_seq = channel_seq++;
+      packet_out->client_port = me_aqueue;
+      packet_out->channel_seq = channel_aseq++;
       packet_out->client_id   = me;
       packet_out->requestor   = me_mc;
       if((core_mask & (core_mask - 1)) != 0) {
@@ -282,26 +295,62 @@ typedef struct rpc_client_st {
 
 } rpc_client_t;
 
-/* we maintain a response poll loop for each client */
-typedef struct clntresponse_monitor_t_{
+/* rx loop of async client */
+typedef struct async_lstener_t_{
 
-void operator()(){
+void exec(){
 	unsigned long mark = rte_get_tsc_cycles();
 	double tsc_mhz = (rte_get_tsc_hz()/1000000.0);
 	unsigned long PERIODICITY_CYCLES = PERIODICITY*tsc_mhz;
 	unsigned long LOOP_TO_CYCLES     = ASYNC__TIMEOUT*tsc_mhz;
 	unsigned long elapsed_time;
-	rte_mbuf *curr_m = NULL;
+	unsigned int seq;
+	int32_t ret,available;
+	*pkt_array[PKT_BURST]
+	rte_mbuf *m = NULL;
 	while(!terminate){
-	resp_sz = cyclone_rx_burst(global_dpdk_context,
-				   0,
-				   me_queue,
-				   buf,
-				   (unsigned char *)packet_in,
-				   MSG_MAXSIZE,
-				   timeout_msec*1000);
-	//admission control based on seq no. incoming seq-number should be >= current msg
-
+	available = cyclone_rx_burst(0,
+				   me_aqueue,
+				   &pkt_array[0],
+				   PKT_BURST);
+	if(available ){
+		for(int i=0;i<available;i++) {
+			m = pkt_array[i];
+			struct ether_hdr *e = rte_pktmbuf_mtod(m, struct ether_hdr *); 
+			struct ipv4_hdr *ip = (struct ipv4_hdr *)(e + 1); 
+			if(e->ether_type != rte_cpu_to_be_16(ETHER_TYPE_IPv4)) {
+				BOOST_LOG_TRIVIAL(warning) << "Dropping junk. Protocol mismatch";
+				rte_pktmbuf_free(m);
+				return -1; 
+			}   
+			else if(ip->src_addr != magic_src_ip) {
+				BOOST_LOG_TRIVIAL(warning) << "Dropping junk. non magic ip";
+				rte_pktmbuf_free(m);
+				return -1; 
+			}   
+			else if(m->data_len <= sizeof(struct ether_hdr) + sizeof(struct ipv4_hdr)) {
+				BOOST_LOG_TRIVIAL(warning) << "Dropping junk = pkt size too small";
+				rte_pktmbuf_free(m);
+				return -1; 
+			}
+			int payload_offset = sizeof(struct ether_hdr) + sizeof(struct ipv4_hdr);
+			void *payload = rte_pktmbuf_mtod_offset(m, void *, payload_offset);
+			int msg_size = m->data_len - payload_offset;
+			//admission control based on seq no. incoming seq-number should be >= current msg
+			unsigned int mseq = m->seq;	
+			if(mseq < seq){
+				BOOST_LOG_TRIVIAL(warning) << "seq mismatch, current seq : " 
+					<< std::to_string(seq) << " message seq : " 
+					<< std::to_string(mseq);
+			}
+			ret = rte_hash_add(clnt->rcvmsg_tbl,(void *)&mseq, (void*)m);
+			if(ret < 0 ){
+				BOOST_LOG_TRIVIAL(fatal) << "Unable to add hash entry" 
+					<< std::to_string(mseq);
+					exit(-1);
+			}	
+		}
+	}
 	elapsed_time = rte_get_tsc_cycles() - mark;
 	if(elapsed_time >= LOOP_TO_CYCLES) {
 		BOOST_LOG_TRIVIAL(warning) << "Client " 
@@ -318,37 +367,50 @@ void operator()(){
 		//TOO:update server
 		curr_m->cb();
 	}
+	
 	// lookup received msgs
-	if(current message not found )
+	ret = ret_hash_lookup(clnt->rcvmsg_tbl,(const void *)&curr_m);
+	if(ret < 0)
 		continue;
 	else{	
+		
 		rte_pktmbuf_free(cur_m);
+		rte_pkmbuf_free(lookedup_m);
 		curr_m->cb();
-
 	}
-
 	current = NULL; // on to next one
 	}
 }
 
-}clntresponse_monitor_t;
+}async_lstener_t;
 
-/* launch common receiver loop */
-void cyclone_client_launch(int client_id)
-{
-			int e = rte_eal_remote_launch(driver, dargs_array[me-client_id_start], 1 + me - client_id_start);
+
+
+int async_listener(void *arg){
+	async_lstener_t *lst = (async_lstener_t *) arg;
+	rte_cpuset_t set;
+	rte_thread_get_affinity(&set);
+	BOOST_LOG_TRIVIAL(info) << "App Thread launch, affinity = "
+										<< get_cpuset(&set);
+	lst->exec();
+	return 0;
+}
+
+/* launch async rx/tx queues */
+void cyclone_client_launch(rpc_client_t *handle ,lcore_function_t * f, void* arg, unsigned slave_id)
+{			//first launch rx
+			int e = rte_eal_remote_launch(async_listener, handle->lstnr, slave_id+1);
 	    if(e != 0) {
 			  BOOST_LOG_TRIVIAL(fatal) << "Failed to launch receiver on remote lcore";
 				exit(-1);
-			e = rte_eal_remote_launch(driver, dargs_array[me-client_id_start], 1 + me - client_id_start);
+			}
+			e = rte_eal_remote_launch(f, arg, slave_id);
 	    if(e != 0) {
 			  BOOST_LOG_TRIVIAL(fatal) << "Failed to launch driver on remote lcore";
 				exit(-1);
+			}
 }
 
-//TODO: figure out a proper place for these struct rte_ring *to_lstnr;	
-volatile char msg_inflight; // inflight async messages
-unsigned long async_max_inflight;
 
 void add_inflight()
 {
@@ -364,6 +426,9 @@ char get_inflight()
 {
 	return msg_inflight;
 }
+
+
+
 
 
 void* cyclone_client_init(int client_id,
@@ -399,13 +464,22 @@ void* cyclone_client_init(int client_id,
   client->packet_rep = (msg_t *)buf;
   client->replicas = pt_quorum.get<int>("quorum.replicas");
 	if(flags & CLIENT_ASYNC){
+		client->lstnr = new async_listener_t();
+
 		//initialize comm rings for listerner thread interation
 		char ringname[50];
 		snprintf(ringname,50,"TO_LSTNR");
-		to_lstnr = rte_ring_create(ringname,
+		client->to_lstnr = rte_ring_create(ringname,
 							 65536,
 							 rte_socket_id(),
 							 RING_F_SC_DEQ);
+		struct rte_hash_parameters hash_params = {
+			.name = NULL,
+			.key_len = sizeof(unsigned int),
+			.entries = UINT_MAX,
+			.hash_func = rte_hash_crc	// default		
+		};
+		client->rcvmsg__tbl= rte_hash_create(&hash_params);
 	}		
   client->channel_seq = client_queue*client_mc*rtc_clock::current_time();
   for(int i=0;i<num_quorums;i++) {
