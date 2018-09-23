@@ -43,9 +43,10 @@ static const unsigned int MAX_CLIENTS = 1024U*1024U;
 static const char MAX_INFLIGHT = 1;
 
 
-//client flags
+//client specific
 static const unsigned int CLIENT_SYNC = 1<<0;
 static const unsigned int CLIENT_ASYNC= 1<<1;
+static const unsigned int MAX_ASYNC_CLIENTS = 32;
 
 static int core_to_quorum(int core_id)
 {

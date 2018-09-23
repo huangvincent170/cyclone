@@ -101,7 +101,12 @@ typedef struct rpc_client_st {
 				    sz);
 
 		if(flags & ASYNC_REQUEST){
-			if(rte_ring_sp_enqueue(to_lstnr, (void *)m) == -ENOBUFS ){
+			rpc_t *com_ring_pkt = (rpc_t *)rte_malloc(sizeof(rpc_t));
+			if(com_ring_pkt == NULL){
+				BOOST_LOG_TRIVIAL(fatal) << "Failed rpc_t allocate";
+			}
+			rte_memcpy(com_ring_pkt,pkt,sizeof(rpc_t));
+			if(rte_ring_sp_enqueue(to_lstnr, (void *)com_ring_pkt) == -ENOBUFS ){
 				BOOST_LOG_TRIVIAL(fatal) << "Failed to enqueue listner queue";	
 				exit(-1);
 			}
@@ -304,10 +309,12 @@ void exec(){
 	unsigned long PERIODICITY_CYCLES = PERIODICITY*tsc_mhz;
 	unsigned long LOOP_TO_CYCLES     = ASYNC__TIMEOUT*tsc_mhz;
 	unsigned long elapsed_time;
-	unsigned int seq;
+	unsigned long me_aseq;
 	int32_t ret,available;
 	*pkt_array[PKT_BURST]
 	rte_mbuf *m = NULL;
+	rpc_t *cur_m = NULL;
+
 	while(!terminate){
 	available = cyclone_rx_burst(0,
 				   me_aqueue,
@@ -334,14 +341,16 @@ void exec(){
 				return -1; 
 			}
 			int payload_offset = sizeof(struct ether_hdr) + sizeof(struct ipv4_hdr);
-			void *payload = rte_pktmbuf_mtod_offset(m, void *, payload_offset);
+			rpc_t *resp = rte_pktmbuf_mtod_offset(m, void *, payload_offset);
 			int msg_size = m->data_len - payload_offset;
 			//admission control based on seq no. incoming seq-number should be >= current msg
-			unsigned int mseq = m->seq;	
-			if(mseq < seq){
-				BOOST_LOG_TRIVIAL(warning) << "seq mismatch, current seq : " 
-					<< std::to_string(seq) << " message seq : " 
-					<< std::to_string(mseq);
+			unsigned long m_aseq = resp->channel_aseq;	
+			if(m_aseq < me_aseq){
+				BOOST_LOG_TRIVIAL(warning) << "async seq mismatch, hence dropping packet, current seq : " 
+					<< std::to_string(me_aseq) << " message seq : " 
+					<< std::to_string(m_aseq);
+				rte_pkmbuf_free(m);
+				continue;
 			}
 			ret = rte_hash_add(clnt->rcvmsg_tbl,(void *)&mseq, (void*)m);
 			if(ret < 0 ){
@@ -363,25 +372,30 @@ void exec(){
   elapsed_time = rte_get_tsc_cycles - cur_m->sent_time;	
 	if(elapsed_time >= ASYNC__TIMEOUT){
 		BOOST_LOG_TRIVIAL(debug) << "message timeout";
-		rte_pktmbuf_free(cur_m);
 		//TOO:update server
-		curr_m->cb();
-	}
-	
-	// lookup received msgs
-	ret = ret_hash_lookup(clnt->rcvmsg_tbl,(const void *)&curr_m);
-	if(ret < 0)
+		curr_m->cb(RPC_REP_TIMEOUT,cur_m->channel_seq); 
+		me_seq = cur_m->channel_seq;
+		rte__free(cur_m);
+		cur_m=NULL;
 		continue;
-	else{	
-		
-		rte_pktmbuf_free(cur_m);
-		rte_pkmbuf_free(lookedup_m);
-		curr_m->cb();
 	}
-	current = NULL; // on to next one
+	// lookup received msgs
+	ret = rte_hash_lookup(clnt->rcvmsg_tbl,(const void *)&me_seq,(void**)&lookeup_m);
+	if(ret < 0)
+		continue; 
+	else{	
+		int payload_offset = sizeof(struct ether_hdr) + sizeof(struct ipv4_hdr);
+		rpc_t *lresp = rte_pktmbuf_mtod_offset(lookeup_m, void *, payload_offset);
+		int msg_size = m->data_len - payload_offset;
+		assert(cur_m->channel_seq == lresp->channel_seq);
+		curr_m->cb(lresp->code,cur_m->channel_seq);
+		me_seq = cur_m->channel_seq;
+		rte_free(cur_m);
+		rte_pkmbuf_free(lookedup_m);
+	}
+	cur_m = NULL; // on to next one
 	}
 }
-
 }async_lstener_t;
 
 
