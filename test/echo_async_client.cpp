@@ -63,7 +63,7 @@ typedef struct driver_args_st {
 } driver_args_t;
 
 
-
+/*
 typedef struct cb_t_{
 
 	unsigned long order;
@@ -74,7 +74,6 @@ typedef struct cb_t_{
 	unsigned long tx_begin_time;
 	unsigned long payload;
 	
-	/* gets called by the listener lcore */
 	void async_callback(int code, unsigned long seq){
 		BOOST_LOG_TRIVIAL(info) << "client response" << std::to_string(seq);
 		tx_block_cnt++;
@@ -95,7 +94,13 @@ typedef struct cb_t_{
 	}
 		
 }cb_t;
+*/
 
+
+void async_callback(int code, unsigned long seq){
+	BOOST_LOG_TRIVIAL(info) << "client response, code : "<< std::to_string(code) 
+		<< " seq : " << std::to_string(seq);
+}
 
 int driver(void *arg)
 {
@@ -114,22 +119,22 @@ int driver(void *arg)
 	int ret;
 
   int my_core;
- 	cb_t *callback = new cb_t();
+// 	cb_t *callback = new cb_t();
 	
-  callback->total_latency = 0;
-  callback->tx_block_cnt  = 0;
-  callback->tx_block_begin = rtc_clock::current_time();
-	callback->leader = dargs->leader;
-  callback->tx_begin_time = rtc_clock::current_time();
+  //callback->total_latency = 0;
+  //callback->tx_block_cnt  = 0;
+  //callback->tx_block_begin = rtc_clock::current_time();
+	//callback->leader = dargs->leader;
+  //callback->tx_begin_time = rtc_clock::current_time();
 	 unsigned long payload = 0;
-  const char *payload_env = getenv("PAYLOAD");
-  if(payload_env != NULL) {
-    callback->payload = atol(payload_env);
-  }
+  //const char *payload_env = getenv("PAYLOAD");
+  //if(payload_env != NULL) {
+    //callback->payload = atol(payload_env);
+  //}
   BOOST_LOG_TRIVIAL(info) << "PAYLOAD = " << payload;
 
 
-	srand(callback->tx_begin_time);
+	srand(rtc_clock::current_time());
   int partition;
   while(true) {
     rpc_flags = 0;
@@ -137,10 +142,10 @@ int driver(void *arg)
 		ret = make_rpc_async(handles[0],
 		  buffer,
 		  payload,
-		  (void **)&resp,
+		  async_callback,
 		  1UL << my_core,
 		  rpc_flags);
-    if(ret == ASYNC_MAX_INFLIGHT) {
+    if(ret == EMAX_INFLIGHT) {
       BOOST_LOG_TRIVIAL(fatal) << "buffer full";
 			sleep(1);
 			continue;
@@ -189,11 +194,13 @@ int main(int argc, const char *argv[]) {
 					      1 + me - client_id_start,
 					      fname_server,
 					      atoi(argv[9]),
-					      fname_client,atoi(argv[10]),CLIENT_ASYNC);
+					      fname_client,
+						  CLIENT_ASYNC,
+						  atoi(argv[10]));
     }
   }
   for(int me = client_id_start; me < client_id_stop; me++) {
-		cyclone_launch_clients(driver, dargs_array[me-client_id_start], 1+me-client_id_start);
+		cyclone_launch_clients(dargs_array[me-client_id_start]->handles[0],driver, dargs_array[me-client_id_start], 1+me-client_id_start);
   }
-	rte_eal_wait_lcore();
+	rte_eal_mp_wait_lcore();
 }

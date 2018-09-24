@@ -111,7 +111,10 @@ void* cyclone_client_init(int client_id,
 			  int client_queue,
 			  const char *config_cluster_path,
 			  int server_ports,
-			  const char *config_quorum_path);
+			  const char *config_quorum_path, 
+			  unsigned int flags,
+			  unsigned int max_inflight);
+
 // Make an rpc call -- returns size of response
 int make_rpc(void *handle,
 	     void *payload,
@@ -119,6 +122,17 @@ int make_rpc(void *handle,
 	     void **response,
 	     unsigned long core_mask,
 	     int rpc_flags);
+
+// Async client request
+int make_rpc_async(void *handle,
+	     void *payload,
+	     int sz,
+	     void (*cb)(int,unsigned long),
+	     unsigned long core_mask,
+	     int rpc_flags);
+
+void cyclone_launch_clients(void *handle, int (*f)(void *), void *arg, unsigned slave_id);
+
 
 int delete_node(void *handle, unsigned long core_mask, int node);
 
