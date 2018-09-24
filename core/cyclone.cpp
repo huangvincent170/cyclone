@@ -208,7 +208,7 @@ static int __applylog(raft_server_t* raft,
   unsigned char *chunk = (unsigned char *)pktadj2rpc((rte_mbuf *)ety->pkt);
   int delta_node_id;
   rte_mbuf *m = (rte_mbuf *)(ety->pkt);
-  pktadj2wal(m)->rep = REP_SUCCESS;
+  pktadj2wal(m)->rep = REP_SUCCESS; // notify compute thread to go-ahead
   if(ety->type == RAFT_LOGTYPE_REMOVE_NODE) {
     cfg_change_t *cfg = (cfg_change_t *)(chunk + sizeof(rpc_t));
     delta_node_id = cfg->node;

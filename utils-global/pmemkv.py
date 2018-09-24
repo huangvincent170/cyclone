@@ -3,11 +3,15 @@ def launch_cmds_startup():
 
 
 def launch_cmds_server_gen(f, q, r, m, quorums, replicas, clients, ports):
+    if os.environ.has_key('CYCLONE_PASS'):
+        passwd=os.environ.get('CYCLONE_PASS')
     cmd='rm -rf /mnt/pmem1p1/pmemkv\n'
     f.write(cmd)
     cmd=''
+    cmd=cmd + ' echo ' + passwd + ' | sudo -S '
     cmd=cmd + ' PMEM_IS_PMEM_FORCE=1 '
-    cmd=cmd + 'pmemkv_server '
+    cmd=cmd + ' LD_LIBRARY_PATH=/usr/lib:/usr/local/lib '
+    cmd=cmd + '/home/pfernando/cyclone/cyclone.git/test/pmemkv_server '
     cmd=cmd + str(r) + ' '
     cmd=cmd + str(m) + ' '
     cmd=cmd + str(clients) + ' '
@@ -36,7 +40,11 @@ def launch_cmds_client_gen(f, m, c, quorums, replicas, clients, machines, ports)
                 cmd=cmd + 'KV_KEYS=' + os.environ.get('KV_KEYS') + ' '    
             if os.environ.has_key('ACTIVE'):
                 cmd=cmd + 'ACTIVE=' + os.environ.get('ACTIVE') + ' '    
-            cmd=cmd + 'pmemkv_client '
+            if os.environ.has_key('CYCLONE_PASS'):
+                passwd=os.environ.get('CYCLONE_PASS')    
+            cmd=cmd + ' echo ' + passwd + ' | sudo -S '
+            cmd=cmd + ' LD_LIBRARY_PATH=/usr/lib:/usr/local/lib:/usr/local/lib64 '    
+            cmd=cmd + '/home/pfernando/cyclone/cyclone.git/test/pmemkv_client '
             cmd=cmd + str(c_start) + ' '
             cmd=cmd + str(c_stop) + ' '
             cmd=cmd + str(m) + ' '
@@ -47,5 +55,7 @@ def launch_cmds_client_gen(f, m, c, quorums, replicas, clients, machines, ports)
             f.write(cmd)
         
 def killall_cmds_gen(f):
-    f.write('killall -9 pmemkv_server\n')
-    f.write('killall -9 pmemkv_client\n')
+    if os.environ.has_key('CYCLONE_PASS'):
+        passwd=os.environ.get('CYCLONE_PASS')
+    f.write('echo ' + passwd + ' | sudo -S pkill pmemkv_server\n')
+    f.write('echo ' + passwd + '| sudo -S pkill pmemkv_client\n')
