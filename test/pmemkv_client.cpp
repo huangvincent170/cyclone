@@ -76,17 +76,18 @@ int driver(void *arg)
   srand(tx_begin_time);
   int partition;
   while(true) {
+    kv->key   = rand() % keys;
+    my_core = kv->key % executor_threads;
     double coin = ((double)rand())/RAND_MAX;
     if(coin > frac_read) {
       rpc_flags = 0;
       kv->op    = OP_PUT;
+      snprintf(kv->value,value_sz,"v%ld\n",kv->key);
     }
     else {
       rpc_flags = RPC_FLAG_RO;
       kv->op    = OP_GET;
     }
-    kv->key   = rand() % keys;
-    my_core = kv->key % executor_threads;
     sz = make_rpc(handles[0],
 		  buffer,
 		  sizeof(pmemkv_t),
