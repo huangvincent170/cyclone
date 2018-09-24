@@ -7,14 +7,19 @@
 #include <boost/property_tree/ini_parser.hpp>
 #include <boost/property_tree/ptree.hpp>
 #include <unistd.h>
+#include  <rte_hash.h>
 #include "cyclone_context.hpp"
+
+
+const static unsigned int SYNC_REQUEST = 1 << 11;
+const static unsigned int ASYNC_REQUEST = 1 << 10;
 
 
 extern dpdk_context_t *global_dpdk_context;
 typedef struct rpc_client_st {
   int me;
   int me_mc;
-  int me_queue;  // synch rcv queue
+  int me_queue;  // sync rcv queue
   quorum_switch *router;
   rpc_t *packet_out;
   rpc_t *packet_out_aux;
@@ -31,6 +36,7 @@ typedef struct rpc_client_st {
 	int me_aqueue;
   unsigned long channel_aseq;
 	struct rte_ring *to_lstnr;	
+	struct rte_hash *rcvmsg_tbl;
 	volatile char msg_inflight;
 	unsigned long async_max_inflight;
 	struct async_listener_t_ *lstnr;
@@ -101,7 +107,7 @@ typedef struct rpc_client_st {
 				    sz);
 
 		if(flags & ASYNC_REQUEST){
-			rpc_t *com_ring_pkt = (rpc_t *)rte_malloc(sizeof(rpc_t));
+			rpc_t *com_ring_pkt = (rpc_t *)rte_malloc("comm.msg",sizeof(rpc_t),0);
 			if(com_ring_pkt == NULL){
 				BOOST_LOG_TRIVIAL(fatal) << "Failed rpc_t allocate";
 			}
@@ -132,7 +138,7 @@ typedef struct rpc_client_st {
     packet_out_aux->client_id   = me;
     packet_out_aux->requestor   = me_mc;
     packet_out_aux->payload_sz  = 0;
-    send_to_server(packet_out_aux, sizeof(rpc_t), 0); // always quorum 0
+    send_to_server(packet_out_aux, sizeof(rpc_t), 0, SYNC_REQUEST); // always quorum 0
     int resp_sz = common_receive_loop(sizeof(rpc_t));
     if(resp_sz != -1) {
       memcpy(terms, packet_in + 1, num_quorums*sizeof(unsigned int));
@@ -176,7 +182,7 @@ typedef struct rpc_client_st {
       packet_out->payload_sz  = sizeof(cfg_change_t);
       cfg_change_t *cfg = (cfg_change_t *)(packet_out + 1);
       cfg->node = nodeid;
-      send_to_server(packet_out, sizeof(rpc_t) + sizeof(cfg_change_t), quorum_id);
+      send_to_server(packet_out, sizeof(rpc_t) + sizeof(cfg_change_t), quorum_id, SYNC_REQUEST);
       resp_sz = common_receive_loop(sizeof(rpc_t) + sizeof(cfg_change_t));
       if(resp_sz == -1) {
 	update_server("rx timeout");
@@ -206,7 +212,7 @@ typedef struct rpc_client_st {
       packet_out->payload_sz  = sizeof(cfg_change_t);
       cfg_change_t *cfg = (cfg_change_t *)(packet_out + 1);
       cfg->node      = nodeid;
-      send_to_server(packet_out, sizeof(rpc_t) + sizeof(cfg_change_t), quorum_id);
+      send_to_server(packet_out, sizeof(rpc_t) + sizeof(cfg_change_t), quorum_id, SYNC_REQUEST);
       resp_sz = common_receive_loop(sizeof(rpc_t) + sizeof(cfg_change_t));
       if(resp_sz == -1) {
 	update_server("rx timeout");
@@ -247,13 +253,13 @@ typedef struct rpc_client_st {
 	unsigned int pkt_sz =  packet_out->payload_sz + sizeof(rpc_t);
 	send_to_server(packet_out, 
 		       pkt_sz,
-		       quorum_id);
+		       quorum_id, SYNC_REQUEST);
 	resp_sz = common_receive_loop(pkt_sz);
       }
       else {
 	packet_out->payload_sz = sz;
 	memcpy(packet_out + 1, payload, sz);
-	send_to_server(packet_out, sizeof(rpc_t) + sz, quorum_id);
+	send_to_server(packet_out, sizeof(rpc_t) + sz, quorum_id, SYNC_REQUEST);
 	resp_sz = common_receive_loop(sizeof(rpc_t) + sz);
       }
       if(resp_sz == -1) {
@@ -269,6 +275,23 @@ typedef struct rpc_client_st {
     return (int)(resp_sz - sizeof(rpc_t));
   }
 
+void add_inflight()
+{
+	__sync_fetch_and_add(&msg_inflight, 1);
+}
+
+void sub_inflight()
+{
+	__sync_fetch_and_sub(&msg_inflight, 1);
+}
+
+char get_inflight()
+{
+	return msg_inflight;
+}
+
+
+
 
   int make_rpc_async(void *payload, int sz, void (*cb)(), unsigned long core_mask, int flags)
   {
@@ -278,7 +301,7 @@ typedef struct rpc_client_st {
 
 			//admission control
 			if(get_inflight() >= async_max_inflight)
-				return ASYNC_MAX_INFLIGHT;
+				return EMAX_INFLIGHT;
 
       // Make request
       packet_out->code        = RPC_REQ;
@@ -293,31 +316,32 @@ typedef struct rpc_client_st {
 			} else {
 				packet_out->payload_sz = sz;
 				memcpy(packet_out + 1, payload, sz);
-				send_to_server(packet_out, sizeof(rpc_t) + sz, quorum_id,flags);
+				send_to_server(packet_out, sizeof(rpc_t) + sz, quorum_id, ASYNC_REQUEST);
       }
-			return ASYNC_SEND_SUCCESS;
+			return 0;
   }
 
 } rpc_client_t;
 
 /* rx loop of async client */
 typedef struct async_lstener_t_{
-
-void exec(){
+	rpc_client_t *clnt; 
+int exec(){
 	unsigned long mark = rte_get_tsc_cycles();
 	double tsc_mhz = (rte_get_tsc_hz()/1000000.0);
 	unsigned long PERIODICITY_CYCLES = PERIODICITY*tsc_mhz;
-	unsigned long LOOP_TO_CYCLES     = ASYNC__TIMEOUT*tsc_mhz;
+	unsigned long LOOP_TO_CYCLES     = timeout_msec * tsc_mhz;
 	unsigned long elapsed_time;
 	unsigned long me_aseq;
 	int32_t ret,available;
-	*pkt_array[PKT_BURST]
+	rte_mbuf *pkt_array[PKT_BURST];
 	rte_mbuf *m = NULL;
+	rte_mbuf *lookedup_m = NULL;
 	rpc_t *cur_m = NULL;
-
-	while(!terminate){
+	
+	for(; ;){
 	available = cyclone_rx_burst(0,
-				   me_aqueue,
+				   clnt->me_aqueue,
 				   &pkt_array[0],
 				   PKT_BURST);
 	if(available ){
@@ -349,7 +373,7 @@ void exec(){
 				BOOST_LOG_TRIVIAL(warning) << "async seq mismatch, hence dropping packet, current seq : " 
 					<< std::to_string(me_aseq) << " message seq : " 
 					<< std::to_string(m_aseq);
-				rte_pkmbuf_free(m);
+				rte_pktmbuf_free(m);
 				continue;
 			}
 			ret = rte_hash_add(clnt->rcvmsg_tbl,(void *)&mseq, (void*)m);
@@ -375,23 +399,23 @@ void exec(){
 		//TOO:update server
 		curr_m->cb(RPC_REP_TIMEOUT,cur_m->channel_seq); 
 		me_seq = cur_m->channel_seq;
-		rte__free(cur_m);
+		rte_free(cur_m);
 		cur_m=NULL;
 		continue;
 	}
 	// lookup received msgs
-	ret = rte_hash_lookup(clnt->rcvmsg_tbl,(const void *)&me_seq,(void**)&lookeup_m);
+	ret = rte_hash_lookup(clnt->rcvmsg_tbl,(const void *)&me_seq,(void**)&lookedup_m);
 	if(ret < 0)
 		continue; 
 	else{	
 		int payload_offset = sizeof(struct ether_hdr) + sizeof(struct ipv4_hdr);
-		rpc_t *lresp = rte_pktmbuf_mtod_offset(lookeup_m, void *, payload_offset);
+		rpc_t *lresp = rte_pktmbuf_mtod_offset(lookedup_m, void *, payload_offset);
 		int msg_size = m->data_len - payload_offset;
 		assert(cur_m->channel_seq == lresp->channel_seq);
 		curr_m->cb(lresp->code,cur_m->channel_seq);
 		me_seq = cur_m->channel_seq;
 		rte_free(cur_m);
-		rte_pkmbuf_free(lookedup_m);
+		rte_pktmbuf_free(lookedup_m);
 	}
 	cur_m = NULL; // on to next one
 	}
@@ -424,23 +448,6 @@ void cyclone_client_launch(rpc_client_t *handle ,lcore_function_t * f, void* arg
 				exit(-1);
 			}
 }
-
-
-void add_inflight()
-{
-	__sync_fetch_and_add(&msg_inflight, 1);
-}
-
-void sub_inflight()
-{
-	__sync_fetch_and_sub(&msg_inflight, 1);
-}
-
-char get_inflight()
-{
-	return msg_inflight;
-}
-
 
 
 
@@ -493,7 +500,7 @@ void* cyclone_client_init(int client_id,
 			.entries = UINT_MAX,
 			.hash_func = rte_hash_crc	// default		
 		};
-		client->rcvmsg__tbl= rte_hash_create(&hash_params);
+		client->rcvmsg_tbl= rte_hash_create(&hash_params);
 	}		
   client->channel_seq = client_queue*client_mc*rtc_clock::current_time();
   for(int i=0;i<num_quorums;i++) {
