@@ -212,6 +212,6 @@ static const int RPC_REQ_NODEADD        = 4; // Add node
 static const int RPC_REQ_NODEDEL        = 5; // Delete node 
 static const int RPC_REP_OK             = 6; // RPC response OK
 static const int RPC_REP_FAIL           = 7; // RPC response FAILED 
-static const int RPC_REP_TIMEOUT        = 8; // RPC response TIMED OUT
+//static const int RPC_REP_TIMEOUT        = 8; // RPC response TIMED OUT
 
 #endif

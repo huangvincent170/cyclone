@@ -5,9 +5,10 @@
 #endif
 static const int DISP_MAX_MSGSIZE = 4096; 
 //Note: DISP_MAX_MSGSIZE must be within MSG_MAXSIZE with room for rpc_t header
-const int REP_UNKNOWN = 0;
-const int REP_SUCCESS = 1;
-const int REP_FAILED  = -1;
+const int REP_FAILED   = -1;
+const int REP_UNKNOWN  = 0;
+const int REP_SUCCESS  = 1;
+const int REP_TIMEDOUT = 2;
 
 
 //Tuning parameters
@@ -25,7 +26,7 @@ static const int RAFT_LOG_TARGET  = 1000;
 static const int timeout_msec  = 30; // Client - failure detect
 
 // Execution resources
-static const int executor_threads = 32;
+static const int executor_threads = 1;
 
 // ZMQ specific tuning
 static const int zmq_threads = 4;
@@ -34,7 +35,7 @@ static const int zmq_threads = 4;
 static const int q_raft       = 0;
 static const int q_dispatcher = 1;
 static const int num_queues   = 2;
-static const int num_quorums  = 8;
+static const int num_quorums  = 1;
 static const int Q_BUFS = 8191;
 static const int R_BUFS = 1023;
 

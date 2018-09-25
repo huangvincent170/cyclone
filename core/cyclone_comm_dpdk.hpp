@@ -509,6 +509,7 @@ static void dpdk_context_init(dpdk_context_t *context,
   pack_ratio = 32; // Forced by burst recv. limitations
   BOOST_LOG_TRIVIAL(info) << "PACK RATIO = " << pack_ratio;
   BOOST_LOG_TRIVIAL(info) << "PORTS = " << context->ports;
+  BOOST_LOG_TRIVIAL(info) << "QUEUES = " << queues;
 
   /* init EAL */
   //ret = rte_eal_init(6, fake_argv);

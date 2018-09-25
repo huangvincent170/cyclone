@@ -138,6 +138,7 @@ int driver(void *arg)
   int partition;
   while(true) {
     rpc_flags = 0;
+	sleep(1);
     my_core = dargs->me % executor_threads;
 		ret = make_rpc_async(handles[0],
 		  buffer,
@@ -166,7 +167,7 @@ int main(int argc, const char *argv[]) {
   int client_id_stop  = atoi(argv[2]);
   driver_args_t *dargs;
   void **prev_handles;
-  cyclone_network_init(argv[7], 1 * NUM_QUEUES , atoi(argv[3]), 1 + client_id_stop - client_id_start);
+  cyclone_network_init(argv[7], 1, atoi(argv[3]), 2 + client_id_stop - client_id_start);
   driver_args_t ** dargs_array = 
     (driver_args_t **)malloc((client_id_stop - client_id_start)*sizeof(driver_args_t *));
   for(int me = client_id_start; me < client_id_stop; me++) {

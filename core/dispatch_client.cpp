@@ -313,6 +313,7 @@ char get_inflight()
       packet_out->client_id   = me;
       packet_out->requestor   = me_mc;
 	  packet_out->timestamp	  = rtc_clock::current_time();
+	  packet_out->cb		  = cb;
       if((core_mask & (core_mask - 1)) != 0) {
 				BOOST_LOG_TRIVIAL(info) << "gang operations not supported";	      
 			} else {
@@ -320,6 +321,10 @@ char get_inflight()
 				memcpy(packet_out + 1, payload, sz);
 				send_to_server(packet_out, sizeof(rpc_t) + sz, quorum_id, ASYNC_REQUEST);
 				add_inflight();
+				BOOST_LOG_TRIVIAL(info)<< "async message sent, seq no : " 
+					<<std::to_string(packet_out->channel_seq) << " queue : "
+					<<std::to_string(packet_out->client_port)
+					<<"inflight msgs : " << std::to_string(get_inflight());
       }
 			return 0;
   }
@@ -343,11 +348,14 @@ int exec(){
 	rte_mbuf *lookedup_m = NULL;
 	rpc_t *cur_m = NULL;
 	
+	BOOST_LOG_TRIVIAL(info) << "Entering listener loop";	      
 	for(; ;){
 	available = cyclone_rx_burst(0,
 				   clnt->me_aqueue,
 				   &pkt_array[0],
 				   PKT_BURST);
+	//BOOST_LOG_TRIVIAL(info) << "available message on the async queue : " 
+	//	<< available;	      
 	if(available ){
 		for(int i=0;i<available;i++) {
 			m = pkt_array[i];
@@ -372,7 +380,7 @@ int exec(){
 			rpc_t *resp = (rpc_t *)rte_pktmbuf_mtod_offset(m, void *, payload_offset);
 			int msg_size = m->data_len - payload_offset;
 			//admission control based on seq no. incoming seq-number should be >= current msg
-			if(resp->channel_seq <= me_aseq){
+			if(resp->channel_seq < me_aseq){
 				BOOST_LOG_TRIVIAL(warning) << "async seq mismatch, hence dropping packet, current seq : " 
 					<< std::to_string(me_aseq) << " message seq : " 
 					<< std::to_string(resp->channel_seq);
@@ -386,19 +394,17 @@ int exec(){
 			}	
 		}
 	}
-	elapsed_time = rte_get_tsc_cycles() - mark;
-	if(elapsed_time >= LOOP_TO_CYCLES) {
-		BOOST_LOG_TRIVIAL(warning) << "Client " 
-			<< " event loop too long cycles = " << elapsed_time;
-	}
 	/* attend to next sent message */
 	if(cur_m == NULL && (rte_ring_sc_dequeue(clnt->to_lstnr,(void **)&cur_m) != 0) ){
 		continue; // no sent msgs
 	}
+
+	BOOST_LOG_TRIVIAL(debug) << "processing message : " << cur_m->channel_seq;
 	if((rtc_clock::current_time() - cur_m->timestamp) >= timeout_msec){
-		BOOST_LOG_TRIVIAL(debug) << "message timeout";
+		BOOST_LOG_TRIVIAL(debug) << "message timeout"
+			<< "mseq : " << std::to_string(cur_m->channel_seq);
 		//TOO:update server
-		cur_m->cb(RPC_REP_TIMEOUT,cur_m->channel_seq); 
+		cur_m->cb(REP_TIMEDOUT,cur_m->channel_seq); 
 		me_aseq = cur_m->channel_seq;
 		rte_free(cur_m);
 		cur_m=NULL;
@@ -413,8 +419,7 @@ int exec(){
 		int payload_offset = sizeof(struct ether_hdr) + sizeof(struct ipv4_hdr);
 		rpc_t *lresp = (rpc_t *)rte_pktmbuf_mtod_offset(lookedup_m, void *, payload_offset);
 		int msg_size = m->data_len - payload_offset;
-		assert(cur_m->channel_seq == lresp->channel_seq);
-		cur_m->cb(lresp->code,cur_m->channel_seq);
+		cur_m->cb(lresp->code == RPC_REP_OK? REP_SUCCESS:REP_FAILED,cur_m->channel_seq);
 		me_aseq = cur_m->channel_seq;
 		rte_free(cur_m);
 		rte_pktmbuf_free(lookedup_m);
@@ -430,7 +435,7 @@ int exec(){
 int async_listener(void *arg){
 	rte_cpuset_t set;
 	rte_thread_get_affinity(&set);
-	BOOST_LOG_TRIVIAL(info) << "App Thread launch, affinity = "
+	BOOST_LOG_TRIVIAL(info) << "Listener thread launch, affinity = "
 										<< get_cpuset(&set);
 	async_lstener_t *lstnr = new async_lstener_t();
 	lstnr->clnt = (rpc_client_t *) arg;
@@ -475,6 +480,7 @@ void* cyclone_client_init(int client_id,
   client->terms  = (unsigned int *)malloc(num_quorums*sizeof(unsigned int));
   client->me_mc = client_mc;
   client->me_queue = client_queue;
+  BOOST_LOG_TRIVIAL(info) << "client->me_queue :  " << client->me_queue;
   client->buf = (dpdk_rx_buffer_t *)malloc(sizeof(dpdk_rx_buffer_t));
   client->buf->buffered = 0;
   client->buf->consumed = 0;
@@ -489,8 +495,10 @@ void* cyclone_client_init(int client_id,
   client->packet_rep = (msg_t *)buf;
   client->replicas = pt_quorum.get<int>("quorum.replicas");
 	if(flags & CLIENT_ASYNC){
-		//client->lstnr = new async_lstener_t();
-		client->max_inflight = max_inflight;
+		client->me_aqueue = client_queue+1;
+		client->max_inflight = 1 << max_inflight;
+		BOOST_LOG_TRIVIAL(info) << "max async msg in flight is set to : " 
+			<< std::to_string(client->max_inflight);
 		//initialize comm rings for listerner thread interation
 		char ringname[50];
 		snprintf(ringname,50,"TO_LSTNR");
@@ -499,14 +507,17 @@ void* cyclone_client_init(int client_id,
 							 rte_socket_id(),
 							 RING_F_SC_DEQ);
 		struct rte_hash_parameters hash_params = {
-			.name = NULL,
-			.entries = UINT_MAX,
+			.name = "asynclookup",
+			.entries = UINT16_MAX,
 			.reserved = 0,
 			.key_len = sizeof(unsigned long),
 			.hash_func = rte_hash_crc,	
 			.hash_func_init_val = 0,
 		};
 		client->rcvmsg_tbl= rte_hash_create(&hash_params);
+		if(client->rcvmsg_tbl == NULL){
+			rte_exit(EXIT_FAILURE,"error creating async message receive hash table");
+		}
 	}		
   client->channel_seq = client_queue*client_mc*rtc_clock::current_time();
   for(int i=0;i<num_quorums;i++) {
