@@ -96,10 +96,28 @@ typedef struct cb_t_{
 }cb_t;
 */
 
+	unsigned long tx_block_cnt;
+	unsigned long total_latency;
+	unsigned long tx_begin_time;
 
 void async_callback(int code, unsigned long seq){
-	BOOST_LOG_TRIVIAL(info) << "client response, code : "<< std::to_string(code) 
-		<< " seq : " << std::to_string(seq);
+	//BOOST_LOG_TRIVIAL(info) << "client response, code : "<< std::to_string(code) 
+	//	<< " seq : " << std::to_string(seq);
+	//if(code == REP_TIMEDOUT)
+	//	BOOST_LOG_TRIVIAL(fatal) << "response timed out, seq :  "<< std::to_string(seq); 
+	tx_block_cnt++;
+	if(tx_block_cnt > 5000) {
+		total_latency = (rtc_clock::current_time() - tx_begin_time);
+		BOOST_LOG_TRIVIAL(info) << "LOAD = "
+				<< ((double)1000000*tx_block_cnt)/total_latency
+				<< " tx/sec "
+				<< "LATENCY = "
+				<< ((double)total_latency)/tx_block_cnt
+				<< " us ";
+		tx_begin_time = rtc_clock::current_time();
+		tx_block_cnt   = 0;
+		total_latency  = 0;
+	}
 }
 
 int driver(void *arg)
@@ -119,14 +137,11 @@ int driver(void *arg)
 	int ret;
 
   int my_core;
-// 	cb_t *callback = new cb_t();
 	
-  //callback->total_latency = 0;
-  //callback->tx_block_cnt  = 0;
-  //callback->tx_block_begin = rtc_clock::current_time();
-	//callback->leader = dargs->leader;
-  //callback->tx_begin_time = rtc_clock::current_time();
-	 unsigned long payload = 0;
+  total_latency = 0;
+  tx_block_cnt  = 0;
+  tx_begin_time = rtc_clock::current_time();
+  unsigned long payload = 0;
   //const char *payload_env = getenv("PAYLOAD");
   //if(payload_env != NULL) {
     //callback->payload = atol(payload_env);
@@ -138,7 +153,6 @@ int driver(void *arg)
   int partition;
   while(true) {
     rpc_flags = 0;
-	sleep(1);
     my_core = dargs->me % executor_threads;
 		ret = make_rpc_async(handles[0],
 		  buffer,
@@ -147,9 +161,8 @@ int driver(void *arg)
 		  1UL << my_core,
 		  rpc_flags);
     if(ret == EMAX_INFLIGHT) {
-      BOOST_LOG_TRIVIAL(fatal) << "buffer full";
-			sleep(1);
-			continue;
+      //BOOST_LOG_TRIVIAL(fatal) << "buffer full";
+	  continue;
     }
   }
   return 0;
