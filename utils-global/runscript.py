@@ -10,6 +10,8 @@ DBG=1
 __gen_dir= 'gen_configs'
 __deploy_dir = '/home/pfernando/cyclone'
 __home = '/home/pfernando/deploy-cyclone/utils-global'
+__rte_sdk = '/home/pfernando/dpdk'
+__rte_nvmsdk = '/home/pfernando/nvm-dpdk'
 
 #workloads
 __echo = 'echo'
@@ -133,6 +135,10 @@ def deploy_bin(args):
     cmd = 'make clean'
     sh(cmd)
     cmd = 'make'
+    if m == __dram:
+        cmd += ' RTE_SSDK=' + __rte_sdk
+    elif m == __nvram:
+        cmd += ' RTE_SSDK=' + __rte_nvmsdk
     sh(cmd)
     cd(__home)
 
