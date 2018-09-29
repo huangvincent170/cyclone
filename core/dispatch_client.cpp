@@ -389,6 +389,7 @@ int exec(){
 				//__sync_synchronize();
 				continue;
 			}
+			resp->timestamp =  rtc_clock::current_time();  // record receive timestamp
 			ret = rte_hash_add_key_data(clnt->rcvmsg_tbl,(void *)&(resp->channel_seq), (void*)m);
 			if(ret != 0 ){
 				BOOST_LOG_TRIVIAL(fatal) << "Unable to add hash entry : "<< std::to_string(resp->channel_seq);
@@ -411,7 +412,9 @@ int exec(){
 		int payload_offset = sizeof(struct ether_hdr) + sizeof(struct ipv4_hdr);
 		rpc_t *lresp = (rpc_t *)rte_pktmbuf_mtod_offset(lookedup_m, void *, payload_offset);
 		int msg_size = m->data_len - payload_offset;
-		cur_m->cb(lresp->code == RPC_REP_OK? REP_SUCCESS:REP_FAILED,cur_m->channel_seq);
+		cur_m->cb(lresp->code == RPC_REP_OK? REP_SUCCESS:REP_FAILED,
+				cur_m->channel_seq,
+				lookedup_m->timestamp - cur_m->timestamp);
 		me_aseq = cur_m->channel_seq;
 		ret = rte_hash_del_key(clnt->rcvmsg_tbl,(const void*)&(cur_m->channel_seq));
 		if(ret < 0)
@@ -429,7 +432,7 @@ int exec(){
 	if((cur_m != NULL)  &&  ((rtc_clock::current_time() - cur_m->timestamp) >= timeout_msec)){
 		//BOOST_LOG_TRIVIAL(warning) << "timeout path";
 		//TOO:update server
-		cur_m->cb(REP_TIMEDOUT,cur_m->channel_seq); 
+		cur_m->cb(REP_TIMEDOUT,cur_m->channel_seq,timeout_msec); 
 		me_aseq = cur_m->channel_seq;
 		rte_free(cur_m);
 		clnt->sub_inflight();
