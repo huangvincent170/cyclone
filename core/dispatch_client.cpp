@@ -294,7 +294,7 @@ int64_t get_inflight()
 
 
 
-  int make_rpc_async(void *payload, int sz, void (*cb)(int,unsigned long), unsigned long core_mask, int flags)
+  int make_rpc_async(void *payload, int sz, void (*cb)(int, unsigned long, unsigned long), unsigned long core_mask, int flags)
   {
 		int retcode;
     int resp_sz;
@@ -414,7 +414,7 @@ int exec(){
 		int msg_size = m->data_len - payload_offset;
 		cur_m->cb(lresp->code == RPC_REP_OK? REP_SUCCESS:REP_FAILED,
 				cur_m->channel_seq,
-				lookedup_m->timestamp - cur_m->timestamp);
+				lresp->timestamp - cur_m->timestamp);
 		me_aseq = cur_m->channel_seq;
 		ret = rte_hash_del_key(clnt->rcvmsg_tbl,(const void*)&(cur_m->channel_seq));
 		if(ret < 0)
@@ -547,7 +547,7 @@ void* cyclone_client_init(int client_id,
 int make_rpc_async(void *handle, 
 		void *payload, 
 		int sz, 
-		void (*cb)(int, unsigned long), 
+		void (*cb)(int, unsigned long, unsigned long), 
 		unsigned long core_mask, 
 		int flags)
 {
