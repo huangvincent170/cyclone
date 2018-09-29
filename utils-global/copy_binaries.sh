@@ -16,10 +16,12 @@ do
 	ip=`cat ${i}/ip_address`
 	clush -w ${ip} rm -rf ${deploy_dir}/cyclone.git/test/echo_server
 	clush -w ${ip} rm -rf ${deploy_dir}/cyclone.git/test/echo_client
+	clush -w ${ip} rm -rf ${deploy_dir}/cyclone.git/test/echo_async_client
 	if [ -f "$i/launch_servers" ] ; then
 	    scp ../test/echo_server ${ip}:${deploy_dir}/cyclone.git/test/
 	else
 	    scp ../test/echo_client ${ip}:${deploy_dir}/cyclone.git/test/
+	    scp ../test/echo_async_client ${ip}:${deploy_dir}/cyclone.git/test/
 	fi
     fi
 done

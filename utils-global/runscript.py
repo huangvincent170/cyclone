@@ -40,6 +40,7 @@ parser.add_argument('-start', dest='start', action='store_true', default=False, 
 parser.add_argument('-stop', dest='stop', action='store_true', default=False, help="stop experiment")
 parser.add_argument('-w', dest='workload', default=__empty , help='workload name, eg: echo, pmemkv', choices=wl)
 parser.add_argument('-m', dest='memtype', default=__empty , help='memory type', choices=ml)
+parser.add_argument('-b', dest='bufsize', default=__empty , help='inflight buffer size')
 
 try:
     args = parser.parse_args()
@@ -101,6 +102,7 @@ def clean():
 def generate(args):
     w = args.workload
     m = args.memtype
+    b = args.bufsize
     #first we remove the old __gen_dir if any
     try:
         shutil.rmtree(__gen_dir)
@@ -109,7 +111,7 @@ def generate(args):
 
     print 'generating workload : ' + w +'for memory tytpe: ' + m
     cmd = 'python config_generator.py ../utils-arch-cluster/cluster-dpdk.ini ../utils-arch-cluster/example.ini '
-    cmd += './' + w + '.py ' + __gen_dir
+    cmd += './' + w + '.py ' + b + ' '+ __gen_dir
 
     sh(cmd)
 
@@ -166,9 +168,15 @@ def start_cyclone(args):
 
 
 def gather_output(args):
-    print 'collect output data'
+
+    w = args.workload
+    m = args.memtype
+    b = args.bufsize
+    
+    outdir = 'results/' + w + '/' + m + '/' + b
+    print 'collect output data and copying in to' + outdir
     cmd = './gather_output.sh '
-    cmd += __gen_dir + ' ' + __deploy_dir
+    cmd += __gen_dir + ' ' + __deploy_dir + ' ' + outdir
     sh(cmd)
     #version the ouput and move it to results dir
 
