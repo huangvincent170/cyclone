@@ -101,12 +101,10 @@ typedef struct cb_t_{
 	unsigned long tx_begin_time;
 
 void async_callback(int code, unsigned long seq, unsigned long msg_latency){
-	//BOOST_LOG_TRIVIAL(info) << "client response, code : "<< std::to_string(code) 
-	//	<< " seq : " << std::to_string(seq);
-	//if(code == REP_TIMEDOUT)
-	//	BOOST_LOG_TRIVIAL(fatal) << "response timed out, seq :  "<< std::to_string(seq); 
-	tx_block_cnt++;
-	total_latency += msg_latency;
+
+	if(code == REP_SUCCESS)
+		tx_block_cnt++;
+	total_latency += msg_latency; //timouts get added in to message latency
 	if(tx_block_cnt > 5000) {
 		unsigned long total_elapsed_time = (rtc_clock::current_time() - tx_begin_time);
 		BOOST_LOG_TRIVIAL(info) << "LOAD = "
