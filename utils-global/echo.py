@@ -55,7 +55,7 @@ def launch_cmds_client_gen(f, m, c, quorums, replicas, clients, machines, ports,
             cmd=cmd + str(replicas) + ' '
             cmd=cmd + str(clients) + ' '
             cmd=cmd + str(quorums) + ' '
-            cmd=cmd + 'config_cluster.ini config_quorum ' + str(ports) + ' ' + str(bufsize) + ' &> client_log' + str(0) + '&\n'
+            cmd=cmd + 'config_cluster.ini config_quorum ' + str(ports) + ' ' + str(bufsize) + ' &> client_log' + str(0) + ' &\n'
             f.write(cmd)
         
 def killall_cmds_gen(f):

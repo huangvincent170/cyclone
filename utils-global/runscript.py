@@ -123,8 +123,29 @@ def deploy_bin(args):
     w = args.workload
     m = args.memtype
     print 'building cyclone binaries'
+    
     cd('../core')
-    #cleaning and building core component
+    cmd = 'make clean'
+    sh(cmd)
+    cmd = 'make'
+    if m == __nvram:
+        cmd += ' CPPFLAGS=' + '\"-DPMEM_HUGE\"'
+    sh(cmd)
+    cd(__home)
+
+    cd('../test')
+    cmd = 'make clean'
+    sh(cmd)
+
+    cmd = 'make server'
+    if m == __dram:
+        cmd += ' RTE_SSDK=' + __rte_sdk
+    elif m == __nvram:
+        cmd += ' RTE_SSDK=' + __rte_nvmsdk
+    sh(cmd)
+    cd(__home)
+
+    cd('../core')
     cmd = 'make clean'
     sh(cmd)
     cmd = 'make'
@@ -132,13 +153,7 @@ def deploy_bin(args):
     cd(__home)
 
     cd('../test')
-    cmd = 'make clean'
-    sh(cmd)
-    cmd = 'make'
-    if m == __dram:
-        cmd += ' RTE_SSDK=' + __rte_sdk
-    elif m == __nvram:
-        cmd += ' RTE_SSDK=' + __rte_nvmsdk
+    cmd = 'make client'
     sh(cmd)
     cd(__home)
 
