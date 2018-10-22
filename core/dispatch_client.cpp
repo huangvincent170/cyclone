@@ -51,7 +51,8 @@ typedef struct rpc_client_st {
 	int me_aqueue;
   unsigned long channel_aseq;
 	struct rte_ring *to_lstnr;	
-	struct rte_hash *rcvmsg_tbl;
+	struct rte_hash *sentmsg_tbl;
+	std::vector<async_comm_st *> pendresponse_q;
 	volatile int64_t msg_inflight;
 	unsigned long max_inflight; 
 //	struct async_lstener_t_ *lstnr;
@@ -385,11 +386,21 @@ int exec(){
 	int32_t ret,available;
 	rte_mbuf *pkt_array[PKT_BURST];
 	rte_mbuf *m = NULL;
-	rte_mbuf *lookedup_m = NULL;
+	async_comm_st *lookedup_m = NULL;
 	async_comm_st_t *cur_m = NULL;
 	unsigned long msg_count = 0;
 	
 	for(; ;){
+		/* store sent request contexts in our lookup structure */
+		while(!rte_ring_sc_dequeue(clnt->to_lstnr,(void **)&cur_m)){
+			ret = rte_hash_add_key_data(clnt->sentmsg_tbl,(void *)&(cur_m->channel_seq), (void*)cur_m);
+			if(ret != 0 ){
+				BOOST_LOG_TRIVIAL(fatal) << "Unable to add hash entry : "<< std::to_string(cur_m->channel_seq);
+			}	
+			pendresponse_q->pushback((async_comm_st *)cur_m);
+		}
+
+	/* process received message */	
 	available = cyclone_rx_burst(0,
 				   clnt->me_aqueue,
 				   &pkt_array[0],
@@ -417,66 +428,43 @@ int exec(){
 			int payload_offset = sizeof(struct ether_hdr) + sizeof(struct ipv4_hdr);
 			rpc_t *resp = (rpc_t *)rte_pktmbuf_mtod_offset(m, void *, payload_offset);
 			int msg_size = m->data_len - payload_offset;
-			//admission control based on seq no. incoming seq-number should be >= current msg
-			if(resp->channel_seq && resp->channel_seq <= me_aseq){
-				//BOOST_LOG_TRIVIAL(warning) << "async seq mismatch, hence dropping packet, current seq : " 
-			    //		<< std::to_string(me_aseq) << " message seq : " 
-			    //		<< std::to_string(resp->channel_seq);
-				rte_pktmbuf_free(m);
-				//clnt->sub_inflight();
-				//__sync_synchronize();
-				continue;
-			}
-			resp->timestamp =  rtc_clock::current_time();  // record receive timestamp
-			ret = rte_hash_add_key_data(clnt->rcvmsg_tbl,(void *)&(resp->channel_seq), (void*)m);
-			if(ret != 0 ){
-				BOOST_LOG_TRIVIAL(fatal) << "Unable to add hash entry : "<< std::to_string(resp->channel_seq);
-			}	
-			//BOOST_LOG_TRIVIAL(fatal)<< "key added : "<< resp->channel_seq;
-			msg_count++;
-		}
-	}
-	//if(me_aseq%1000 == 0)
-    //		BOOST_LOG_TRIVIAL(info)<< "hash table entries : " << msg_count;
-	/* attend to next sent message */
-	if(cur_m == NULL && (rte_ring_sc_dequeue(clnt->to_lstnr,(void **)&cur_m) != 0) ){
-		continue; // no sent msgs
-	}
 
-	// lookup received msgs
-	ret = rte_hash_lookup_data(clnt->rcvmsg_tbl,(const void *)&(cur_m->channel_seq),(void**)&lookedup_m);
-	if(ret >= 0){	
-		//BOOST_LOG_TRIVIAL(warning) << "we have a message";
-		int payload_offset = sizeof(struct ether_hdr) + sizeof(struct ipv4_hdr);
-		rpc_t *lresp = (rpc_t *)rte_pktmbuf_mtod_offset(lookedup_m, void *, payload_offset);
-		int msg_size = m->data_len - payload_offset;
-		cur_m->cb(cur_m->cb_args, lresp->code == RPC_REP_OK? REP_SUCCESS:REP_FAILED,
-				cur_m->channel_seq,
+			ret = rte_hash_lookup_data(clnt->sentmsg_tbl,(const void *)&(resp->channel_seq),(void**)&lookedup_m);
+			if(ret >= 0){	
+
+				//BOOST_LOG_TRIVIAL(warning) << "we have a message";
+				lookedup_m->cb(lookedup_m->cb_args, lresp->code == RPC_REP_OK? REP_SUCCESS:REP_FAILED,
+				lookedup_m->channel_seq,
 				lresp->timestamp - cur_m->timestamp);
-		me_aseq = cur_m->channel_seq;
-		ret = rte_hash_del_key(clnt->rcvmsg_tbl,(const void*)&(cur_m->channel_seq));
-		if(ret < 0)
-			BOOST_LOG_TRIVIAL(fatal)<< "error removing key from the hashtable, key : "<< cur_m->channel_seq;
-		msg_count--;
-		rte_free(cur_m);
-		rte_pktmbuf_free(lookedup_m);
-		clnt->sub_inflight();
-		__sync_synchronize();
-		cur_m = NULL; // on to next one
-	}else if(ret == -EINVAL){
-			BOOST_LOG_TRIVIAL(fatal)<< "hash invalid params : "<< cur_m->channel_seq;
-	}
-	
-	if((cur_m != NULL)  &&  ((rtc_clock::current_time() - cur_m->timestamp) >= timeout_msec)){
-		//BOOST_LOG_TRIVIAL(warning) << "timeout path";
-		//TOO:update server
-		cur_m->cb(cur_m->cb_args, REP_TIMEDOUT,cur_m->channel_seq,timeout_msec); 
-		me_aseq = cur_m->channel_seq;
-		rte_free(cur_m);
-		clnt->sub_inflight();
-	  __sync_synchronize();
-		cur_m=NULL;
-	}
+				ret = rte_hash_del_key(clnt->rcvmsg_tbl,(const void*)&(cur_m->channel_seq));
+				if(ret < 0)
+					BOOST_LOG_TRIVIAL(fatal)<< "error removing key from the hashtable, key : "<< cur_m->channel_seq;
+				msg_count--;
+				rte_free(cur_m);
+				rte_pktmbuf_free(lookedup_m);
+				clnt->sub_inflight();
+				__sync_synchronize();
+
+			}else if(ret == NOTFOUND){
+				// drop the packet	
+				rte_pktmbuf_free(m);
+				continue;
+				
+			}else if(ret == -EINVAL){
+				BOOST_LOG_TRIVIAL(fatal)<< "hash invalid params : "<< cur_m->channel_seq;
+			}
+
+			/* check the pendingresponse_q for timeouts */
+			std::vector<async_comm_st *>::iterator it;
+			for(it = pendresponse_q->begin(); it != pendresponse_q->end(); it++){	
+				if(it->timestamp - rtc_clock::current_time() >= timeout_msec){
+						//BOOST_LOG_TRIVIAL(warning) << "timeout path";
+						it->cb(it->cb_args, REP_TIMEDOUT,it->channel_seq,timeout_msec); 
+						rte_free(*it);
+						// remote from vector and hash
+						clnt->sub_inflight();
+						__sync_synchronize();
+			}
 	
 	}
 }
