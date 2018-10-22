@@ -37,6 +37,7 @@
 #include <unistd.h>
 #include <time.h>
 #include <assert.h>
+#include <pthread.h>
 #include <boost/property_tree/ini_parser.hpp>
 #include <boost/property_tree/ptree.hpp>
 #include "../core/clock.hpp"
@@ -46,7 +47,21 @@
 
 #define NUM_QUEUES 2 // 2 qpairs for sync and async client modes
 
+unsigned long client_id = 0UL; // wrap around at MAX
+std::vector<unsigned long> *replayq;
+std::map<unsigned long, unsigned long> *clnt_map;
+static pthread_mutex lock = PTHREAD_MUTEX_INITIALIZER;
+
+unsigned long tx_block_cnt;
+unsigned long total_latency;
+unsigned long tx_begin_time;
+
 int driver(void *arg);
+
+typedef struct replay_st{
+	unsigned long client_id;
+	unsigned long latency;
+}relay_t;
 
 typedef struct driver_args_st {
   int leader;
@@ -63,47 +78,12 @@ typedef struct driver_args_st {
 } driver_args_t;
 
 
-/*
-typedef struct cb_t_{
 
-	unsigned long order;
-	unsigned long tx_block_cnt;
-	unsigned long tx_block_begin;
-	unsigned long total_latency;
-	unsigned int leader;
-	unsigned long tx_begin_time;
-	unsigned long payload;
-	
-	void async_callback(int code, unsigned long seq){
-		BOOST_LOG_TRIVIAL(info) << "client response" << std::to_string(seq);
-		tx_block_cnt++;
-	  if(leader) {
-      if(tx_block_cnt > 5000) {
-			total_latency = (rtc_clock::current_time() - tx_begin_time);
-			BOOST_LOG_TRIVIAL(info) << "LOAD = "
-				<< ((double)1000000*tx_block_cnt)/total_latency
-				<< " tx/sec "
-				<< "LATENCY = "
-				<< ((double)total_latency)/tx_block_cnt
-				<< " us ";
-			tx_begin_time = rtc_clock::current_time();
-			tx_block_cnt   = 0;
-			total_latency  = 0;
-      }
-    }
-	}
-		
-}cb_t;
-*/
-
-	unsigned long tx_block_cnt;
-	unsigned long total_latency;
-	unsigned long tx_begin_time;
-
-void async_callback(int code, unsigned long seq, unsigned long msg_latency){
+void async_callback(int code, unsigned long clnt_id, unsigned long msg_latency){
 
 	if(code == REP_SUCCESS)
 		tx_block_cnt++;
+
 	total_latency += msg_latency; //timouts get added in to message latency
 	if(tx_block_cnt > 5000) {
 		unsigned long total_elapsed_time = (rtc_clock::current_time() - tx_begin_time);
@@ -179,6 +159,10 @@ int main(int argc, const char *argv[]) {
   int client_id_stop  = atoi(argv[2]);
   driver_args_t *dargs;
   void **prev_handles;
+
+  replayq = new std::vector<unsigned long>();
+  clnt_map = new std::map<unsigned long, unsigned long>();
+
   cyclone_network_init(argv[7], 1, atoi(argv[3]), 2 + client_id_stop - client_id_start);
   driver_args_t ** dargs_array = 
     (driver_args_t **)malloc((client_id_stop - client_id_start)*sizeof(driver_args_t *));
@@ -216,4 +200,5 @@ int main(int argc, const char *argv[]) {
 		cyclone_launch_clients(dargs_array[me-client_id_start]->handles[0],driver, dargs_array[me-client_id_start], 1+me-client_id_start);
   }
 	rte_eal_mp_wait_lcore();
+	// free vector and map
 }
