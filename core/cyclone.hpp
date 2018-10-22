@@ -60,7 +60,7 @@ typedef struct rpc_st {
   int quorum_term;
   unsigned long channel_seq;
   unsigned long timestamp; // For tracing
-  void (*cb)(int,unsigned long, unsigned long); // move this different struct
+  //void (*cb)(int,unsigned long, unsigned long); // move this different struct
 } __attribute__((packed)) rpc_t; // Used for both requests and replies
 
 //////// Addendum for inter-core rendevouz

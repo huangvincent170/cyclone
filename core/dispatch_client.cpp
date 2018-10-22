@@ -16,6 +16,20 @@ const static unsigned int SYNC_REQUEST = 1 << 11;
 const static unsigned int ASYNC_REQUEST = 1 << 10;
 
 
+
+/* comm struct between async client sender/receiver */
+
+typedef struct async_comm_st{
+	int payload_sz;
+	unsigned long channel_seq;
+	unsigned long timestamp;
+	void (*cb)(void *, int, unsigned long, unsigned long);
+	void *cb_args;	
+}async_comm_t;
+
+
+
+
 extern dpdk_context_t *global_dpdk_context;
 typedef struct rpc_client_st {
   int me;
@@ -92,7 +106,7 @@ typedef struct rpc_client_st {
     return resp_sz;
   }
 
-  void send_to_server(rpc_t *pkt, int sz, int quorum_id, int flags)
+  void send_to_server(rpc_t *pkt,int sz, int quorum_id, int flags)
   {
     rte_mbuf *mb = rte_pktmbuf_alloc(global_dpdk_context->mempools[me_queue]);
     if(mb == NULL) {
@@ -107,26 +121,38 @@ typedef struct rpc_client_st {
 				    pkt,
 				    sz);
 
-		if(flags & ASYNC_REQUEST){
-			rpc_t *com_ring_pkt = (rpc_t *)rte_malloc("comm.msg",sizeof(rpc_t),0);
-			if(com_ring_pkt == NULL){
-				BOOST_LOG_TRIVIAL(fatal) << "Failed rpc_t allocate";
-			}
-			rte_memcpy(com_ring_pkt,pkt,sizeof(rpc_t));
-			if(rte_ring_sp_enqueue(to_lstnr, (void *)com_ring_pkt) == -ENOBUFS ){
+			int e = cyclone_tx(global_dpdk_context, mb, me_queue);
+			if(e) 
+				BOOST_LOG_TRIVIAL(warning) << "Client failed to send sync request to server";
+  }
+
+
+  void send_to_server_async(rpc_t *pkt, async_comm_st *comm_pkt, int sz, int quorum_id, int flags)
+  {
+    rte_mbuf *mb = rte_pktmbuf_alloc(global_dpdk_context->mempools[me_queue]);
+    if(mb == NULL) {
+      BOOST_LOG_TRIVIAL(fatal) << "Out of mbufs for send to server";
+    }
+    pkt->quorum_term = terms[quorum_id];
+    cyclone_prep_mbuf_client2server(global_dpdk_context,
+				    queue2port(quorum_q(quorum_id, q_dispatcher), server_ports),
+				    router->replica_mc(server),
+				    queue_index_at_port(quorum_q(quorum_id, q_dispatcher), server_ports),
+				    mb,
+				    pkt,
+				    sz);
+
+			comm_pkt->channel_seq = pkt->channel_seq;
+			comm_pkt->timestamp = rtc_clock::current_time();
+
+			if(rte_ring_sp_enqueue(to_lstnr, (void *)comm_pkt) == -ENOBUFS ){
 				BOOST_LOG_TRIVIAL(fatal) << "Failed to enqueue listner queue";	
 				exit(-1);
 			}
 			int e = cyclone_tx(global_dpdk_context, mb, me_aqueue);
 			if(e) 
 				BOOST_LOG_TRIVIAL(warning) << "Client failed to send async request to server";
-		}else{
-			int e = cyclone_tx(global_dpdk_context, mb, me_queue);
-			if(e) 
-				BOOST_LOG_TRIVIAL(warning) << "Client failed to send sync request to server";
-    }
-  }
-
+	}
 
   
   int set_server()
@@ -294,7 +320,10 @@ int64_t get_inflight()
 
 
 
-  int make_rpc_async(void *payload, int sz, void (*cb)(int, unsigned long, unsigned long), unsigned long core_mask, int flags)
+  int make_rpc_async(void *payload, int sz, 
+			void (*cb)(int, unsigned long, unsigned long), 
+			void *cb_args, 
+			unsigned long core_mask, int flags)
   {
 		int retcode;
     int resp_sz;
@@ -320,7 +349,16 @@ int64_t get_inflight()
 			} else {
 				packet_out->payload_sz = sz;
 				memcpy(packet_out + 1, payload, sz);
-				send_to_server(packet_out, sizeof(rpc_t) + sz, quorum_id, ASYNC_REQUEST);
+
+				/* populate comm_ring structure */
+				async_comm_t *comm_pkt = (async_comm_st *)rte_malloc("comm.msg",sizeof(async_comm_st),0);
+				if(comm_pkt == NULL){
+					BOOST_LOG_TRIVIAL(fatal) << "Failed rpc_t allocate";
+				}
+				comm_pkt->cb = cb;
+				comm_pkt->cb_arg = cb_args;
+
+				send_to_server(packet_out, sizeof(rpc_t) + sz, quorum_id, ASYNC_REQUEST, comm_pkt);
 				add_inflight();
 			//	get_inflight();
 			//	BOOST_LOG_TRIVIAL(info)<< "async message sent, seq no : " 
@@ -348,7 +386,7 @@ int exec(){
 	rte_mbuf *pkt_array[PKT_BURST];
 	rte_mbuf *m = NULL;
 	rte_mbuf *lookedup_m = NULL;
-	rpc_t *cur_m = NULL;
+	async_comm_st_t *cur_m = NULL;
 	unsigned long msg_count = 0;
 	
 	for(; ;){
@@ -412,7 +450,7 @@ int exec(){
 		int payload_offset = sizeof(struct ether_hdr) + sizeof(struct ipv4_hdr);
 		rpc_t *lresp = (rpc_t *)rte_pktmbuf_mtod_offset(lookedup_m, void *, payload_offset);
 		int msg_size = m->data_len - payload_offset;
-		cur_m->cb(lresp->code == RPC_REP_OK? REP_SUCCESS:REP_FAILED,
+		cur_m->cb(cur_m->cb_args, lresp->code == RPC_REP_OK? REP_SUCCESS:REP_FAILED,
 				cur_m->channel_seq,
 				lresp->timestamp - cur_m->timestamp);
 		me_aseq = cur_m->channel_seq;
@@ -432,7 +470,7 @@ int exec(){
 	if((cur_m != NULL)  &&  ((rtc_clock::current_time() - cur_m->timestamp) >= timeout_msec)){
 		//BOOST_LOG_TRIVIAL(warning) << "timeout path";
 		//TOO:update server
-		cur_m->cb(REP_TIMEDOUT,cur_m->channel_seq,timeout_msec); 
+		cur_m->cb(cur_m->cb_args, REP_TIMEDOUT,cur_m->channel_seq,timeout_msec); 
 		me_aseq = cur_m->channel_seq;
 		rte_free(cur_m);
 		clnt->sub_inflight();

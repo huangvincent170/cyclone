@@ -40,6 +40,7 @@
 #include <pthread.h>
 #include <boost/property_tree/ini_parser.hpp>
 #include <boost/property_tree/ptree.hpp>
+#include <boost/bind.hpp>
 #include "../core/clock.hpp"
 #include "../core/logging.hpp"
 #include "../core/libcyclone.hpp"
@@ -47,10 +48,10 @@
 
 #define NUM_QUEUES 2 // 2 qpairs for sync and async client modes
 
-unsigned long client_id = 0UL; // wrap around at MAX
+unsigned long request_id = 0UL; // wrap around at MAX
 std::vector<unsigned long> *replayq;
 std::map<unsigned long, unsigned long> *clnt_map;
-static pthread_mutex lock = PTHREAD_MUTEX_INITIALIZER;
+static pthread_mutex_t lock = PTHREAD_MUTEX_INITIALIZER;
 
 unsigned long tx_block_cnt;
 unsigned long total_latency;
@@ -77,13 +78,16 @@ typedef struct driver_args_st {
   }
 } driver_args_t;
 
+typedef struct cb_st{
+	unsigned long request_id;
+}cb_t;
 
 
-void async_callback(int code, unsigned long clnt_id, unsigned long msg_latency){
-
+void async_callback(void *args, int code, unsigned long msg_latency){
+	cb_t *cb = (cb_t *)args;
 	if(code == REP_SUCCESS)
 		tx_block_cnt++;
-
+	free(cb);
 	total_latency += msg_latency; //timouts get added in to message latency
 	if(tx_block_cnt > 5000) {
 		unsigned long total_elapsed_time = (rtc_clock::current_time() - tx_begin_time);
@@ -98,6 +102,7 @@ void async_callback(int code, unsigned long clnt_id, unsigned long msg_latency){
 		tx_begin_time = rtc_clock::current_time();
 	}
 }
+
 
 int driver(void *arg)
 {
@@ -130,19 +135,25 @@ int driver(void *arg)
 
 	srand(rtc_clock::current_time());
   int partition;
-  while(true) {
+	int newcb  = 1;
+  for( ; ; ) {
     rpc_flags = 0;
     my_core = dargs->me % executor_threads;
-		ret = make_rpc_async(handles[0],
-		  buffer,
-		  payload,
-		  async_callback,
-		  1UL << my_core,
-		  rpc_flags);
-    if(ret == EMAX_INFLIGHT) {
-      //BOOST_LOG_TRIVIAL(fatal) << "buffer full";
-	  continue;
-    }
+		cb_t *cb_args = (cb_t *)malloc(sizeof(cb_t));;
+		cb_args->request_id =request_id++;
+		do{
+			ret = make_rpc_async(handles[0],
+				buffer,
+				payload,
+				async_callback,
+				(void *)cb_args,
+				1UL << my_core,
+				rpc_flags);
+			if(ret == EMAX_INFLIGHT) {
+				//BOOST_LOG_TRIVIAL(fatal) << "buffer full";
+				continue;
+			}
+		}while(!ret);
   }
   return 0;
 }
