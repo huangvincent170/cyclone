@@ -51,8 +51,8 @@ typedef struct rpc_client_st {
 	int me_aqueue;
   unsigned long channel_aseq;
 	struct rte_ring *to_lstnr;	
-	struct rte_hash *sentmsg_tbl;
-	std::vector<async_comm_st *> pendresponse_q;
+	//struct rte_hash *sentmsg_tbl;
+	std::map<unsigned long, async_comm_st *> *pendresponse_map; // ordered map 
 	volatile int64_t msg_inflight;
 	unsigned long max_inflight; 
 //	struct async_lstener_t_ *lstnr;
@@ -343,8 +343,8 @@ int64_t get_inflight()
       packet_out->channel_seq = channel_aseq++;
       packet_out->client_id   = me;
       packet_out->requestor   = me_mc;
-	  packet_out->timestamp	  = rtc_clock::current_time();
-	  packet_out->cb		  = cb;
+			packet_out->timestamp	  = rtc_clock::current_time();
+			packet_out->cb		  = cb;
       if((core_mask & (core_mask - 1)) != 0) {
 				BOOST_LOG_TRIVIAL(info) << "gang operations not supported";	      
 			} else {
@@ -389,15 +389,12 @@ int exec(){
 	async_comm_st *lookedup_m = NULL;
 	async_comm_st_t *cur_m = NULL;
 	unsigned long msg_count = 0;
+	std::map<unsigned long, async_comm_st *>::iterator it;
 	
 	for(; ;){
-		/* store sent request contexts in our lookup structure */
+		/* store, sent request contexts in our lookup structure */
 		while(!rte_ring_sc_dequeue(clnt->to_lstnr,(void **)&cur_m)){
-			ret = rte_hash_add_key_data(clnt->sentmsg_tbl,(void *)&(cur_m->channel_seq), (void*)cur_m);
-			if(ret != 0 ){
-				BOOST_LOG_TRIVIAL(fatal) << "Unable to add hash entry : "<< std::to_string(cur_m->channel_seq);
-			}	
-			pendresponse_q->pushback((async_comm_st *)cur_m);
+			pendresponse_map.insert(std::pair<unsigned long, async_comm_st *>(cur_m->channel_seq,cur_m));
 		}
 
 	/* process received message */	
@@ -429,38 +426,34 @@ int exec(){
 			rpc_t *resp = (rpc_t *)rte_pktmbuf_mtod_offset(m, void *, payload_offset);
 			int msg_size = m->data_len - payload_offset;
 
-			ret = rte_hash_lookup_data(clnt->sentmsg_tbl,(const void *)&(resp->channel_seq),(void**)&lookedup_m);
-			if(ret >= 0){	
-
+			it = pendresponse_map->find(resp->channel_seq);
+			if(it != pendresponse_map->end()){	
+				lookedup_m = it->second;
 				//BOOST_LOG_TRIVIAL(warning) << "we have a message";
 				lookedup_m->cb(lookedup_m->cb_args, lresp->code == RPC_REP_OK? REP_SUCCESS:REP_FAILED,
 				lookedup_m->channel_seq,
-				lresp->timestamp - cur_m->timestamp);
-				ret = rte_hash_del_key(clnt->rcvmsg_tbl,(const void*)&(cur_m->channel_seq));
-				if(ret < 0)
-					BOOST_LOG_TRIVIAL(fatal)<< "error removing key from the hashtable, key : "<< cur_m->channel_seq;
+				rtc_clock::current_time() - lookedup_m->timestamp);
+				pendresponse_map->erase(it);	
 				msg_count--;
-				rte_free(cur_m);
-				rte_pktmbuf_free(lookedup_m);
+				rte_free(lookedup_m);
+				rte_pktmbuf_free(m);
 				clnt->sub_inflight();
 				__sync_synchronize();
-
-			}else if(ret == NOTFOUND){
+			}else{
 				// drop the packet	
 				rte_pktmbuf_free(m);
 				continue;
-				
-			}else if(ret == -EINVAL){
-				BOOST_LOG_TRIVIAL(fatal)<< "hash invalid params : "<< cur_m->channel_seq;
-			}
+			}	
 
-			/* check the pendingresponse_q for timeouts */
-			std::vector<async_comm_st *>::iterator it;
-			for(it = pendresponse_q->begin(); it != pendresponse_q->end(); it++){	
+			/* check the pendingresponse_map for timeouts. We travers an ordered map. The ordering can go wrong
+			 * when the seq get wrapped around at the ulong_max. But, there is no correctness issue and we are 
+			 * unlikely hit it as a performance issue during benchmark runs */
+			for(it = pendresponse_map->begin(); it != pendresponse_map->end(); it++){	
 				if(it->timestamp - rtc_clock::current_time() >= timeout_msec){
 						//BOOST_LOG_TRIVIAL(warning) << "timeout path";
-						it->cb(it->cb_args, REP_TIMEDOUT,it->channel_seq,timeout_msec); 
-						rte_free(*it);
+						it->cb(it->seocnd->cb_args, REP_TIMEDOUT,it->second->channel_seq,timeout_msec); 
+						rte_free(it->second);
+						pendresponse_map->erase(it);
 						// remote from vector and hash
 						clnt->sub_inflight();
 						__sync_synchronize();
@@ -548,7 +541,7 @@ void* cyclone_client_init(int client_id,
 							 65536,
 							 rte_socket_id(),
 							 RING_F_SC_DEQ);
-		struct rte_hash_parameters hash_params = {
+		/* struct rte_hash_parameters hash_params = {
 			.name = "asynclookup",
 			.entries = UINT16_MAX,
 			.reserved = 0,
@@ -560,7 +553,8 @@ void* cyclone_client_init(int client_id,
 		if(client->rcvmsg_tbl == NULL){
 			rte_exit(EXIT_FAILURE,"error creating async message receive hash table");
 		}
-	}		
+	}	*/	
+	client->pendresponse_map = new std::map<unsigned long, async_comm_st *>();
   client->channel_seq = client_queue*client_mc*rtc_clock::current_time();
   for(int i=0;i<num_quorums;i++) {
     client->server = 0;
