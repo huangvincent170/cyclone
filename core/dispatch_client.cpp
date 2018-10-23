@@ -52,7 +52,7 @@ typedef struct rpc_client_st {
   unsigned long channel_aseq;
 	struct rte_ring *to_lstnr;	
 	//struct rte_hash *sentmsg_tbl;
-	std::map<unsigned long, async_comm_st *> *pendresponse_map; // ordered map 
+	std::map<unsigned long, async_comm_t *> *pendresponse_map; // ordered map 
 	volatile int64_t msg_inflight;
 	unsigned long max_inflight; 
 //	struct async_lstener_t_ *lstnr;
@@ -128,7 +128,7 @@ typedef struct rpc_client_st {
   }
 
 
-  void send_to_server_async(rpc_t *pkt, async_comm_st *comm_pkt, int sz, int quorum_id, int flags)
+  void send_to_server_async(rpc_t *pkt, int sz, int quorum_id, int flags, async_comm_t *comm_pkt)
   {
     rte_mbuf *mb = rte_pktmbuf_alloc(global_dpdk_context->mempools[me_queue]);
     if(mb == NULL) {
@@ -322,7 +322,7 @@ int64_t get_inflight()
 
 
   int make_rpc_async(void *payload, int sz, 
-			void (*cb)(int, unsigned long, unsigned long), 
+			void (*cb)(void *, int, unsigned long, unsigned long), 
 			void *cb_args, 
 			unsigned long core_mask, int flags)
   {
@@ -344,7 +344,7 @@ int64_t get_inflight()
       packet_out->client_id   = me;
       packet_out->requestor   = me_mc;
 			packet_out->timestamp	  = rtc_clock::current_time();
-			packet_out->cb		  = cb;
+			//packet_out->cb		  = cb;
       if((core_mask & (core_mask - 1)) != 0) {
 				BOOST_LOG_TRIVIAL(info) << "gang operations not supported";	      
 			} else {
@@ -352,14 +352,14 @@ int64_t get_inflight()
 				memcpy(packet_out + 1, payload, sz);
 
 				/* populate comm_ring structure */
-				async_comm_t *comm_pkt = (async_comm_st *)rte_malloc("comm.msg",sizeof(async_comm_st),0);
+				async_comm_t *comm_pkt = (async_comm_t *)rte_malloc("comm.msg",sizeof(async_comm_t),0);
 				if(comm_pkt == NULL){
 					BOOST_LOG_TRIVIAL(fatal) << "Failed rpc_t allocate";
 				}
 				comm_pkt->cb = cb;
-				comm_pkt->cb_arg = cb_args;
+				comm_pkt->cb_args = cb_args;
 
-				send_to_server(packet_out, sizeof(rpc_t) + sz, quorum_id, ASYNC_REQUEST, comm_pkt);
+				send_to_server_async(packet_out, sizeof(rpc_t) + sz, quorum_id, ASYNC_REQUEST, comm_pkt);
 				add_inflight();
 			//	get_inflight();
 			//	BOOST_LOG_TRIVIAL(info)<< "async message sent, seq no : " 
@@ -386,24 +386,24 @@ int exec(){
 	int32_t ret,available;
 	rte_mbuf *pkt_array[PKT_BURST];
 	rte_mbuf *m = NULL;
-	async_comm_st *lookedup_m = NULL;
-	async_comm_st_t *cur_m = NULL;
+	async_comm_t *lookedup_m = NULL;
+	async_comm_t *cur_m = NULL;
 	unsigned long msg_count = 0;
-	std::map<unsigned long, async_comm_st *>::iterator it;
+	std::map<unsigned long, async_comm_t *>::iterator it;
 	
 	for(; ;){
 		/* store, sent request contexts in our lookup structure */
 		while(!rte_ring_sc_dequeue(clnt->to_lstnr,(void **)&cur_m)){
-			pendresponse_map.insert(std::pair<unsigned long, async_comm_st *>(cur_m->channel_seq,cur_m));
+			clnt->pendresponse_map->insert(std::pair<unsigned long, async_comm_t *>(cur_m->channel_seq,cur_m));
 		}
 
-	/* process received message */	
-	available = cyclone_rx_burst(0,
+		/* process received message */	
+		available = cyclone_rx_burst(0,
 				   clnt->me_aqueue,
 				   &pkt_array[0],
 				   PKT_BURST);
-	if(available ){
-		for(int i=0;i<available;i++) {
+		if(available ){
+			for(int i=0;i<available;i++) {
 			m = pkt_array[i];
 			struct ether_hdr *e = rte_pktmbuf_mtod(m, struct ether_hdr *); 
 			struct ipv4_hdr *ip = (struct ipv4_hdr *)(e + 1); 
@@ -426,14 +426,14 @@ int exec(){
 			rpc_t *resp = (rpc_t *)rte_pktmbuf_mtod_offset(m, void *, payload_offset);
 			int msg_size = m->data_len - payload_offset;
 
-			it = pendresponse_map->find(resp->channel_seq);
-			if(it != pendresponse_map->end()){	
+			it = clnt->pendresponse_map->find(resp->channel_seq);
+			if(it != clnt->pendresponse_map->end()){	
 				lookedup_m = it->second;
 				//BOOST_LOG_TRIVIAL(warning) << "we have a message";
-				lookedup_m->cb(lookedup_m->cb_args, lresp->code == RPC_REP_OK? REP_SUCCESS:REP_FAILED,
+				lookedup_m->cb(lookedup_m->cb_args, resp->code == RPC_REP_OK? REP_SUCCESS:REP_FAILED,
 				lookedup_m->channel_seq,
 				rtc_clock::current_time() - lookedup_m->timestamp);
-				pendresponse_map->erase(it);	
+				clnt->pendresponse_map->erase(it);	
 				msg_count--;
 				rte_free(lookedup_m);
 				rte_pktmbuf_free(m);
@@ -444,24 +444,23 @@ int exec(){
 				rte_pktmbuf_free(m);
 				continue;
 			}	
-
+			}
+		}
 			/* check the pendingresponse_map for timeouts. We travers an ordered map. The ordering can go wrong
 			 * when the seq get wrapped around at the ulong_max. But, there is no correctness issue and we are 
 			 * unlikely hit it as a performance issue during benchmark runs */
-			for(it = pendresponse_map->begin(); it != pendresponse_map->end(); it++){	
-				if(it->timestamp - rtc_clock::current_time() >= timeout_msec){
+			for(it = clnt->pendresponse_map->begin(); it != clnt->pendresponse_map->end(); it++){	
+				if(it->second->timestamp - rtc_clock::current_time() >= timeout_msec){
 						//BOOST_LOG_TRIVIAL(warning) << "timeout path";
-						it->cb(it->seocnd->cb_args, REP_TIMEDOUT,it->second->channel_seq,timeout_msec); 
+						it->second->cb(it->second->cb_args, REP_TIMEDOUT,it->second->channel_seq,timeout_msec); 
 						rte_free(it->second);
-						pendresponse_map->erase(it);
-						// remote from vector and hash
+						clnt->pendresponse_map->erase(it);
 						clnt->sub_inflight();
 						__sync_synchronize();
+				}
 			}
-	
 	}
 }
-
 }async_lstener_t;
 
 
@@ -541,6 +540,7 @@ void* cyclone_client_init(int client_id,
 							 65536,
 							 rte_socket_id(),
 							 RING_F_SC_DEQ);
+		client->pendresponse_map = new std::map<unsigned long, async_comm_t *>();
 		/* struct rte_hash_parameters hash_params = {
 			.name = "asynclookup",
 			.entries = UINT16_MAX,
@@ -552,10 +552,9 @@ void* cyclone_client_init(int client_id,
 		client->rcvmsg_tbl= rte_hash_create(&hash_params);
 		if(client->rcvmsg_tbl == NULL){
 			rte_exit(EXIT_FAILURE,"error creating async message receive hash table");
-		}
-	}	*/	
-	client->pendresponse_map = new std::map<unsigned long, async_comm_st *>();
-  client->channel_seq = client_queue*client_mc*rtc_clock::current_time();
+		} */
+	}		
+	client->channel_seq = client_queue*client_mc*rtc_clock::current_time();
   for(int i=0;i<num_quorums;i++) {
     client->server = 0;
     client->update_server("Initialization");
@@ -567,7 +566,8 @@ void* cyclone_client_init(int client_id,
 int make_rpc_async(void *handle, 
 		void *payload, 
 		int sz, 
-		void (*cb)(int, unsigned long, unsigned long), 
+		void (*cb)(void *, int, unsigned long, unsigned long), 
+		void *cb_args,
 		unsigned long core_mask, 
 		int flags)
 {
@@ -578,7 +578,7 @@ int make_rpc_async(void *handle,
 			     << " DISP_MAX_MSGSIZE = " << DISP_MAX_MSGSIZE;
     exit(-1);
   }
-  return client->make_rpc_async(payload, sz, cb, core_mask, flags);
+  return client->make_rpc_async(payload, sz, cb, cb_args, core_mask, flags);
 }
 
 
