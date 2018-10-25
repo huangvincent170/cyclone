@@ -128,8 +128,8 @@ int make_rpc(void *handle,
 int make_rpc_async(void *handle,
 	     void *payload,
 	     int sz,
-	     void (*cb)(void *,int,unsigned long, unsigned long),
-			 void *,
+	     void (*cb)(void *,int,unsigned long),
+		 void *,
 	     unsigned long core_mask,
 	     int rpc_flags);
 

@@ -23,7 +23,7 @@ typedef struct async_comm_st{
 	int payload_sz;
 	unsigned long channel_seq;
 	unsigned long timestamp;
-	void (*cb)(void *, int, unsigned long, unsigned long);
+	void (*cb)(void *, int, unsigned long);
 	void *cb_args;	
 }async_comm_t;
 
@@ -322,7 +322,7 @@ int64_t get_inflight()
 
 
   int make_rpc_async(void *payload, int sz, 
-			void (*cb)(void *, int, unsigned long, unsigned long), 
+			void (*cb)(void *, int, unsigned long), 
 			void *cb_args, 
 			unsigned long core_mask, int flags)
   {
@@ -431,7 +431,6 @@ int exec(){
 				lookedup_m = it->second;
 				//BOOST_LOG_TRIVIAL(warning) << "we have a message";
 				lookedup_m->cb(lookedup_m->cb_args, resp->code == RPC_REP_OK? REP_SUCCESS:REP_FAILED,
-				lookedup_m->channel_seq,
 				rtc_clock::current_time() - lookedup_m->timestamp);
 				clnt->pendresponse_map->erase(it);	
 				msg_count--;
@@ -452,7 +451,7 @@ int exec(){
 			for(it = clnt->pendresponse_map->begin(); it != clnt->pendresponse_map->end(); it++){	
 				if(it->second->timestamp - rtc_clock::current_time() >= timeout_msec){
 						//BOOST_LOG_TRIVIAL(warning) << "timeout path";
-						it->second->cb(it->second->cb_args, REP_TIMEDOUT,it->second->channel_seq,timeout_msec); 
+						it->second->cb(it->second->cb_args, REP_TIMEDOUT,timeout_msec); 
 						rte_free(it->second);
 						clnt->pendresponse_map->erase(it);
 						clnt->sub_inflight();
@@ -566,7 +565,7 @@ void* cyclone_client_init(int client_id,
 int make_rpc_async(void *handle, 
 		void *payload, 
 		int sz, 
-		void (*cb)(void *, int, unsigned long, unsigned long), 
+		void (*cb)(void *, int, unsigned long), 
 		void *cb_args,
 		unsigned long core_mask, 
 		int flags)
