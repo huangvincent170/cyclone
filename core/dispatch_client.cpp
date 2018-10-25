@@ -388,12 +388,12 @@ int exec(){
 	rte_mbuf *m = NULL;
 	async_comm_t *lookedup_m = NULL;
 	async_comm_t *cur_m = NULL;
-	unsigned long msg_count = 0;
 	std::map<unsigned long, async_comm_t *>::iterator it;
 	
 	for(; ;){
 		/* store, sent request contexts in our lookup structure */
 		while(!rte_ring_sc_dequeue(clnt->to_lstnr,(void **)&cur_m)){
+			//BOOST_LOG_TRIVIAL(info) << "Message sent : " << std::to_string(cur_m->channel_seq);
 			clnt->pendresponse_map->insert(std::pair<unsigned long, async_comm_t *>(cur_m->channel_seq,cur_m));
 		}
 
@@ -426,6 +426,7 @@ int exec(){
 			rpc_t *resp = (rpc_t *)rte_pktmbuf_mtod_offset(m, void *, payload_offset);
 			int msg_size = m->data_len - payload_offset;
 
+			//BOOST_LOG_TRIVIAL(info) << "Response received : " << std::to_string(resp->channel_seq);
 			it = clnt->pendresponse_map->find(resp->channel_seq);
 			if(it != clnt->pendresponse_map->end()){	
 				lookedup_m = it->second;
@@ -433,15 +434,14 @@ int exec(){
 				lookedup_m->cb(lookedup_m->cb_args, resp->code == RPC_REP_OK? REP_SUCCESS:REP_FAILED,
 				rtc_clock::current_time() - lookedup_m->timestamp);
 				clnt->pendresponse_map->erase(it);	
-				msg_count--;
 				rte_free(lookedup_m);
 				rte_pktmbuf_free(m);
 				clnt->sub_inflight();
 				__sync_synchronize();
 			}else{
 				// drop the packet	
+				//BOOST_LOG_TRIVIAL(info) << "Message not found  : " << std::to_string(resp->channel_seq);
 				rte_pktmbuf_free(m);
-				continue;
 			}	
 			}
 		}
@@ -449,8 +449,8 @@ int exec(){
 			 * when the seq get wrapped around at the ulong_max. But, there is no correctness issue and we are 
 			 * unlikely hit it as a performance issue during benchmark runs */
 			for(it = clnt->pendresponse_map->begin(); it != clnt->pendresponse_map->end(); it++){	
-				if(it->second->timestamp - rtc_clock::current_time() >= timeout_msec){
-						//BOOST_LOG_TRIVIAL(warning) << "timeout path";
+				if(rtc_clock::current_time() - it->second->timestamp >= timeout_msec){
+						//BOOST_LOG_TRIVIAL(info) << "Message removed : " << it->first;
 						it->second->cb(it->second->cb_args, REP_TIMEDOUT,timeout_msec); 
 						rte_free(it->second);
 						clnt->pendresponse_map->erase(it);
