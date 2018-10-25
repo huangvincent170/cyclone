@@ -84,10 +84,10 @@ typedef struct cb_st{
 
 
 void async_callback(void *args, int code, unsigned long msg_latency){
-	cb_t *cb = (cb_t *)args;
+	//cb_t *cb = (cb_t *)args;
 	if(code == REP_SUCCESS)
 		tx_block_cnt++;
-	free(cb);
+	//free(cb);
 	total_latency += msg_latency; //timouts get added in to message latency
 	if(tx_block_cnt > 5000) {
 		unsigned long total_elapsed_time = (rtc_clock::current_time() - tx_begin_time);
@@ -139,14 +139,14 @@ int driver(void *arg)
   for( ; ; ) {
     rpc_flags = 0;
     my_core = dargs->me % executor_threads;
-		cb_t *cb_args = (cb_t *)malloc(sizeof(cb_t));;
-		cb_args->request_id =request_id++;
+		//cb_t *cb_args = (cb_t *)malloc(sizeof(cb_t));;
+		//cb_args->request_id =request_id++;
 		do{
 			ret = make_rpc_async(handles[0],
 				buffer,
 				payload,
 				async_callback,
-				(void *)cb_args,
+				(void *)NULL,
 				1UL << my_core,
 				rpc_flags);
 			if(ret == EMAX_INFLIGHT) {
