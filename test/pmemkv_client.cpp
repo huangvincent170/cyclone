@@ -151,7 +151,9 @@ int main(int argc, const char *argv[]) {
 					      1 + me - client_id_start,
 					      fname_server,
 					      atoi(argv[9]),
-					      fname_client);
+					      fname_client,
+								CLIENT_SYNC,
+								0);
     }
   }
   for(int me = client_id_start; me < client_id_stop; me++) {
