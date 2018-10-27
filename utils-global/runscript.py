@@ -13,6 +13,12 @@ __home = '/home/pfernando/deploy-cyclone/utils-global'
 __rte_sdk = '/home/pfernando/dpdk'
 __rte_nvmsdk = '/home/pfernando/nvm-dpdk'
 
+
+#config - single replica, 3 replicas etc
+__one = '1'
+__two = '2'
+__three = '3'
+
 #workloads
 __echo = 'echo'
 __pmemkv = 'pmemkv'
@@ -22,6 +28,10 @@ __dram = 'dram'
 __nvram = 'nvram'
 __empty = 'empty'
 
+rl=[]
+rl.append(__one)
+rl.append(__two)
+rl.append(__three)
 
 wl=[]
 wl.append(__echo)
@@ -43,6 +53,7 @@ parser.add_argument('-stop', dest='stop', action='store_true', default=False, he
 parser.add_argument('-w', dest='workload', default=__empty , help='workload name, eg: echo, pmemkv', choices=wl)
 parser.add_argument('-m', dest='memtype', default=__empty , help='memory type', choices=ml)
 parser.add_argument('-b', dest='bufsize', default=__empty , help='inflight buffer size')
+parser.add_argument('-rep', dest='replicas', default=__empty , help='number of replicas', choices=rl)
 
 try:
     args = parser.parse_args()
@@ -105,14 +116,18 @@ def generate(args):
     w = args.workload
     m = args.memtype
     b = args.bufsize
+    r = args.replicas
     #first we remove the old __gen_dir if any
     try:
         shutil.rmtree(__gen_dir)
     except OSError:
         pass
+    if r == __empty:
+        print "Error generating config, specify number of replicas"
+        return 1;
 
-    print 'generating workload : ' + w +'for memory tytpe: ' + m
-    cmd = 'python config_generator.py ../utils-arch-cluster/cluster-dpdk.ini ../utils-arch-cluster/example.ini '
+    print 'generating workload : ' + w +' for memory tytpe: ' + m + ' replica nodes: ' + r
+    cmd = 'python config_generator.py ../utils-arch-cluster/cluster-dpdk.ini.' + r + ' ../utils-arch-cluster/example.ini.' + r + ' '
     cmd += './' + w + '.py ' + b + ' '+ __gen_dir
 
     sh(cmd)
@@ -193,8 +208,11 @@ def gather_output(args):
     w = args.workload
     m = args.memtype
     b = args.bufsize
-    
-    outdir = 'results/' + w + '/' + m + '/' + b
+    r = args.replicas
+    if r == __empty:
+        print "Error gathering output, specify replicas"
+        return 1
+    outdir = 'results/' + w + '/rep' + r  + '/' + m + '/' + b
     print 'collect output data and copying in to' + outdir
     cmd = './gather_output.sh '
     cmd += __gen_dir + ' ' + __deploy_dir + ' ' + outdir
