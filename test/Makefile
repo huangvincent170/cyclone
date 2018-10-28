@@ -8,9 +8,9 @@ counter_coordinator_driver counter_driver_mt counter_driver_noop_mt
 #all: echo_server echo_client echo_async_client
 #all: echo_server echo_client pmemkv_client pmemkv_server
 
-server: echo_server
+server: pmemkv_server
 
-client: echo_client echo_async_client
+client: pmemkv_client pmemkv_async_client
 
 CXXFLAGS = -O3 -DBOOST_LOG_DYN_LINK
 #CXXFLAGS = -O1 -g -fno-omit-frame-pointer -DBOOST_LOG_DYN_LINK
@@ -56,7 +56,7 @@ echo_logserver:echo_logserver.cpp
 	$(CXX) $(CXXFLAGS) echo_logserver.cpp $(BOOST_THREAD_LIB) $(LIBS) -o $@
 
 pmemkv_server:pmemkv_server.cpp
-	$(CXX) $(CXXFLAGS) $(PMEMKV_CXXFLAGS) pmemkv_server.cpp $(BOOST_THREAD_LIB) $(LIBS) $(PMEMKV_LIBS) -o $@
+	$(CXX) $(CXXFLAGS) $(PMEMKV_CXXFLAGS) pmemkv_server.cpp $(BOOST_THREAD_LIB) $(SERVER_LIBS) $(PMEMKV_LIBS) -o $@
 
 rocksdb_server:rocksdb_server.cpp
 	$(CXX) $(CXXFLAGS) $(ROCKS_CXXFLAGS) rocksdb_server.cpp $(BOOST_THREAD_LIB) $(LIBS) $(ROCKS_LIBS) -o $@
@@ -79,11 +79,14 @@ rocksdb_checkpoint:rocksdb_checkpoint.cpp
 echo_client:echo_client.cpp 
 	$(CXX) $(CLIENT_CXXFLAGS) echo_client.cpp $(BOOST_THREAD_LIB) $(CLIENT_LIBS) -o $@
 
-echo_async_client:echo_client.cpp 
+echo_async_client:echo_async_client.cpp 
 	$(CXX) $(CLIENT_CXXFLAGS) echo_async_client.cpp $(BOOST_THREAD_LIB) $(CLIENT_LIBS) -o $@
 
 pmemkv_client:pmemkv_client.cpp
-	$(CXX) $(CXXFLAGS) pmemkv_client.cpp $(BOOST_THREAD_LIB) $(LIBS) -o $@
+	$(CXX) $(CLIENT_CXXFLAGS) pmemkv_client.cpp $(BOOST_THREAD_LIB) $(CLIENT_LIBS) -o $@
+
+pmemkv_async_client:pmemkv_async_client.cpp
+	$(CXX) $(CLIENT_CXXFLAGS) pmemkv_async_client.cpp $(BOOST_THREAD_LIB) $(CLIENT_LIBS) -o $@
 
 rocksdb_client:rocksdb_client.cpp 
 	$(CXX) $(CXXFLAGS) rocksdb_client.cpp $(BOOST_THREAD_LIB) $(LIBS) -o $@
@@ -108,4 +111,5 @@ counter_coordinator counter_delete_node counter_add_node \
 counter_loader counter_driver_mt common.o counter_driver_noop_mt \
 echo_server echo_client echo_async_client echo_client_multicore rocksdb_server rocksdb_client \
 echo_logserver rocksdb_loader rocksdb_checkpoint rocksdb_client_multicore \
-rocksdb_merge_server rocksdb_merge_client fb_loader fb_server fb_client
+rocksdb_merge_server rocksdb_merge_client fb_loader fb_server fb_client \
+pmemkv_client pmemkv_server
