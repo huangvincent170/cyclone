@@ -44,7 +44,7 @@ ROCKS_LIBS += ${ROCKS_HOME}/librocksdb.a ${ROCKS_HOME}/libbz2.a ${ROCKS_HOME}/li
 #pmemkv
 PMEMKV_HOME=../pmemkv
 PMEMKV_CXXFLAGS=-std=c++11 -I${PMEMKV_HOME}/src 
-PMEMKV_LIBS=  ${PMEMKV_HOME}/bin/libpmemkv.so
+PMEMKV_LIBS=  ${PMEMKV_HOME}/bin/libpmemkv.a
 
 #BOOST_THREAD_LIB=-lboost_thread-mt
 BOOST_THREAD_LIB=-lboost_thread
