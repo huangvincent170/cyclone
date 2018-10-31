@@ -413,7 +413,9 @@ void dispatcher_start(const char* config_cluster_path,
   if(!i_am_active) {
     BOOST_LOG_TRIVIAL(info) << "Starting inactive server";
   }
+
   // TODO: invalid pmem code path
+  /*
   if(access(file_path.c_str(), F_OK)) {
     state = pmemobj_create(file_path.c_str(),
 			   POBJ_LAYOUT_NAME(disp_state),
@@ -437,7 +439,9 @@ void dispatcher_start(const char* config_cluster_path,
     TOID(disp_state_t) root = POBJ_ROOT(state, disp_state_t);
     BOOST_LOG_TRIVIAL(info) << "DISPATCHER: Recovered state";
   }
-  
+  */ 
+
+
   quorums = (cyclone_t **)malloc(num_quorums*sizeof(cyclone_t *));
   core_status = (core_status_t *)malloc(executor_threads*sizeof(core_status_t));
   for(int i=0;i < executor_threads;i++) {
