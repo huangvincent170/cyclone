@@ -134,7 +134,7 @@ def generate(args):
 
 
 #build the cyclone binaries and copy them over to participating machines
-def deploy_bin(args):
+def deploy_server_bin(args):
     w = args.workload
     m = args.memtype
     print 'building cyclone binaries'
@@ -160,23 +160,38 @@ def deploy_bin(args):
     sh(cmd)
     cd(__home)
 
-    cd('../core')
-    cmd = 'make clean'
-    sh(cmd)
-    cmd = 'make'
-    sh(cmd)
-    cd(__home)
-
-    cd('../test')
-    cmd = 'make client'
-    sh(cmd)
-    cd(__home)
-
     #now copy the binaries over
     cmd ='./copy_binaries.sh '
     cmd += __gen_dir + ' ' + __deploy_dir
     msg(cmd)
     sh(cmd)
+
+# our client machines are different from servers. we are
+# shipping source
+def deploy_client_bin(args):
+    __tmpdir = 'tmpdir'
+    #compress core and test directories
+    try:
+        shutil.rmtree(__tmpdir)
+    except OSError:
+        pass
+    if not os.path.exists(__tmpdir):
+        os.mkdirs(__tmpdir)
+
+    cd(__tmpdir)
+    cmd = 'zip -rq client_src.zip '
+    cmd = cmd + __home + '/../core ' + __home + '/../test'
+    sh(cmd)
+    cd(__home)
+
+    #ship compressed files
+    cmd ='./copy_client_src.sh '
+    cmd += __gen_dir + ' ' + __deploy_dir
+    sh(cmd)
+    cd(__home)
+
+def deploy_bin(args):
+    deploy_client_bin(args)
 
 # this should include both config copy and binary copy
 def deploy_configs(args):
