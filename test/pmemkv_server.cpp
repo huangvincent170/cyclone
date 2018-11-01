@@ -42,7 +42,7 @@
 #include "../core/libcyclone.hpp"
 #include "../core/logging.hpp"
 #include "../core/clock.hpp"
-#include "libpmemkv.h"
+#include "pmemkv.h"
 #include "pmemkv.hpp"
 
 static void *logs[executor_threads];

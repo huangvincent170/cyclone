@@ -137,7 +137,7 @@ int driver(void *arg)
 
 int main(int argc, const char *argv[])
 {
-	if (argc != 10)
+	if (argc != 11)
 	{
 		printf("Usage: %s client_id_start client_id_stop mc replicas clients partitions cluster_config quorum_config_prefix server_ports inflight_cap\n", argv[0]);
 		exit(-1);

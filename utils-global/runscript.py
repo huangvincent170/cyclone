@@ -183,7 +183,7 @@ def deploy_client_bin(args):
     cmd = cmd + __home + '/../core ' + __home + '/../test'
     sh(cmd)
     cd(__home)
-
+    
     #ship compressed files
     cmd ='./copy_client_src.sh '
     cmd += __gen_dir + ' ' + __deploy_dir

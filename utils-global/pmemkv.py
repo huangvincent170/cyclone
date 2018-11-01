@@ -5,10 +5,11 @@ def launch_cmds_startup():
 def launch_cmds_server_gen(f, q, r, m, quorums, replicas, clients, ports):
     if os.environ.has_key('CYCLONE_PASS'):
         passwd=os.environ.get('CYCLONE_PASS')
-    cmd='rm -rf /mnt/pmem1p1/pmemkv\n'
+    cmd='echo ' + passwd + ' | sudo -S '
+    cmd= cmd + 'rm -rf /mnt/pmem1p1/pmemkv\n'
     f.write(cmd)
     cmd=''
-    cmd=cmd + ' echo ' + passwd + ' | sudo -S '
+    cmd=cmd + 'echo ' + passwd + ' | sudo -S '
     cmd=cmd + ' PMEM_IS_PMEM_FORCE=1 '
     cmd=cmd + ' LD_LIBRARY_PATH=/usr/lib:/usr/local/lib '
     cmd=cmd + '/home/pfernando/cyclone/cyclone.git/test/pmemkv_server '
@@ -22,7 +23,7 @@ def launch_cmds_preload_gen(f, m, c, quorums, replicas, clients, machines, ports
     cmd=''
 
 
-def launch_cmds_client_gen(f, m, c, quorums, replicas, clients, machines, ports):
+def launch_cmds_client_gen(f, m, c, quorums, replicas, clients, machines, ports,bufsize):
     if m >= replicas:
         client_machines=machines-replicas
         if client_machines > clients:
@@ -44,14 +45,16 @@ def launch_cmds_client_gen(f, m, c, quorums, replicas, clients, machines, ports)
                 passwd=os.environ.get('CYCLONE_PASS')    
             cmd=cmd + ' echo ' + passwd + ' | sudo -S '
             cmd=cmd + ' LD_LIBRARY_PATH=/usr/lib:/usr/local/lib:/usr/local/lib64 '    
-            cmd=cmd + '/home/pfernando/cyclone/cyclone.git/test/pmemkv_client '
+            #cmd=cmd + '/home/pfernando/cyclone/cyclone.git/test/pmemkv_client '
+            cmd=cmd + '/home/pfernando/cyclone/cyclone.git/test/pmemkv_async_client '
             cmd=cmd + str(c_start) + ' '
             cmd=cmd + str(c_stop) + ' '
             cmd=cmd + str(m) + ' '
             cmd=cmd + str(replicas) + ' '
             cmd=cmd + str(clients) + ' '
             cmd=cmd + str(quorums) + ' '
-            cmd=cmd + 'config_cluster.ini config_quorum ' + str(ports) + ' &> client_log' + str(0) + '&\n'
+            #cmd=cmd + 'config_cluster.ini config_quorum ' + str(ports) + ' &> client_log' + str(0) + '&\n'
+            cmd=cmd + 'config_cluster.ini config_quorum ' + str(ports) + ' ' + str(bufsize)  +' &> client_log' + str(0) + '&\n'
             f.write(cmd)
         
 def killall_cmds_gen(f):
@@ -59,3 +62,4 @@ def killall_cmds_gen(f):
         passwd=os.environ.get('CYCLONE_PASS')
     f.write('echo ' + passwd + ' | sudo -S pkill pmemkv_server\n')
     f.write('echo ' + passwd + '| sudo -S pkill pmemkv_client\n')
+    f.write('echo ' + passwd + '| sudo -S pkill pmemkv_async\n')
