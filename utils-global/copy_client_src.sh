@@ -14,12 +14,12 @@ do
     if [ -d "$i" ] ; then
         node=$(basename $i)
         ip=`cat ${i}/ip_address`
-        clush -w ${ip} rm -rf ${deploy_dir}/cyclone.git/test
-        clush -w ${ip} rm -rf ${deploy_dir}/cyclone.git/core
-        clush -w ${ip} rm -rf ${deploy_dir}/cyclone.git/client_src.zip
-
         if [ ! -f "$i/launch_servers" ] ; then
-            scp tempdir/client_src.zip ${ip}:${deploy_dir}/cyclone.git/
+			clush -w ${ip} rm -rf ${deploy_dir}/cyclone.git/test
+			clush -w ${ip} rm -rf ${deploy_dir}/cyclone.git/core
+			clush -w ${ip} rm -rf ${deploy_dir}/cyclone.git/client_src.zip
+            scp tmpdir/client_src.zip ${ip}:${deploy_dir}/cyclone.git/
+			clush -w ${ip} ${deploy_dir}/${node}/build_client.sh
         fi
     fi
 done

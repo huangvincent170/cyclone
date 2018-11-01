@@ -41,6 +41,16 @@ do
 	scp ${i}/* ${ip}:${deploy_dir}/${node}
 	if [ -f "$i/launch_servers" ] ; then
 	    scp exec_servers.sh ${ip}:${deploy_dir}/${node}
+	else
+		echo '#!/bin/bash' > build_client.sh
+		echo 'pushd ' ${deploy_dir}'/cyclone.git' >> build_client.sh
+		echo 'unzip -q client_src.zip' >> build_client.sh
+		echo 'cd core;make clean;make' >> build_client.sh
+		echo 'cd ..' >> build_client.sh
+		echo 'cd test;make clean;make client' >> build_client.sh
+		echo 'popd' >> build_client.sh
+		chmod u+x build_client.sh
+	    scp build_client.sh ${ip}:${deploy_dir}/${node}
 	fi
 	if [ -f "$i/launch_inactive_servers" ] ; then
 	    scp exec_inactive_servers.sh ${ip}:${deploy_dir}/${node}
