@@ -162,7 +162,7 @@ def deploy_server_bin(args):
 
     #now copy the binaries over
     cmd ='./copy_binaries.sh '
-    cmd += __gen_dir + ' ' + __deploy_dir
+    cmd += __gen_dir + ' ' + __deploy_dir + ' ' + w
     msg(cmd)
     sh(cmd)
     cd(__home)
