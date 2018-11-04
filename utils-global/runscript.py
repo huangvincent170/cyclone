@@ -162,9 +162,10 @@ def deploy_server_bin(args):
 
     #now copy the binaries over
     cmd ='./copy_binaries.sh '
-    cmd += __gen_dir + ' ' + __deploy_dir
+    cmd += __gen_dir + ' ' + __deploy_dir + ' ' + w
     msg(cmd)
     sh(cmd)
+    cd(__home)
 
 # our client machines are different from servers. we are
 # shipping source
@@ -176,11 +177,11 @@ def deploy_client_bin(args):
     except OSError:
         pass
     if not os.path.exists(__tmpdir):
-        os.mkdirs(__tmpdir)
+        os.makedirs(__tmpdir)
 
-    cd(__tmpdir)
-    cmd = 'zip -rq client_src.zip '
-    cmd = cmd + __home + '/../core ' + __home + '/../test'
+    cd('..')
+    cmd = 'zip -rq '+ __home + '/tmpdir/client_src.zip '
+    cmd = cmd + 'core ' + 'test'
     sh(cmd)
     cd(__home)
     
@@ -191,6 +192,7 @@ def deploy_client_bin(args):
     cd(__home)
 
 def deploy_bin(args):
+    deploy_server_bin(args)
     deploy_client_bin(args)
 
 # this should include both config copy and binary copy

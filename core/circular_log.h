@@ -1,7 +1,7 @@
 #ifndef _CIRCULAR_LOG_
 #define _CIRCULAR_LOG_
-//#include<libpmemobj.h>
-//#include "pmem_layout.h"
+#include<libpmemobj.h>
+#include "pmem_layout.h"
 #include "clwb_sim.hpp"
 
 static void **log_data(struct circular_log *log)

@@ -6,7 +6,7 @@
 #include<unistd.h>
 #include "cyclone.hpp"
 #include "libcyclone.hpp"
-//#include "dispatcher_layout.hpp"
+#include "dispatcher_layout.hpp"
 #include "../core/clock.hpp"
 #include "cyclone_comm.hpp"
 #include <boost/property_tree/ini_parser.hpp>
@@ -15,7 +15,7 @@
 #include <boost/thread.hpp>
 #include <boost/asio/io_service.hpp>
 #include <boost/bind.hpp>
-//#include<libpmemobj.h>
+#include<libpmemobj.h>
 #include "cyclone_context.hpp"
 
 dpdk_context_t * global_dpdk_context = NULL;
@@ -362,7 +362,7 @@ void dispatcher_start(const char* config_cluster_path,
   boost::property_tree::read_ini(config_cluster_path, pt_cluster);
   boost::property_tree::read_ini(config_quorum_path, pt_quorum);
   // Load/Setup state
-  //static PMEMobjpool *state;
+  static PMEMobjpool *state;
   std::string file_path = pt_quorum.get<std::string>("dispatch.filepath");
   unsigned long heapsize = pt_quorum.get<unsigned long>("dispatch.heapsize");
   char me_str[100];
@@ -415,7 +415,6 @@ void dispatcher_start(const char* config_cluster_path,
   }
 
   // TODO: invalid pmem code path
-  /*
   if(access(file_path.c_str(), F_OK)) {
     state = pmemobj_create(file_path.c_str(),
 			   POBJ_LAYOUT_NAME(disp_state),
@@ -439,8 +438,6 @@ void dispatcher_start(const char* config_cluster_path,
     TOID(disp_state_t) root = POBJ_ROOT(state, disp_state_t);
     BOOST_LOG_TRIVIAL(info) << "DISPATCHER: Recovered state";
   }
-  */ 
-
 
   quorums = (cyclone_t **)malloc(num_quorums*sizeof(cyclone_t *));
   core_status = (core_status_t *)malloc(executor_threads*sizeof(core_status_t));
