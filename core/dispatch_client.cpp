@@ -529,7 +529,8 @@ void* cyclone_client_init(int client_id,
 	if(flags & CLIENT_ASYNC){
 		client->me_aqueue = client_queue+1;
 		client->msg_inflight = 0;
-		client->max_inflight = 1 << max_inflight;
+		//client->max_inflight = 1 << max_inflight;
+		client->max_inflight = max_inflight;
 		BOOST_LOG_TRIVIAL(info) << "max async msg in flight is set to : " 
 			<< std::to_string(client->max_inflight);
 		//initialize comm rings for listerner thread interation

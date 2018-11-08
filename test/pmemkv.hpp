@@ -10,7 +10,12 @@ typedef struct pmemkv_st{
   char value[value_sz];
 }pmemkv_t;
 
+#ifdef __DRAM
+static const char* PMEM_KV = "/dev/shm/pmemkv";
+#else
 static const char* PMEM_KV = "/mnt/pmem1p1/pmemkv";
+#endif
+
 static const char* KV_ENGINE = "kvtree3";
 static const int DB_SIZE_IN_GB = 1;
 unsigned long pmemkv_keys = 100;

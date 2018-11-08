@@ -13,8 +13,9 @@ server: echo_server pmemkv_server
 client: echo_client echo_async_client pmemkv_client pmemkv_async_client
 
 CXXFLAGS = -O3 -DBOOST_LOG_DYN_LINK -DBOOST_THREAD_DYN_LINK
+CXXFLAGS += $(CPPFLAGS)
 #CXXFLAGS = -O1 -g -fno-omit-frame-pointer -DBOOST_LOG_DYN_LINK
-PMEM_LIB=/home/pfernando/deploy-cyclone/pmdk/src/debug
+PMEM_LIB=../pmdk/src/debug
 LIBS = -lc ../core/libcyclone.a ../raft/libcraft.a ${PMEM_LIB}/libpmemobj.a ${PMEM_LIB}/libpmem.a -lndctl -ldaxctl  -lboost_system -lboost_date_time -lpthread -laio
 #DPDK extras
 

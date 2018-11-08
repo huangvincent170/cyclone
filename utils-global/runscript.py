@@ -22,6 +22,7 @@ __three = '3'
 #workloads
 __echo = 'echo'
 __pmemkv = 'pmemkv'
+__volatile_pmemkv = 'volatile_pmemkv'
 
 #memory types
 __dram = 'dram'
@@ -36,6 +37,7 @@ rl.append(__three)
 wl=[]
 wl.append(__echo)
 wl.append(__pmemkv)
+wl.append(__volatile_pmemkv)
 wl.append(__empty)
 
 ml=[]
@@ -112,6 +114,16 @@ def clean():
     print 'cleaning deployed servers/clients'
 
 
+
+
+#map some workload names to binary name
+def wl2binary(arg):
+    switcher= {
+            'volatile_pmemkv' : 'pmemkv'
+            }
+    return switcher.get(arg,arg)
+
+
 def generate(args):
     w = args.workload
     m = args.memtype
@@ -128,7 +140,7 @@ def generate(args):
 
     print 'generating workload : ' + w +' for memory tytpe: ' + m + ' replica nodes: ' + r
     cmd = 'python config_generator.py ../utils-arch-cluster/cluster-dpdk.ini.' + r + ' ../utils-arch-cluster/example.ini.' + r + ' '
-    cmd += './' + w + '.py ' + b + ' '+ __gen_dir
+    cmd += './' + wl2binary(w) + '.py ' + b + ' '+ __gen_dir
 
     sh(cmd)
 
@@ -157,12 +169,16 @@ def deploy_server_bin(args):
         cmd += ' RTE_SSDK=' + __rte_sdk
     elif m == __nvram:
         cmd += ' RTE_SSDK=' + __rte_nvmsdk
+
+    if w == __volatile_pmemkv:
+        cmd += ' CPPFLAGS=' + '\"-D__DRAM\"'
+
     sh(cmd)
     cd(__home)
 
     #now copy the binaries over
     cmd ='./copy_binaries.sh '
-    cmd += __gen_dir + ' ' + __deploy_dir + ' ' + w
+    cmd += __gen_dir + ' ' + __deploy_dir + ' ' + wl2binary(w)
     msg(cmd)
     sh(cmd)
     cd(__home)

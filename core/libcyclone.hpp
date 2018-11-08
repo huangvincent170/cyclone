@@ -41,7 +41,7 @@ static const int R_BUFS = 1023;
 
 // Maximum clients (1 million)
 static const unsigned int MAX_CLIENTS = 1024U*1024U;
-static const char MAX_INFLIGHT = 1;
+static const char MAX_INFLIGHT = 64;
 
 
 //client specific
