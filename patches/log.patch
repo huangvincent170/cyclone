@@ -1,0 +1,58 @@
+diff --git a/src/libpmemobj/Makefile b/src/libpmemobj/Makefile
+index 7774634..9f140a7 100644
+--- a/src/libpmemobj/Makefile
++++ b/src/libpmemobj/Makefile
+@@ -63,6 +63,6 @@ SOURCE +=\
+ 
+ include ../Makefile.inc
+ 
+-CFLAGS += -DUSE_LIBDL -D_PMEMOBJ_INTRNL
++CFLAGS += -DUSE_LIBDL -D_PMEMOBJ_INTRNL -D__CSOFF
+ 
+ LIBS += -pthread -lpmem $(LIBDL) $(LIBNDCTL)
+diff --git a/src/libpmemobj/memops.c b/src/libpmemobj/memops.c
+index d5d7525..d07e468 100644
+--- a/src/libpmemobj/memops.c
++++ b/src/libpmemobj/memops.c
+@@ -425,6 +425,7 @@ operation_add_buffer(struct operation_context *ctx,
+ static void
+ operation_process_persistent_redo(struct operation_context *ctx)
+ {
++#if !defined (__CSOFF)
+ 	ASSERTeq(ctx->pshadow_ops.capacity % CACHELINE_SIZE, 0);
+ 
+ 	ulog_store(ctx->ulog, ctx->pshadow_ops.ulog,
+@@ -435,6 +436,10 @@ operation_process_persistent_redo(struct operation_context *ctx)
+ 		ctx->p_ops);
+ 
+ 	ulog_clobber(ctx->ulog, &ctx->next, ctx->p_ops);
++#else
++	ulog_process(ctx->pshadow_ops.ulog, OBJ_OFF_IS_VALID_FROM_CTX,
++		ctx->p_ops);
++#endif
+ }
+ 
+ /*
+diff --git a/src/libpmemobj/tx.c b/src/libpmemobj/tx.c
+index 907c53e..6212e0c 100644
+--- a/src/libpmemobj/tx.c
++++ b/src/libpmemobj/tx.c
+@@ -1090,6 +1090,7 @@ pmemobj_tx_add_snapshot(struct tx *tx, struct tx_range_def *snapshot)
+ static int
+ pmemobj_tx_add_common(struct tx *tx, struct tx_range_def *args)
+ {
++#if !defined (__CSOFF)
+ 	LOG(15, NULL);
+ 
+ 	if (args->size > PMEMOBJ_MAX_ALLOC_SIZE) {
+@@ -1242,6 +1243,10 @@ pmemobj_tx_add_common(struct tx *tx, struct tx_range_def *args)
+ 	}
+ 
+ 	return 0;
++#else
++	// we avoid redo logging of transient state (memops) + snapshot creation on undo log
++	return 0; 
++#endif
+ }
+ 
+ /*
