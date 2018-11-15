@@ -13,14 +13,17 @@ enum trace_keys{
 #if !defined (__LATENCY_TRACER)
 
 #define LT_INIT_RUNTIME()
-#define LT_START(counter)
-#define LT_END(counter)
+#define LT_START(key, rpc)
+#define LT_END(key, rpc)
 #define LT_PRINT() 
 
 #else
 
 #include <stdlib.h>
 #include <stdio.h>
+
+#include "clock.hpp"
+#include "logging.hpp"
 
 
 static const char *print_headers[MAX_LT_TRACE] = 
@@ -43,8 +46,8 @@ extern struct lt_tracer_ ltracer;
 														ltracer.init_tracer();\
 														}while(0)
 
-#define LT_START(counter) ltracer.start_counter(counter)
-#define LT_END(counter) ltracer.end_counter(counter)
+#define LT_START(key, rpc) ltracer.start_counter(key, rpc)
+#define LT_END(key, rpc) ltracer.end_counter(key, rpc)
 #define LT_PRINT() ltracer.print_trace()
 
 
@@ -70,26 +73,29 @@ typedef struct lt_tracer_{
 		return;
 	}
 
-	int start_counter(enum trace_keys key){
+	int start_counter(enum trace_keys key, struct rpc_st *rpc){
 		if(key >= MAX_LT_TRACE){
 			exit(1);
 		}	
-			counters[key].count++;
+		rpc->timestamp =  rtc_clock::current_time();
 		return 0;
 	}
 
-	int end_counter(enum trace_keys key){
+	int end_counter(enum trace_keys key, struct rpc_st *rpc){
 		if(key >= MAX_LT_TRACE){
 			exit(1);
 		}	
+		unsigned long elapsed_time = rtc_clock::current_time() - rpc->timestamp;
+		counters[key].ttime += elapsed_time;
+		counters[key].count++;
 		return 0;
 	}
 
 	void print_trace(){
 		int i;
 		for(i=0; i < MAX_LT_TRACE;i ++){
-			printf("app lt : %lu " , counters[i].count);
-			printf("raft lt : %lu " , counters[i].count);
+			printf("app lt : %lu " , counters[i].count == 0 ? 0 : counters[i].ttime/counters[i].count);
+			printf("raft lt : %lu " , counters[i].count == 0 ? 0 : counters[i].ttime/counters[i].count);
 		}
 		return;
 	}

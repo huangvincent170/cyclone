@@ -5,6 +5,7 @@ CXXFLAGS = -O3 -fPIC -DBOOST_LOG_DYN_LINK
 
 #Hardware Workaround
 #CXXFLAGS += -DWORKAROUND0
+CXXFLAGS += -D__LATENCY_TRACER
 CXXFLAGS += $(CPPFLAGS)
 CXXFLAGS += -DDPDK_STACK -std=gnu++0x
 RTE_SDK?=/home/pfernando/dpdk
