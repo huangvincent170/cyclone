@@ -17,6 +17,8 @@
 #include <boost/bind.hpp>
 #include<libpmemobj.h>
 #include "cyclone_context.hpp"
+#include "latency_tracer.hpp"
+
 
 dpdk_context_t * global_dpdk_context = NULL;
 extern struct rte_ring ** to_cores;
@@ -124,9 +126,11 @@ int exec_rpc_internal(rpc_t *rpc,
     user_data += num_quorums*sizeof(unsigned int) + sizeof(ic_rdv_t);
     len        -= (num_quorums*sizeof(unsigned int) + sizeof(ic_rdv_t));
   }
+	LT_START(APP_WR);
   app_callbacks.rpc_callback(user_data,
 			     len,
 			     cookie);
+	LT_END(APP_WR);
   cstatus->checkpoint_idx = checkpoint_idx;
   __sync_synchronize(); // publish core status
   return 0;
@@ -269,6 +273,7 @@ typedef struct executor_st {
   void operator() ()
   {
     resp_buffer = (rpc_t *)malloc(MSG_MAXSIZE);
+		unsigned long counter = 0;
     while(true) {
       int e = rte_ring_sc_dequeue(to_cores[tid], (void **)&quorum);
       if(e == 0) {
@@ -279,6 +284,10 @@ typedef struct executor_st {
 	//client_buffer->timestamp = rte_get_tsc_cycles();
 	wal = pktadj2wal(m);
 	exec();
+	if(counter%1000){
+		LT_PRINT();
+		counter=0;
+	}
 	if(!is_multicore_rpc(client_buffer)) {
 	  quorums[quorum]->remove_inflight(client_buffer->client_id);
 	}
