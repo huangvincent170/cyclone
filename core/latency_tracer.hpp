@@ -1,5 +1,5 @@
-#ifndef __LATENCY_TRACER
-#define __LATENCY_TRACER
+#ifndef __LATENCY_TRACER_HPP
+#define __LATENCY_TRACER_HPP
 
 enum trace_keys{
 	raft=0,
@@ -37,7 +37,7 @@ enum lt_state{
 	MAX_LT_STATE
 };
 
-extern struct lt_tracer_ latency_tracer;
+extern struct lt_tracer_ ltracer;
 
 #define LT_INIT_RUNTIME() do{ \
 														ltracer.init_tracer();\

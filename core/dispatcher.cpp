@@ -126,11 +126,11 @@ int exec_rpc_internal(rpc_t *rpc,
     user_data += num_quorums*sizeof(unsigned int) + sizeof(ic_rdv_t);
     len        -= (num_quorums*sizeof(unsigned int) + sizeof(ic_rdv_t));
   }
-	LT_START(APP_WR);
+	LT_START(app_wr);
   app_callbacks.rpc_callback(user_data,
 			     len,
 			     cookie);
-	LT_END(APP_WR);
+	LT_END(app_wr);
   cstatus->checkpoint_idx = checkpoint_idx;
   __sync_synchronize(); // publish core status
   return 0;

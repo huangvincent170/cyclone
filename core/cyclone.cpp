@@ -601,11 +601,11 @@ int dpdk_raft_monitor(void *arg)
 }
 
 
-/*TODO: move this in to a appropriate structure */
+/*TODO: move this in to an appropriate structure */
 
 #if defined (__LATENCY_TRACER)
 
-lt_tracer_t ltracer;
+struct lt_tracer_ ltracer;
 
 #endif
 
@@ -626,7 +626,7 @@ void* cyclone_setup(const char *config_quorum_path,
   cyclone_handle->user_arg   = user_arg;
  
   /* latency tracing */
-	LT_INIT_RUNTIME();
+  LT_INIT_RUNTIME();
 
   boost::property_tree::read_ini(config_quorum_path, cyclone_handle->pt);
   std::string path_raft           = cyclone_handle->pt.get<std::string>("storage.raftpath");
