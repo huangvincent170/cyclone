@@ -16,37 +16,51 @@
 #include "pmemkv.hpp"
 
 
-unsigned long tx_block_cnt;
+unsigned long tx_wr_block_cnt;
+unsigned long tx_ro_block_cnt;
 unsigned long total_latency;
 unsigned long tx_begin_time;
-
-
+std::vector<struct cb_st *> *timeout_vector;
+pthread_mutex_t vlock = PTHREAD_MUTEX_INITIALIZER;
+volatile int64_t timedout_msgs;
 int driver(void *arg);
 
-
+#define TIMEOUT_VECTOR_THRESHOLD 32
 /* callback context */
 typedef struct cb_st
 {
+	uint8_t request_type;
 	unsigned long request_id;
 } cb_t;
 
 
 void async_callback(void *args, int code, unsigned long msg_latency)
 {
+	struct cb_st *cb_ctxt = (struct cb_st *)args;
 	if(code == REP_SUCCESS){
-		tx_block_cnt++;
+		cb_ctxt->request_type == OP_PUT ? tx_wr_block_cnt++ : tx_ro_block_cnt++;
+		free(cb_ctxt);
+	}else if (code == REP_FAILED && timedout_msgs < TIMEOUT_VECTOR_THRESHOLD){
+		pthread_mutex_lock(&vlock);
+		timeout_vector->push_back(cb_ctxt);
+		__sync_fetch_and_add(&timedout_msgs, 1);
+		pthread_mutex_unlock(&vlock);
 	}
-	total_latency += msg_latency;	
-	if (tx_block_cnt > 5000)
+
+	total_latency += msg_latency;
+	if ((tx_wr_block_cnt + tx_ro_block_cnt) > 5000)
 	{
 		unsigned long total_elapsed_time = (rtc_clock::current_time() - tx_begin_time);
 		BOOST_LOG_TRIVIAL(info) << "LOAD = "
-		                        << ((double)1000000 * tx_block_cnt) / total_elapsed_time
-		                        << " tx/sec "
-		                        << "LATENCY = "
-		                        << ((double)total_latency) / tx_block_cnt
-		                        << " us ";
-		tx_block_cnt   = 0;
+			<< ((double)1000000 * (tx_wr_block_cnt + tx_ro_block_cnt)) / total_elapsed_time
+			<< " tx/sec "
+			<< "LATENCY = "
+			<< ((double)total_latency) / (tx_wr_block_cnt + tx_ro_block_cnt)
+			<< " us "
+			<< "wr/rd = "
+			<<((double)tx_wr_block_cnt/tx_ro_block_cnt);
+		tx_wr_block_cnt   = 0;
+		tx_ro_block_cnt   = 0;
 		total_latency  = 0;
 		tx_begin_time = rtc_clock::current_time();
 	}
@@ -61,14 +75,15 @@ typedef struct driver_args_st
 	int clients;
 	int partitions;
 	void **handles;
-	void operator() ()
-	{
-		(void)driver((void *)this);
-	}
+		void operator() ()
+		{
+			(void)driver((void *)this);
+		}
 } driver_args_t;
 
 int driver(void *arg)
 {
+	unsigned long request_id = 0UL; // wrap around at MAX
 	driver_args_t *dargs = (driver_args_t *)arg;
 	int me = dargs->me;
 	int mc = dargs->mc;
@@ -103,31 +118,46 @@ int driver(void *arg)
 	BOOST_LOG_TRIVIAL(info) << "KEYS = " << keys;
 
 	srand(rtc_clock::current_time());
+	struct cb_st *cb_ctxt;
 	for( ; ; ){
-		double coin = ((double)rand()) / RAND_MAX;
-
-		if (coin > frac_read)
-		{
-			rpc_flags = 0;
-			kv->op    = OP_PUT;
+		if(timedout_msgs > 0){ // re-try timedout messages
+		
+		pthread_mutex_lock(&vlock);
+		if(timeout_vector->size() > 0){
+			cb_ctxt = timeout_vector->at(0);
+			timeout_vector->erase(timeout_vector->begin());
+			__sync_fetch_and_sub(&timedout_msgs, 1);
 		}
-		else
-		{
-			rpc_flags = RPC_FLAG_RO;
-			kv->op    = OP_GET;
-		}
+		pthread_mutex_unlock(&vlock);
 
-		kv->key   = rand() % keys;
-		my_core = kv->key % executor_threads;
+		}else{
+			double coin = ((double)rand()) / RAND_MAX;
+			if (coin > frac_read){
+				rpc_flags = 0;
+				kv->op    = OP_PUT;
+			}
+			else{
+				rpc_flags = RPC_FLAG_RO;
+				kv->op    = OP_GET;
+			}
+
+			kv->key   = rand() % keys;
+			my_core = kv->key % executor_threads;
+
+			cb_ctxt = (struct cb_st *)malloc(sizeof(struct cb_st));
+			cb_ctxt->request_type = rpc_flags;
+		}
+		cb_ctxt->request_id = request_id++;
 		do{
 			ret = make_rpc_async(handles[0],
-		              buffer,
-		              sizeof(pmemkv_t),
-									async_callback,
-		              (void *)NULL,
-		              1UL << my_core,
-		              rpc_flags);
+					buffer,
+					sizeof(pmemkv_t),
+					async_callback,
+					(void *)cb_ctxt,
+					1UL << my_core,
+					rpc_flags);
 			if(ret == EMAX_INFLIGHT){
+				//sleep a bit
 				continue;
 			}
 		}while(!ret);
@@ -149,7 +179,7 @@ int main(int argc, const char *argv[])
 	void **prev_handles;
 	cyclone_network_init(argv[7], 1, atoi(argv[3]), 2 + client_id_stop - client_id_start);
 	driver_args_t ** dargs_array =
-	    (driver_args_t **)malloc((client_id_stop - client_id_start) * sizeof(driver_args_t *));
+		(driver_args_t **)malloc((client_id_stop - client_id_start) * sizeof(driver_args_t *));
 	for (int me = client_id_start; me < client_id_stop; me++)
 	{
 		dargs = (driver_args_t *) malloc(sizeof(driver_args_t));
@@ -174,17 +204,17 @@ int main(int argc, const char *argv[])
 			sprintf(fname_server, "%s", argv[7]);
 			sprintf(fname_client, "%s%d.ini", argv[8], i);
 			dargs->handles[i] = cyclone_client_init(dargs->me,
-			                                        dargs->mc,
-			                                        1 + me - client_id_start,
-			                                        fname_server,
-			                                        atoi(argv[9]),
-			                                        fname_client,
-																							CLIENT_ASYNC,
-																							atoi(argv[10]));
+					dargs->mc,
+					1 + me - client_id_start,
+					fname_server,
+					atoi(argv[9]),
+					fname_client,
+					CLIENT_ASYNC,
+					atoi(argv[10]));
 		}
 	}
 	for (int me = client_id_start; me < client_id_stop; me++){
-		 cyclone_launch_clients(dargs_array[me-client_id_start]->handles[0],driver, dargs_array[me-client_id_start], 1+  me-client_id_start);	
+		cyclone_launch_clients(dargs_array[me-client_id_start]->handles[0],driver, dargs_array[me-client_id_start], 1+  me-client_id_start);
 	}
 	rte_eal_mp_wait_lcore();
 }

@@ -1,8 +1,8 @@
 #ifndef _PMEMKV_COMMON_
 #define _PMEMKV_COMMON_
-const unsigned long OP_PUT       = 0;
-const unsigned long OP_GET       = 1;
-const unsigned long OP_ADD       = 2;
+#define OP_PUT        0
+#define OP_GET        1
+#define OP_ADD        2
 const unsigned long value_sz     = 8;
 typedef struct pmemkv_st{
   unsigned long op;
