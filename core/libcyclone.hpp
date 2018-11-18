@@ -18,12 +18,12 @@ static const int PERIODICITY                = 1;
 static const int RAFT_ELECTION_TIMEOUT      = 10000; 
 static const int RAFT_QUORUM_TO             = 500;
 static const int RAFT_REQUEST_TIMEOUT       = 1000; 
-static const int RAFT_NACK_TIMEOUT          = 20;
+static const int RAFT_NACK_TIMEOUT          = 1000;
 // RAFT log tuning -- need to match load
 static const int RAFT_LOG_TARGET  = 1000;
 
 // Client side timeouts
-static const int timeout_msec  = 30; // Client - failure detect
+static const int timeout_msec  = 1200; // Client - failure detect
 
 // Execution resources
 static const int executor_threads = 1;
@@ -41,7 +41,7 @@ static const int R_BUFS = 1023;
 
 // Maximum clients (1 million)
 static const unsigned int MAX_CLIENTS = 1024U*1024U;
-static const char MAX_INFLIGHT = 64;
+static const char MAX_INFLIGHT = 12;
 
 
 //client specific

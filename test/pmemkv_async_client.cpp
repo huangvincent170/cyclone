@@ -9,6 +9,9 @@
 #include <boost/property_tree/ini_parser.hpp>
 #include <boost/property_tree/ptree.hpp>
 #include <rte_launch.h>
+#include <rte_malloc.h>
+
+#include <vector>
 
 #include "../core/logging.hpp"
 #include "../core/clock.hpp"
@@ -16,13 +19,14 @@
 #include "pmemkv.hpp"
 
 
-unsigned long tx_wr_block_cnt;
-unsigned long tx_ro_block_cnt;
-unsigned long total_latency;
-unsigned long tx_begin_time;
+unsigned long tx_wr_block_cnt = 0UL;
+unsigned long tx_ro_block_cnt = 0UL;
+unsigned long tx_failed_cnt = 0UL;
+unsigned long total_latency = 0UL;
+unsigned long tx_begin_time = 0UL;
 std::vector<struct cb_st *> *timeout_vector;
 pthread_mutex_t vlock = PTHREAD_MUTEX_INITIALIZER;
-volatile int64_t timedout_msgs;
+volatile int64_t timedout_msgs = 0;
 int driver(void *arg);
 
 #define TIMEOUT_VECTOR_THRESHOLD 32
@@ -38,17 +42,22 @@ void async_callback(void *args, int code, unsigned long msg_latency)
 {
 	struct cb_st *cb_ctxt = (struct cb_st *)args;
 	if(code == REP_SUCCESS){
+		//BOOST_LOG_TRIVIAL(info) << "received message " << cb_ctxt->request_id;
 		cb_ctxt->request_type == OP_PUT ? tx_wr_block_cnt++ : tx_ro_block_cnt++;
-		free(cb_ctxt);
-	}else if (code == REP_FAILED && timedout_msgs < TIMEOUT_VECTOR_THRESHOLD){
+		rte_free(cb_ctxt);
+	}else if (timedout_msgs < TIMEOUT_VECTOR_THRESHOLD){
+		__sync_synchronize();
+		//BOOST_LOG_TRIVIAL(info) << "timed-out message " << cb_ctxt->request_id;
+		tx_failed_cnt++;
 		pthread_mutex_lock(&vlock);
 		timeout_vector->push_back(cb_ctxt);
-		__sync_fetch_and_add(&timedout_msgs, 1);
+		timedout_msgs++;
+		//__sync_fetch_and_add(&timedout_msgs, 1);
 		pthread_mutex_unlock(&vlock);
 	}
 
 	total_latency += msg_latency;
-	if ((tx_wr_block_cnt + tx_ro_block_cnt) > 5000)
+	if ((tx_wr_block_cnt + tx_ro_block_cnt) >= 5000)
 	{
 		unsigned long total_elapsed_time = (rtc_clock::current_time() - tx_begin_time);
 		BOOST_LOG_TRIVIAL(info) << "LOAD = "
@@ -61,6 +70,21 @@ void async_callback(void *args, int code, unsigned long msg_latency)
 			<<((double)tx_wr_block_cnt/tx_ro_block_cnt);
 		tx_wr_block_cnt   = 0;
 		tx_ro_block_cnt   = 0;
+		tx_failed_cnt  = 0;
+		total_latency  = 0;
+		tx_begin_time = rtc_clock::current_time();
+	}else if(tx_failed_cnt >= 5000){
+		unsigned long total_elapsed_time = (rtc_clock::current_time() - tx_begin_time);
+		BOOST_LOG_TRIVIAL(info) << "Escessive message timing out "
+			<< " timedout count "
+			<< tx_failed_cnt
+			<< " success count "
+			<< tx_wr_block_cnt + tx_ro_block_cnt
+			<< " elpsd time "
+			<< total_elapsed_time;
+		tx_wr_block_cnt   = 0;
+		tx_ro_block_cnt   = 0;
+		tx_failed_cnt  = 0;
 		total_latency  = 0;
 		tx_begin_time = rtc_clock::current_time();
 	}
@@ -75,10 +99,10 @@ typedef struct driver_args_st
 	int clients;
 	int partitions;
 	void **handles;
-		void operator() ()
-		{
-			(void)driver((void *)this);
-		}
+	void operator() ()
+	{
+		(void)driver((void *)this);
+	}
 } driver_args_t;
 
 int driver(void *arg)
@@ -121,14 +145,15 @@ int driver(void *arg)
 	struct cb_st *cb_ctxt;
 	for( ; ; ){
 		if(timedout_msgs > 0){ // re-try timedout messages
-		
-		pthread_mutex_lock(&vlock);
-		if(timeout_vector->size() > 0){
-			cb_ctxt = timeout_vector->at(0);
-			timeout_vector->erase(timeout_vector->begin());
-			__sync_fetch_and_sub(&timedout_msgs, 1);
-		}
-		pthread_mutex_unlock(&vlock);
+			__sync_synchronize();
+			pthread_mutex_lock(&vlock);
+			if(timeout_vector->size() > 0){
+				cb_ctxt = timeout_vector->at(0);
+				timeout_vector->erase(timeout_vector->begin());
+				//__sync_fetch_and_sub(&timedout_msgs, 1);
+				timedout_msgs--;
+			}
+			pthread_mutex_unlock(&vlock);
 
 		}else{
 			double coin = ((double)rand()) / RAND_MAX;
@@ -144,10 +169,11 @@ int driver(void *arg)
 			kv->key   = rand() % keys;
 			my_core = kv->key % executor_threads;
 
-			cb_ctxt = (struct cb_st *)malloc(sizeof(struct cb_st));
+			cb_ctxt = (struct cb_st *)rte_malloc("callback_ctxt", sizeof(struct cb_st), 0);
 			cb_ctxt->request_type = rpc_flags;
 		}
 		cb_ctxt->request_id = request_id++;
+		// BOOST_LOG_TRIVIAL(info) << "sent message id  " << cb_ctxt->request_id;
 		do{
 			ret = make_rpc_async(handles[0],
 					buffer,
@@ -160,7 +186,7 @@ int driver(void *arg)
 				//sleep a bit
 				continue;
 			}
-		}while(!ret);
+		}while(ret);
 	}
 	return 0;
 }
@@ -177,6 +203,7 @@ int main(int argc, const char *argv[])
 	int client_id_stop  = atoi(argv[2]);
 	driver_args_t *dargs;
 	void **prev_handles;
+	timeout_vector = new std::vector<struct cb_st *>();
 	cyclone_network_init(argv[7], 1, atoi(argv[3]), 2 + client_id_stop - client_id_start);
 	driver_args_t ** dargs_array =
 		(driver_args_t **)malloc((client_id_stop - client_id_start) * sizeof(driver_args_t *));
