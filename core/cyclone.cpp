@@ -1,6 +1,8 @@
 // Asynchronous fault tolerant pmem log replication with cyclone
 #include "cyclone.hpp"
 #include "cyclone_context.hpp"
+#include "latency_tracer.hpp"
+
 #include <rte_ring.h>
 #include <rte_mbuf.h>
 #include <sys/mman.h>
@@ -598,6 +600,15 @@ int dpdk_raft_monitor(void *arg)
   return 0;
 }
 
+
+/*TODO: move this in to an appropriate structure */
+
+#if defined (__LATENCY_TRACER)
+
+struct lt_tracer_ ltracer;
+
+#endif
+
 void* cyclone_setup(const char *config_quorum_path,
 		    void *router,
 		    int quorum_id,
@@ -613,7 +624,10 @@ void* cyclone_setup(const char *config_quorum_path,
   cyclone_handle = new cyclone_t();
   quorums[quorum_id] = cyclone_handle;
   cyclone_handle->user_arg   = user_arg;
-  
+ 
+  /* latency tracing */
+  LT_INIT_RUNTIME();
+
   boost::property_tree::read_ini(config_quorum_path, cyclone_handle->pt);
   std::string path_raft           = cyclone_handle->pt.get<std::string>("storage.raftpath");
   char me_str[100];
