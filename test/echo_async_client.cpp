@@ -37,14 +37,33 @@
 #include <unistd.h>
 #include <time.h>
 #include <assert.h>
+#include <pthread.h>
 #include <boost/property_tree/ini_parser.hpp>
 #include <boost/property_tree/ptree.hpp>
+#include <boost/bind.hpp>
 #include "../core/clock.hpp"
 #include "../core/logging.hpp"
 #include "../core/libcyclone.hpp"
 #include <rte_launch.h>
 
+#define NUM_QUEUES 2 // 2 qpairs for sync and async client modes
+
+unsigned long request_id = 0UL; // wrap around at MAX
+std::vector<unsigned long> *replayq;
+std::map<unsigned long, unsigned long> *clnt_map;
+static pthread_mutex_t lock = PTHREAD_MUTEX_INITIALIZER;
+
+unsigned long tx_block_cnt;
+unsigned long tx_failed_cnt;
+unsigned long total_latency;
+unsigned long tx_begin_time;
+
 int driver(void *arg);
+
+typedef struct replay_st{
+	unsigned long client_id;
+	unsigned long latency;
+}relay_t;
 
 typedef struct driver_args_st {
   int leader;
@@ -60,6 +79,42 @@ typedef struct driver_args_st {
   }
 } driver_args_t;
 
+typedef struct cb_st{
+	unsigned long request_id;
+}cb_t;
+
+
+void async_callback(void *args, int code, unsigned long msg_latency){
+	//cb_t *cb = (cb_t *)args;
+	if(code == REP_SUCCESS){
+		tx_block_cnt++;
+	}else{
+		tx_failed_cnt++;
+	}
+	//free(cb);
+	total_latency += msg_latency; //timouts get added in to message latency
+	if(tx_block_cnt >= 5000) {
+		unsigned long total_elapsed_time = (rtc_clock::current_time() - tx_begin_time);
+		BOOST_LOG_TRIVIAL(info) << "LOAD = "
+				<< ((double)1000000*tx_block_cnt)/total_elapsed_time
+				<< " tx/sec "
+				<< "LATENCY = "
+				<< ((double)total_latency)/tx_block_cnt
+				<< " us "
+				<< " timedout count "
+                << tx_failed_cnt
+                << " success count "
+                << tx_block_cnt
+                << " elpsd time "
+                << total_elapsed_time;
+		tx_block_cnt   = 0;
+		tx_failed_cnt  = 0;
+		total_latency  = 0;
+		tx_begin_time = rtc_clock::current_time();
+	}
+}
+
+
 int driver(void *arg)
 {
   driver_args_t *dargs = (driver_args_t *)arg;
@@ -72,65 +127,53 @@ int driver(void *arg)
   char *buffer = new char[DISP_MAX_MSGSIZE];
   struct proposal *prop = (struct proposal *)buffer;
   srand(time(NULL));
-  int sz;
   struct proposal *resp;
-  unsigned long order = 0;
-  unsigned long tx_block_cnt   = 0;
-  unsigned long tx_block_begin = rtc_clock::current_time();
-  unsigned long total_latency  = 0;
   int rpc_flags;
+	int ret;
 
   int my_core;
-  
-  unsigned long payload = 0;
-  const char *payload_env = getenv("PAYLOAD");
-  if(payload_env != NULL) {
-    payload = atol(payload_env);
-  }
-  BOOST_LOG_TRIVIAL(info) << "PAYLOAD = " << payload;
-
+	
   total_latency = 0;
   tx_block_cnt  = 0;
-  tx_block_begin = rtc_clock::current_time();
-  unsigned long tx_begin_time = rtc_clock::current_time();
-  srand(tx_begin_time);
+  tx_begin_time = rtc_clock::current_time();
+  unsigned long payload = 0;
+  //const char *payload_env = getenv("PAYLOAD");
+  //if(payload_env != NULL) {
+    //callback->payload = atol(payload_env);
+  //}
+  BOOST_LOG_TRIVIAL(info) << "PAYLOAD = " << payload;
+
+
+	srand(rtc_clock::current_time());
   int partition;
-  while(true) {
+	int newcb  = 1;
+  for( ; ; ) {
     rpc_flags = 0;
-    //rpc_flags = RPC_FLAG_RO;
     my_core = dargs->me % executor_threads;
-    sz = make_rpc(handles[0],
-		  buffer,
-		  payload,
-		  (void **)&resp,
-		  1UL << my_core,
-		  rpc_flags);
-    if(sz != payload) {
-      BOOST_LOG_TRIVIAL(fatal) << "Invalid response";
-    }
-    tx_block_cnt++;
-    
-    if(dargs->leader) {
-      if(tx_block_cnt > 5000) {
-	total_latency = (rtc_clock::current_time() - tx_begin_time);
-	BOOST_LOG_TRIVIAL(info) << "LOAD = "
-				<< ((double)1000000*tx_block_cnt)/total_latency
-				<< " tx/sec "
-				<< "LATENCY = "
-				<< ((double)total_latency)/tx_block_cnt
-				<< " us ";
-	tx_begin_time = rtc_clock::current_time();
-	tx_block_cnt   = 0;
-	total_latency  = 0;
-      }
-    }
+		//cb_t *cb_args = (cb_t *)malloc(sizeof(cb_t));;
+		//cb_args->request_id =request_id++;
+		do{
+			ret = make_rpc_async(handles[0],
+				buffer,
+				payload,
+				async_callback,
+				(void *)NULL,
+				1UL << my_core,
+				rpc_flags);
+			if(ret == EMAX_INFLIGHT) {
+				//BOOST_LOG_TRIVIAL(fatal) << "buffer full";
+				continue;
+			}
+		}while(ret);
   }
   return 0;
 }
 
 int main(int argc, const char *argv[]) {
-  if(argc != 10) {
-    printf("Usage: %s client_id_start client_id_stop mc replicas clients partitions cluster_config quorum_config_prefix server_ports\n", argv[0]);
+  if(argc != 11) {
+    printf("Usage: %s client_id_start client_id_stop mc replicas" 
+				"clients partitions cluster_config quorum_config_prefix" 
+				"server_ports inflight_cap\n", argv[0]);
     exit(-1);
   }
   
@@ -138,7 +181,11 @@ int main(int argc, const char *argv[]) {
   int client_id_stop  = atoi(argv[2]);
   driver_args_t *dargs;
   void **prev_handles;
-  cyclone_network_init(argv[7], 1, atoi(argv[3]), 1 + client_id_stop - client_id_start);
+
+  replayq = new std::vector<unsigned long>();
+  clnt_map = new std::map<unsigned long, unsigned long>();
+
+  cyclone_network_init(argv[7], 1, atoi(argv[3]), 2 + client_id_stop - client_id_start);
   driver_args_t ** dargs_array = 
     (driver_args_t **)malloc((client_id_stop - client_id_start)*sizeof(driver_args_t *));
   for(int me = client_id_start; me < client_id_stop; me++) {
@@ -167,16 +214,13 @@ int main(int argc, const char *argv[]) {
 					      fname_server,
 					      atoi(argv[9]),
 					      fname_client,
-						  CLIENT_SYNC,
-						  0);
+						  CLIENT_ASYNC,
+						  atoi(argv[10]));
     }
   }
   for(int me = client_id_start; me < client_id_stop; me++) {
-    int e = rte_eal_remote_launch(driver, dargs_array[me-client_id_start], 1 + me - client_id_start);
-    if(e != 0) {
-      BOOST_LOG_TRIVIAL(fatal) << "Failed to launch driver on remote lcore";
-      exit(-1);
-    }
+		cyclone_launch_clients(dargs_array[me-client_id_start]->handles[0],driver, dargs_array[me-client_id_start], 1+me-client_id_start);
   }
-  rte_eal_mp_wait_lcore();
+	rte_eal_mp_wait_lcore();
+	// free vector and map
 }

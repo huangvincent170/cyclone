@@ -5,8 +5,8 @@ import shutil
 import imp
 
 #Check cmdline
-if len(sys.argv) != 5:
-    print('Usage:' + sys.argv[0] + ' cluster-ini app-ini launch-py output-dir')
+if len(sys.argv) != 6:
+    print('Usage:' + sys.argv[0] + ' cluster-ini app-ini launch-py buffer-size output-dir')
     sys.exit(-1)
 
 #Static portmap
@@ -36,7 +36,8 @@ def cond_abs_rm(name):
 input=sys.argv[2]
 execfile(sys.argv[3])
 launch_cmds_startup()
-output=sys.argv[4]
+bufsize = int(sys.argv[4])
+output=sys.argv[5]
 config=ConfigParser.RawConfigParser()
 config.read(input)
 quorums=config.getint('meta', 'quorums')
@@ -86,7 +87,7 @@ for i in range(machines):
         launch_cmds_preload_gen(f, i, c, quorums, replicas, clients, machines, ports)
         f.close()
         f=open(dname + '/' + 'launch_clients', 'a')
-        launch_cmds_client_gen(f, i, c, quorums, replicas, clients, machines, ports)
+        launch_cmds_client_gen(f, i, c, quorums, replicas, clients, machines, ports,bufsize)
         f.close()
     
 

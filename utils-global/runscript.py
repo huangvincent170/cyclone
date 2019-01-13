@@ -10,20 +10,42 @@ DBG=1
 __gen_dir= 'gen_configs'
 __deploy_dir = '/home/pfernando/cyclone'
 __home = '/home/pfernando/deploy-cyclone/utils-global'
+__rte_sdk = '/home/pfernando/dpdk'
+__rte_nvmsdk = '/home/pfernando/nvm-dpdk'
+#pmemkv lib with crash-consistent logging turned-off
+__ncc_pmem = '/home/pfernando/pmdknlog/src/nondebug'
+
+#config - single replica, 3 replicas etc
+__one = '1'
+__two = '2'
+__three = '3'
 
 #workloads
 __echo = 'echo'
+
 __pmemkv = 'pmemkv'
+__pmemkv_ncc = 'pmemkv_ncc'
+__volatile_pmemkv = 'volatile_pmemkv'
+__volatile_pmemkv_ncc = 'volatile_pmemkv_ncc'
 
 #memory types
 __dram = 'dram'
 __nvram = 'nvram'
 __empty = 'empty'
 
+rl=[]
+rl.append(__one)
+rl.append(__two)
+rl.append(__three)
 
 wl=[]
 wl.append(__echo)
+
 wl.append(__pmemkv)
+wl.append(__pmemkv_ncc)
+wl.append(__volatile_pmemkv)
+wl.append(__volatile_pmemkv_ncc)
+
 wl.append(__empty)
 
 ml=[]
@@ -40,6 +62,8 @@ parser.add_argument('-start', dest='start', action='store_true', default=False, 
 parser.add_argument('-stop', dest='stop', action='store_true', default=False, help="stop experiment")
 parser.add_argument('-w', dest='workload', default=__empty , help='workload name, eg: echo, pmemkv', choices=wl)
 parser.add_argument('-m', dest='memtype', default=__empty , help='memory type', choices=ml)
+parser.add_argument('-b', dest='bufsize', default=__empty , help='inflight buffer size')
+parser.add_argument('-rep', dest='replicas', default=__empty , help='number of replicas', choices=rl)
 
 try:
     args = parser.parse_args()
@@ -98,47 +122,105 @@ def clean():
     print 'cleaning deployed servers/clients'
 
 
+
+
+#map some workload names to binary name
+def wl2binary(arg):
+    switcher= {
+            'pmemkv_ncc' : 'pmemkv',
+            'volatile_pmemkv' : 'pmemkv',
+            'volatile_pmemkv_ncc' : 'pmemkv'
+            }
+    return switcher.get(arg,arg)
+
+
 def generate(args):
     w = args.workload
     m = args.memtype
+    b = args.bufsize
+    r = args.replicas
     #first we remove the old __gen_dir if any
     try:
         shutil.rmtree(__gen_dir)
     except OSError:
         pass
+    if r == __empty:
+        print "Error generating config, specify number of replicas"
+        return 1;
 
-    print 'generating workload : ' + w +'for memory tytpe: ' + m
-    cmd = 'python config_generator.py ../utils-arch-cluster/cluster-dpdk.ini ../utils-arch-cluster/example.ini '
-    cmd += './' + w + '.py ' + __gen_dir
+    print 'generating workload : ' + w +' for memory tytpe: ' + m + ' replica nodes: ' + r
+    cmd = 'python config_generator.py ../utils-arch-cluster/cluster-dpdk.ini.' + r + ' ../utils-arch-cluster/example.ini.' + r + ' '
+    cmd += './' + wl2binary(w) + '.py ' + b + ' '+ __gen_dir
 
     sh(cmd)
 
 
 #build the cyclone binaries and copy them over to participating machines
-def deploy_bin(args):
+def deploy_server_bin(args):
     w = args.workload
     m = args.memtype
     print 'building cyclone binaries'
+    
     cd('../core')
-    #cleaning and building core component
     cmd = 'make clean'
     sh(cmd)
     cmd = 'make'
+    if m == __nvram:
+        cmd += ' CPPFLAGS=' + '\"-DPMEM_HUGE\"'
     sh(cmd)
     cd(__home)
 
     cd('../test')
     cmd = 'make clean'
     sh(cmd)
-    cmd = 'make'
+
+    cmd = 'make server'
+    if m == __dram:
+        cmd += ' RTE_SSDK=' + __rte_sdk
+    elif m == __nvram:
+        cmd += ' RTE_SSDK=' + __rte_nvmsdk
+
+    if w == __volatile_pmemkv or w == __volatile_pmemkv_ncc:
+        cmd += ' CPPFLAGS=' + '\"-D__DRAM\"'
+    if w == __volatile_pmemkv_ncc or w == __pmemkv_ncc:
+        cmd += ' PMEM_SLIB=' + __ncc_pmem
     sh(cmd)
     cd(__home)
 
     #now copy the binaries over
     cmd ='./copy_binaries.sh '
-    cmd += __gen_dir + ' ' + __deploy_dir
+    cmd += __gen_dir + ' ' + __deploy_dir + ' ' + wl2binary(w)
     msg(cmd)
     sh(cmd)
+    cd(__home)
+
+# our client machines are different from servers. we are
+# shipping source
+def deploy_client_bin(args):
+    __tmpdir = 'tmpdir'
+    #compress core and test directories
+    try:
+        shutil.rmtree(__tmpdir)
+    except OSError:
+        pass
+    if not os.path.exists(__tmpdir):
+        os.makedirs(__tmpdir)
+
+    cd('..')
+    cmd = 'zip -rq '+ __home + '/tmpdir/client_src.zip '
+    cmd = cmd + 'core ' + 'test'
+    sh(cmd)
+    cd(__home)
+    
+    #ship compressed files
+    cmd ='./copy_client_src.sh '
+    cmd += __gen_dir + ' ' + __deploy_dir
+    sh(cmd)
+    cd(__home)
+
+def deploy_bin(args):
+    deploy_server_bin(args)
+    deploy_client_bin(args)
 
 # this should include both config copy and binary copy
 def deploy_configs(args):
@@ -166,9 +248,18 @@ def start_cyclone(args):
 
 
 def gather_output(args):
-    print 'collect output data'
+
+    w = args.workload
+    m = args.memtype
+    b = args.bufsize
+    r = args.replicas
+    if r == __empty:
+        print "Error gathering output, specify replicas"
+        return 1
+    outdir = 'results/' + w + '/rep' + r  + '/' + m + '/' + b
+    print 'collect output data and copying in to' + outdir
     cmd = './gather_output.sh '
-    cmd += __gen_dir + ' ' + __deploy_dir
+    cmd += __gen_dir + ' ' + __deploy_dir + ' ' + outdir
     sh(cmd)
     #version the ouput and move it to results dir
 

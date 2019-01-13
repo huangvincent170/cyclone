@@ -60,6 +60,7 @@ typedef struct rpc_st {
   int quorum_term;
   unsigned long channel_seq;
   unsigned long timestamp; // For tracing
+  //void (*cb)(int,unsigned long, unsigned long); // move this different struct
 } __attribute__((packed)) rpc_t; // Used for both requests and replies
 
 //////// Addendum for inter-core rendevouz
@@ -211,5 +212,6 @@ static const int RPC_REQ_NODEADD        = 4; // Add node
 static const int RPC_REQ_NODEDEL        = 5; // Delete node 
 static const int RPC_REP_OK             = 6; // RPC response OK
 static const int RPC_REP_FAIL           = 7; // RPC response FAILED 
+//static const int RPC_REP_TIMEOUT        = 8; // RPC response TIMED OUT
 
 #endif

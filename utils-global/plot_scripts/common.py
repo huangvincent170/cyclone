@@ -1,6 +1,41 @@
 #!/usr/bin/env python
 
+import os
+import sys
+import glob
+
 SAMPLE_SIZE = 100
+
+
+def dbg(s):
+    if DBG==1:
+        print s
+
+def msg(s):
+    print '\n' + '>>>' +s + '\n'
+
+def cd(dirt):
+
+    dbg(dirt)
+    if dirt == __home:
+        os.chdir(__home);
+    else:
+        path = __home + '/' + dirt
+        dbg(path)
+        try:
+            os.chdir(path)
+        except:
+            print 'invalid directory ', path
+            sys.exit(0)
+
+def sh(cmd):
+
+    #msg(cmd)
+    try:
+        os.system(cmd)
+    except:
+        print 'invalid cmd', cmd
+        sys.exit(0)
 
 def file_len(fname):
     with open(fname) as f:
@@ -13,6 +48,15 @@ def get_tl_tuple(line):
     if(slines[4] == 'LOAD' and slines[8] == 'LATENCY'):
         return (float(slines[6]),float(slines[10]))
     return None
+
+
+def parse_dir(dirpath):
+    regexpath = dirpath + '/' + 'client_*.log'
+    dirlist = glob.glob(regexpath)
+    for f in dirlist:
+        return parse_file(f)
+
+
 
 def parse_file(fpath):
     tl_l = []
@@ -39,7 +83,3 @@ def parse_file(fpath):
     ave_load = ave_load/len(tl_l)
     ave_lat = ave_lat/len(tl_l)
     return (ave_load,ave_lat)
-
-if __name__ == '__main__':
-
-    parse_file('../results/client_10.212.43.11.log')

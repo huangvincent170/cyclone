@@ -490,17 +490,6 @@ static void dpdk_context_init(dpdk_context_t *context,
 			      int queues)
 {
   int ret;
-  
-  /* char* fake_argv[] = {(char *)"./fake",
-			(char *)"-m",
-			(char *)"1024",
-			(char *)"--huge-dir",
-			(char *)"/mnt/pmem0p1",
-  			(char *)"--log-level=8"};
-*/
-
-
-  char* fake_argv[] = {(char *)"./fake"};
   struct rte_eth_dev_info dev_info;
   struct rte_eth_txconf *txconf;
   unsigned long max_req_size;
@@ -509,10 +498,24 @@ static void dpdk_context_init(dpdk_context_t *context,
   pack_ratio = 32; // Forced by burst recv. limitations
   BOOST_LOG_TRIVIAL(info) << "PACK RATIO = " << pack_ratio;
   BOOST_LOG_TRIVIAL(info) << "PORTS = " << context->ports;
+  BOOST_LOG_TRIVIAL(info) << "QUEUES = " << queues;
 
-  /* init EAL */
-  //ret = rte_eal_init(6, fake_argv);
+
+#ifdef PMEM_HUGE  
+  BOOST_LOG_TRIVIAL(info) << "dpddk with PMEM hugepages";
+  char* fake_argv[] = {(char *)"./fake",
+			(char *)"-m",
+			(char *)"1024",
+			(char *)"--huge-dir",
+			(char *)"/mnt/pmem1"};
+//  			(char *)"--log-level=8"};
+// ret = rte_eal_init(6, fake_argv);
+  ret = rte_eal_init(5, fake_argv);
+#else
+  BOOST_LOG_TRIVIAL(info) << "dpddk with DRAM hugepages";
+  char* fake_argv[] = {(char *)"./fake"};
   ret = rte_eal_init(1, fake_argv);
+#endif
   if (ret < 0)
     rte_exit(EXIT_FAILURE, "Invalid EAL arguments\n");
  

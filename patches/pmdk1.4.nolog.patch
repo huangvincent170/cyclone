@@ -1,0 +1,70 @@
+From 3b8300d2ca1e7ce574d62cdda9c5585a2ac13323 Mon Sep 17 00:00:00 2001
+From: pradeep <pradeepfn@gmail.com>
+Date: Tue, 13 Nov 2018 14:47:03 -0800
+Subject: [PATCH] nolog edits
+
+---
+ src/libpmemobj/Makefile |  2 +-
+ src/libpmemobj/memops.c | 10 ++++++++++
+ src/libpmemobj/tx.c     |  4 ++++
+ 3 files changed, 15 insertions(+), 1 deletion(-)
+
+diff --git a/src/libpmemobj/Makefile b/src/libpmemobj/Makefile
+index 688dc258e..fc77e01f1 100644
+--- a/src/libpmemobj/Makefile
++++ b/src/libpmemobj/Makefile
+@@ -66,6 +66,6 @@ SOURCE +=\
+ 
+ include ../Makefile.inc
+ 
+-CFLAGS += -DUSE_LIBDL -D_PMEMOBJ_INTRNL
++CFLAGS += -Wno-unused-function -DUSE_LIBDL -D_PMEMOBJ_INTRNL -D__CSOFF
+ 
+ LIBS += -pthread -lpmem $(LIBDL)
+diff --git a/src/libpmemobj/memops.c b/src/libpmemobj/memops.c
+index 00bace1a6..175269245 100644
+--- a/src/libpmemobj/memops.c
++++ b/src/libpmemobj/memops.c
+@@ -198,7 +198,17 @@ operation_process(struct operation_context *ctx)
+ 
+ 		VALGRIND_REMOVE_FROM_TX(e->ptr, sizeof(uint64_t));
+ 	} else if (ctx->nentries[ENTRY_PERSISTENT] != 0) {
++#if !defined (__CSOFF)
+ 		operation_process_persistent_redo(ctx);
++#else
++	/*
++	 * we process the buffered entries without redo logging
++	 */
++	for (size_t i = 0; i < ctx->nentries[ENTRY_PERSISTENT]; ++i) {
++		e = &ctx->entries[ENTRY_PERSISTENT][i];
++		*e->ptr = e->value;
++	}
++#endif
+ 	}
+ 
+ 	for (size_t i = 0; i < ctx->nentries[ENTRY_TRANSIENT]; ++i) {
+diff --git a/src/libpmemobj/tx.c b/src/libpmemobj/tx.c
+index 523eb28ac..53e70e89c 100644
+--- a/src/libpmemobj/tx.c
++++ b/src/libpmemobj/tx.c
+@@ -1775,6 +1775,7 @@ vg_verify_initialized(PMEMobjpool *pop, const struct tx_range_def *def)
+ static int
+ pmemobj_tx_add_common(struct tx *tx, struct tx_range_def *args)
+ {
++#if !defined(__CSOFF)
+ 	LOG(15, NULL);
+ 
+ 	if (args->size > PMEMOBJ_MAX_ALLOC_SIZE) {
+@@ -1879,6 +1880,9 @@ pmemobj_tx_add_common(struct tx *tx, struct tx_range_def *args)
+ 	}
+ 
+ 	return 0;
++#else
++	return 0;
++#endif
+ }
+ 
+ /*
+-- 
+2.14.4
+
