@@ -507,7 +507,7 @@ static void dpdk_context_init(dpdk_context_t *context,
 			(char *)"-m",
 			(char *)"1024",
 			(char *)"--huge-dir",
-			(char *)"/mnt/pmem0p1"};
+			(char *)"/mnt/pmem1"};
 //  			(char *)"--log-level=8"};
 // ret = rte_eal_init(6, fake_argv);
   ret = rte_eal_init(5, fake_argv);

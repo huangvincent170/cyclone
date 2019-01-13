@@ -13,7 +13,7 @@ typedef struct pmemkv_st{
 #ifdef __DRAM
 static const char* PMEM_KV = "/dev/shm/pmemkv";
 #else
-static const char* PMEM_KV = "/mnt/pmem1p1/pmemkv";
+static const char* PMEM_KV = "/mnt/pmem1/pmemkv";
 #endif
 
 static const char* KV_ENGINE = "kvtree3";

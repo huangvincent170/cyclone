@@ -10,15 +10,18 @@ counter_coordinator_driver counter_driver_mt counter_driver_noop_mt
 
 server: echo_server pmemkv_server
 
-client: echo_client echo_async_client pmemkv_client pmemkv_async_client
+#client: echo_client echo_async_client pmemkv_client pmemkv_async_client
+client: pmemkv_async_client echo_async_client
 
 CXXFLAGS = -O3 -DBOOST_LOG_DYN_LINK -DBOOST_THREAD_DYN_LINK
 CXXFLAGS += $(CPPFLAGS)
 #CXXFLAGS = -O1 -g -fno-omit-frame-pointer -DBOOST_LOG_DYN_LINK
-PMEM_LIB=../pmdk/src/debug
-LIBS = -lc ../core/libcyclone.a ../raft/libcraft.a ${PMEM_LIB}/libpmemobj.a ${PMEM_LIB}/libpmem.a -lndctl -ldaxctl  -lboost_system -lboost_date_time -lpthread -laio
-#DPDK extras
+PMEM_SLIB?=/home/pfernando/pmdk/src/nondebug
+PMEM_CLIB?=../pmdk/src/nondebug
 
+LIBS = -lc ../core/libcyclone.a ../raft/libcraft.a -lboost_system -lboost_date_time -laio
+
+#DPDK extras
 RTE_CSDK?=/home/pfernando/dpdk
 RTE_SSDK?=/home/pfernando/dpdk
 
@@ -36,6 +39,9 @@ LIBS2 = -Wl,--whole-archive -Wl,-lrte_distributor -Wl,-lrte_reorder -Wl,-lrte_kn
 SERVER_LIBS += ${LIBS2}
 CLIENT_LIBS += ${LIBS2}
 
+SERVER_LIBS += ${PMEM_SLIB}/libpmemobj.a ${PMEM_SLIB}/libpmem.a -lndctl -ldaxctl -lpthread
+CLIENT_LIBS += ${PMEM_CLIB}/libpmemobj.a ${PMEM_CLIB}/libpmem.a -lndctl -ldaxctl -lpthread
+
 #Rocksdb 
 ROCKS_HOME=/root/cyclone/rocksdb
 ROCKS_CXXFLAGS=-std=c++11 -I//root/cyclone/rocksdb/include/ -L/root/cyclone/rocksdb -DROCKSDB_PLATFORM_POSIX -DROCKSDB_LIB_IO_POSIX  -DOS_LINUX -fno-builtin-memcmp -DROCKSDB_FALLOCATE_PRESENT -DSNAPPY -DGFLAGS=gflags -DZLIB -DBZIP2 -DZSTD -DNUMA -DROCKSDB_MALLOC_USABLE_SIZE -DROCKSDB_PTHREAD_ADAPTIVE_MUTEX -DROCKSDB_BACKTRACE -march=native  "-DROCKSDB_JEMALLOC"
@@ -45,7 +51,7 @@ ROCKS_LIBS += ${ROCKS_HOME}/librocksdb.a ${ROCKS_HOME}/libbz2.a ${ROCKS_HOME}/li
 #pmemkv
 PMEMKV_HOME=../pmemkv
 PMEMKV_CXXFLAGS=-std=c++11 -I${PMEMKV_HOME}/src 
-PMEMKV_LIBS=${PMEMKV_HOME}/bin/libpmemkv.a ${PMEM_LIB}/libpmemobj.a ${PMEM_LIB}/libpmem.a -lndctl -ldaxctl
+PMEMKV_LIBS=${PMEMKV_HOME}/bin/libpmemkv.a
 
 #BOOST_THREAD_LIB=-lboost_thread-mt
 BOOST_THREAD_LIB=-lboost_thread

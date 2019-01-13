@@ -12,7 +12,8 @@ __deploy_dir = '/home/pfernando/cyclone'
 __home = '/home/pfernando/deploy-cyclone/utils-global'
 __rte_sdk = '/home/pfernando/dpdk'
 __rte_nvmsdk = '/home/pfernando/nvm-dpdk'
-
+#pmemkv lib with crash-consistent logging turned-off
+__ncc_pmem = '/home/pfernando/pmdknlog/src/nondebug'
 
 #config - single replica, 3 replicas etc
 __one = '1'
@@ -21,8 +22,11 @@ __three = '3'
 
 #workloads
 __echo = 'echo'
+
 __pmemkv = 'pmemkv'
+__pmemkv_ncc = 'pmemkv_ncc'
 __volatile_pmemkv = 'volatile_pmemkv'
+__volatile_pmemkv_ncc = 'volatile_pmemkv_ncc'
 
 #memory types
 __dram = 'dram'
@@ -36,8 +40,12 @@ rl.append(__three)
 
 wl=[]
 wl.append(__echo)
+
 wl.append(__pmemkv)
+wl.append(__pmemkv_ncc)
 wl.append(__volatile_pmemkv)
+wl.append(__volatile_pmemkv_ncc)
+
 wl.append(__empty)
 
 ml=[]
@@ -119,7 +127,9 @@ def clean():
 #map some workload names to binary name
 def wl2binary(arg):
     switcher= {
-            'volatile_pmemkv' : 'pmemkv'
+            'pmemkv_ncc' : 'pmemkv',
+            'volatile_pmemkv' : 'pmemkv',
+            'volatile_pmemkv_ncc' : 'pmemkv'
             }
     return switcher.get(arg,arg)
 
@@ -170,9 +180,10 @@ def deploy_server_bin(args):
     elif m == __nvram:
         cmd += ' RTE_SSDK=' + __rte_nvmsdk
 
-    if w == __volatile_pmemkv:
+    if w == __volatile_pmemkv or w == __volatile_pmemkv_ncc:
         cmd += ' CPPFLAGS=' + '\"-D__DRAM\"'
-
+    if w == __volatile_pmemkv_ncc or w == __pmemkv_ncc:
+        cmd += ' PMEM_SLIB=' + __ncc_pmem
     sh(cmd)
     cd(__home)
 
