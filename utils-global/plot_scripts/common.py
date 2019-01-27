@@ -45,7 +45,7 @@ def file_len(fname):
 
 def get_tl_tuple(line):
     slines = line.split(' ')
-    if(slines[4] == 'LOAD' and slines[8] == 'LATENCY'):
+    if(len(slines) > 8 and slines[4] == 'LOAD' and slines[8] == 'LATENCY'):
         return (float(slines[6]),float(slines[10]))
     return None
 
@@ -57,8 +57,30 @@ def parse_dir(dirpath):
         return parse_file(f)
 
 
+# during the system saturation we don't get much output to work on.
+# we parse whatever we have to generate the number
+def parse_again(fpath):
+    tl_l = []
+    with open(fpath) as f:
+        for line in f:
+            tuple = get_tl_tuple(line)
+            if tuple is not None:
+                tl_l.append(tuple)
+
+    if not len(tl_l):
+        return None
+    ave_load = 0
+    ave_lat = 0
+    for x in tl_l:
+        ave_load += x[0]
+        ave_lat += x[1]
+    ave_load = ave_load/len(tl_l)
+    ave_lat = ave_lat/len(tl_l)
+    return (ave_load,ave_lat)
+
 
 def parse_file(fpath):
+    print 'now parsing : ' + fpath
     tl_l = []
     nlines = file_len(fpath)
     start_line = nlines/2;
@@ -75,6 +97,8 @@ def parse_file(fpath):
                 break
             cnt += 1
 
+    if not len(tl_l):
+        return parse_again(fpath)
     ave_load = 0
     ave_lat = 0
     for x in tl_l:
@@ -83,3 +107,4 @@ def parse_file(fpath):
     ave_load = ave_load/len(tl_l)
     ave_lat = ave_lat/len(tl_l)
     return (ave_load,ave_lat)
+
