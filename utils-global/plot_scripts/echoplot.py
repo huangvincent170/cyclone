@@ -74,7 +74,9 @@ if __name__ == '__main__':
   if r == __empty:
       sys.exit(0)
 
-  bufsize = [0, 1, 2, 3, 4, 5]
+
+  bufsize = [1,  2,  4,  6,  8,  10,  12,  14,  16,  18,  20,  22,  24,  26,  28 , 32,  34,  36]
+
   t_l = []
   for idx1,item1 in enumerate(wrkld_l):
         for idx2,item2 in enumerate(tstone_l):
