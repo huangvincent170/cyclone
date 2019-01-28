@@ -16,6 +16,10 @@ do
 		echo "copy back logs"
 		scp ${ip}:${deploy_dir}/${node}/client_log0  ${out_dir}/client_${ip}.log
 	fi
+	if [ "${node}" = "cyclone_0" ]; then
+		echo "copy back server 0 logs"
+		scp ${ip}:${deploy_dir}/${node}/server_log  ${out_dir}/server_${ip}.log
+	fi
     fi
 done
 

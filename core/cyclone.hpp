@@ -93,7 +93,7 @@ static int is_multicore_rpc(rpc_t *rpc)
   if(rpc->core_mask & (rpc->core_mask - 1)) {
     return 1;
   }
-  else {
+  else { // 100 & 011 -> 0 ( single core always resolve to zero )
     return 0;
   }
 }
