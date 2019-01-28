@@ -31,20 +31,22 @@
  */
 
 
-#include<assert.h>
-#include<errno.h>
-#include<libcyclone.hpp>
-#include<string.h>
-#include<stdlib.h>
-#include "../core/logging.hpp"
-#include "../core/clock.hpp"
-#include<stdio.h>
+#include <assert.h>
+#include <errno.h>
+#include <string.h>
+#include <stdlib.h>
+#include <stdio.h>
+#include <unistd.h>
 #include <time.h>
-#include<unistd.h>
+
 #include <rocksdb/db.h>
 #include <rocksdb/options.h>
-#include "rocksdb.hpp"
 #include <rocksdb/write_batch.h>
+
+#include "../core/libcyclone.hpp"
+#include "../core/logging.hpp"
+#include "../core/clock.hpp"
+#include "rocksdb.hpp"
 
 // Rate measurement stuff
 static unsigned long *marks;
@@ -207,8 +209,8 @@ void opendb(){
   options.max_background_flushes = num_threads;
   options.max_write_buffer_number = num_threads;
   options.wal_dir = log_dir;
-  options.env->set_affinity(num_quorums + executor_threads, 
-			    num_quorums + executor_threads + num_threads);
+  //options.env->set_affinity(num_quorums + executor_threads, 
+  //			    num_quorums + executor_threads + num_threads);
   rocksdb::Status s = rocksdb::DB::Open(options, data_dir, &db);
   if (!s.ok()){
     BOOST_LOG_TRIVIAL(fatal) << s.ToString().c_str();
