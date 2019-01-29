@@ -109,6 +109,7 @@ void callback(const unsigned char *data,
     else {
       int leader = __builtin_ffsl(cookie->core_mask) - 1;
       if(leader == cookie->core_id) { // Multi put
+		  assert(0);
 	rocksdb::WriteBatch batch;
 	int bytes  = len;
 	const unsigned char *buffer = data;
@@ -174,6 +175,7 @@ int wal_callback(const unsigned char *data,
 		 rpc_cookie_t *cookie)
 {
   if(use_flashlog) {
+	assert(0);
     int idx = log_append(logs[cookie->core_id],
 			 (const char *)data,
 			 len, 
@@ -240,12 +242,12 @@ int main(int argc, char *argv[])
 		       atoi(argv[6]) + num_queues*num_quorums + executor_threads);
   
 
-  char log_path[50];
+/*  char log_path[50];
   for(int i=0;i<executor_threads;i++) {
     sprintf(log_path, "%s/flash_log%d", log_dir, i);
     logs[i] = create_flash_log(log_path);
   }
-  
+*/ 
   opendb();
   
   
