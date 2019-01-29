@@ -84,7 +84,7 @@ void callback(const unsigned char *data,
 {
   cookie->ret_value  = malloc(len);
   cookie->ret_size   = len;
-  rock_kv_t *rock = (rock_kv_t *)data;
+  rockskv_t *rock = (rockskv_t *)data;
   if(rock->op == OP_PUT) {
     rocksdb::WriteOptions write_options;
     if(use_rocksdbwal) {
@@ -95,7 +95,7 @@ void callback(const unsigned char *data,
       write_options.sync       = false;
       write_options.disableWAL = true;
     }
-    if(len == sizeof(rock_kv_t)) { // single put
+    if(len == sizeof(rockskv_t)) { // single put
       rocksdb::Slice key((const char *)&rock->key, 8);
       rocksdb::Slice value((const char *)&rock->value[0], value_sz);
       rocksdb::Status s = db->Put(write_options, 
@@ -118,8 +118,8 @@ void callback(const unsigned char *data,
 	    rocksdb::Slice key((const char *)&rock->key, 8);
 	    rocksdb::Slice value((const char *)&rock->value[0], value_sz);
 	    batch.Put(key, value);
-	    buffer = buffer + sizeof(rock_kv_t);
-	    bytes -= sizeof(rock_kv_t);
+	    buffer = buffer + sizeof(rockskv_t);
+	    bytes -= sizeof(rockskv_t);
 	  }
 	  else {
 	    rock_kv_pair_t *kv = (rock_kv_pair_t *)buffer;
@@ -145,7 +145,7 @@ void callback(const unsigned char *data,
     memcpy(cookie->ret_value, data, len);
   }
   else {
-    rock_kv_t *rock_back = (rock_kv_t *)cookie->ret_value;
+    rockskv_t *rock_back = (rockskv_t *)cookie->ret_value;
     rocksdb::Slice key((const char *)&rock->key, 8);
     std::string value;
     rocksdb::Status s = db->Get(rocksdb::ReadOptions(),

@@ -55,14 +55,16 @@ def launch_cmds_client_gen(f, m, c, quorums, replicas, clients, machines, ports,
                  passwd=os.environ.get('CYCLONE_PASS')
             cmd=cmd + ' echo ' + passwd + ' | sudo -S '
             cmd=cmd + ' LD_LIBRARY_PATH=/usr/lib:/usr/local/lib '
-            cmd=cmd + '/home/pfernando/cyclone/cyclone.git/test/rocksdb_client '
+            #cmd=cmd + '/home/pfernando/cyclone/cyclone.git/test/rocksdb_client '
+            cmd=cmd + '/home/pfernando/cyclone/cyclone.git/test/rocksdb_async_client '
             cmd=cmd + str(c_start) + ' '
             cmd=cmd + str(c_stop) + ' '
             cmd=cmd + str(m) + ' '
             cmd=cmd + str(replicas) + ' '
             cmd=cmd + str(clients) + ' '
             cmd=cmd + str(quorums) + ' '
-            cmd=cmd + 'config_cluster.ini config_quorum ' + str(ports) + ' ' + str(bufsize) + ' &> client_log' + str(0) + '&\n'
+            #cmd=cmd + 'config_cluster.ini config_quorum ' + str(ports) + ' ' + ' &> client_log' + str(0) + ' &\n'
+            cmd=cmd + 'config_cluster.ini config_quorum ' + str(ports) + ' ' + str(bufsize) + ' &> client_log' + str(0) + ' &\n'
             f.write(cmd)
         
 def killall_cmds_gen(f):

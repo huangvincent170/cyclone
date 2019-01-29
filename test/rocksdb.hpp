@@ -4,11 +4,11 @@ const unsigned long OP_PUT       = 0;
 const unsigned long OP_GET       = 1;
 const unsigned long OP_ADD       = 2;
 const unsigned long value_sz     = 8;
-typedef struct rock_kv_st{
+typedef struct rockskv_st{
   unsigned long op;
   unsigned long key;
   char value[value_sz];
-}rock_kv_t;
+}rockskv_t;
 typedef struct rock_kv_pair_st {
   unsigned long key;
   char value[value_sz];

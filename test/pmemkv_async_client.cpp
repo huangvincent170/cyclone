@@ -75,7 +75,7 @@ void async_callback(void *args, int code, unsigned long msg_latency)
 		tx_begin_time = rtc_clock::current_time();
 	}else if(tx_failed_cnt >= 5000){
 		unsigned long total_elapsed_time = (rtc_clock::current_time() - tx_begin_time);
-		BOOST_LOG_TRIVIAL(info) << "Escessive message timing out "
+		BOOST_LOG_TRIVIAL(info) << "Ecsessive message timing out "
 			<< " timedout count "
 			<< tx_failed_cnt
 			<< " success count "
