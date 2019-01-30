@@ -222,8 +222,8 @@ int driver(void *arg)
 }
 
 int main(int argc, const char *argv[]) {
-	if(argc != 10) {
-		printf("Usage: %s client_id_start client_id_stop mc replicas clients partitions cluster_config quorum_config_prefix server_ports\n", argv[0]);
+	if(argc != 11) {
+		printf("Usage: %s client_id_start client_id_stop mc replicas clients partitions cluster_config quorum_config_prefix server_ports inflight_cap\n", argv[0]);
 		exit(-1);
 	}
 
@@ -231,7 +231,8 @@ int main(int argc, const char *argv[]) {
 	int client_id_stop  = atoi(argv[2]);
 	driver_args_t *dargs;
 	void **prev_handles;
-	cyclone_network_init(argv[7], 1, atoi(argv[3]), 1 + client_id_stop - client_id_start);
+	cyclone_network_init(argv[7], 1, atoi(argv[3]), 
+			2 + client_id_stop - client_id_start); // 2 - sync and async queues
 	driver_args_t ** dargs_array =
 		(driver_args_t **)malloc((client_id_stop - client_id_start)*sizeof(driver_args_t *));
 	for(int me = client_id_start; me < client_id_stop; me++) {
@@ -260,15 +261,13 @@ int main(int argc, const char *argv[]) {
 					fname_server,
 					atoi(argv[9]),
 					fname_client,
-					CLIENT_SYNC,0);
+					CLIENT_ASYNC,
+					atoi(argv[10]));
 		}
 	}
-	for(int me = client_id_start; me < client_id_stop; me++) {
-		int e = rte_eal_remote_launch(driver, dargs_array[me-client_id_start], 1 + me - client_id_start);
-		if(e != 0) {
-			BOOST_LOG_TRIVIAL(fatal) << "Failed to launch driver on remote lcore";
-			exit(-1);
-		}
-	}
+	for (int me = client_id_start; me < client_id_stop; me++){
+        cyclone_launch_clients(dargs_array[me-client_id_start]->handles[0],
+				driver, dargs_array[me-client_id_start], 1+  me-client_id_start);
+    } 
 	rte_eal_mp_wait_lcore();
 }

@@ -14,7 +14,12 @@ enum trcekey{
 
 #define LT_INIT_RUNTIME()
 #define LT_START(key, rpc)
+#define LT_PAUSE(key, rpc)
 #define LT_END(key, rpc)
+
+#define LT_LOCAL_START_BATCH(key, count)
+#define LT_LOCAL_END_BATCH(key, count)
+
 #define LT_PRINT() 
 
 #else
