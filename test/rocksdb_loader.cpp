@@ -31,19 +31,21 @@
  */
 
 
-#include<assert.h>
-#include<errno.h>
-#include<string.h>
-#include<stdlib.h>
-#include "../core/logging.hpp"
-#include "../core/clock.hpp"
-#include<stdio.h>
+#include <assert.h>
+#include <errno.h>
+#include <string.h>
+#include <stdlib.h>
+#include <stdio.h>
 #include <time.h>
-#include<unistd.h>
+#include <unistd.h>
+
 #include <rocksdb/db.h>
 #include <rocksdb/options.h>
 #include <rocksdb/write_batch.h>
 #include "rocksdb.hpp"
+
+#include "../core/logging.hpp"
+#include "../core/clock.hpp"
 
 // Rate measurement stuff
 rocksdb::DB* db = NULL;
@@ -84,7 +86,7 @@ void opendb(){
   options.create_if_missing = true;
   options.error_if_exists   = true;
   auto env = rocksdb::Env::Default();
-  env->set_affinity(0, 10); 
+  //env->set_affinity(0, 10); 
   env->SetBackgroundThreads(2, rocksdb::Env::LOW);
   env->SetBackgroundThreads(1, rocksdb::Env::HIGH);
   options.env = env;

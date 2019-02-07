@@ -8,10 +8,12 @@ counter_coordinator_driver counter_driver_mt counter_driver_noop_mt
 #all: echo_server echo_client echo_async_client
 #all: echo_server echo_client pmemkv_client pmemkv_server
 
-server: echo_server pmemkv_server
+#server: echo_server pmemkv_server
+server: rocksdb_server
 
 #client: echo_client echo_async_client pmemkv_client pmemkv_async_client
-client: pmemkv_async_client echo_async_client
+#client: pmemkv_async_client echo_async_client
+client: rocksdb_client
 
 CXXFLAGS = -O3 -DBOOST_LOG_DYN_LINK -DBOOST_THREAD_DYN_LINK
 CXXFLAGS += $(CPPFLAGS)
@@ -43,8 +45,8 @@ SERVER_LIBS += ${PMEM_SLIB}/libpmemobj.a ${PMEM_SLIB}/libpmem.a -lndctl -ldaxctl
 CLIENT_LIBS += ${PMEM_CLIB}/libpmemobj.a ${PMEM_CLIB}/libpmem.a -lndctl -ldaxctl -lpthread
 
 #Rocksdb 
-ROCKS_HOME=/root/cyclone/rocksdb
-ROCKS_CXXFLAGS=-std=c++11 -I//root/cyclone/rocksdb/include/ -L/root/cyclone/rocksdb -DROCKSDB_PLATFORM_POSIX -DROCKSDB_LIB_IO_POSIX  -DOS_LINUX -fno-builtin-memcmp -DROCKSDB_FALLOCATE_PRESENT -DSNAPPY -DGFLAGS=gflags -DZLIB -DBZIP2 -DZSTD -DNUMA -DROCKSDB_MALLOC_USABLE_SIZE -DROCKSDB_PTHREAD_ADAPTIVE_MUTEX -DROCKSDB_BACKTRACE -march=native  "-DROCKSDB_JEMALLOC"
+ROCKS_HOME=/home/pfernando/rocksdb
+ROCKS_CXXFLAGS=-std=c++11 -I${ROCKS_HOME}/include/ -L${ROCKS_HOME} -DROCKSDB_PLATFORM_POSIX -DROCKSDB_LIB_IO_POSIX  -DOS_LINUX -fno-builtin-memcmp -DROCKSDB_FALLOCATE_PRESENT -DSNAPPY -DGFLAGS=gflags -DZLIB -DBZIP2 -DZSTD -DNUMA -DROCKSDB_MALLOC_USABLE_SIZE -DROCKSDB_PTHREAD_ADAPTIVE_MUTEX -DROCKSDB_BACKTRACE -march=native  "-DROCKSDB_JEMALLOC"
 ROCKS_LIBS += ${ROCKS_HOME}/librocksdb.a ${ROCKS_HOME}/libbz2.a ${ROCKS_HOME}/libz.a ${ROCKS_HOME}/libsnappy.a -lsnappy -lgflags -lz -lbz2 -lzstd 
 
 
@@ -66,7 +68,7 @@ pmemkv_server:pmemkv_server.cpp
 	$(CXX) $(CXXFLAGS) $(PMEMKV_CXXFLAGS) pmemkv_server.cpp $(BOOST_THREAD_LIB) $(PMEMKV_LIBS) $(SERVER_LIBS) -o $@
 
 rocksdb_server:rocksdb_server.cpp
-	$(CXX) $(CXXFLAGS) $(ROCKS_CXXFLAGS) rocksdb_server.cpp $(BOOST_THREAD_LIB) $(LIBS) $(ROCKS_LIBS) -o $@
+	$(CXX) $(CXXFLAGS) $(ROCKS_CXXFLAGS) rocksdb_server.cpp $(BOOST_THREAD_LIB) $(SERVER_LIBS) $(ROCKS_LIBS) -o $@
 
 fb_server:fb_server.cpp
 	$(CXX) $(CXXFLAGS) $(ROCKS_CXXFLAGS) fb_server.cpp $(BOOST_THREAD_LIB) $(LIBS) $(ROCKS_LIBS) -o $@
@@ -96,7 +98,7 @@ pmemkv_async_client:pmemkv_async_client.cpp
 	$(CXX) $(CLIENT_CXXFLAGS) pmemkv_async_client.cpp $(BOOST_THREAD_LIB) $(CLIENT_LIBS) -o $@
 
 rocksdb_client:rocksdb_client.cpp 
-	$(CXX) $(CXXFLAGS) rocksdb_client.cpp $(BOOST_THREAD_LIB) $(LIBS) -o $@
+	$(CXX) $(CLIENT_CXXFLAGS) rocksdb_client.cpp $(BOOST_THREAD_LIB) $(CLIENT_LIBS) -o $@
 
 fb_client:fb_client.cpp 
 	$(CXX) $(CXXFLAGS) -std=c++0x fb_client.cpp $(BOOST_THREAD_LIB) $(LIBS) -o $@

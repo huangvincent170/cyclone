@@ -31,20 +31,22 @@
  */
 
 
-#include<assert.h>
-#include<errno.h>
-#include<libcyclone.hpp>
-#include<string.h>
-#include<stdlib.h>
-#include "../core/logging.hpp"
-#include "../core/clock.hpp"
-#include<stdio.h>
+#include <assert.h>
+#include <errno.h>
+#include <string.h>
+#include <stdlib.h>
+#include <stdio.h>
+#include <unistd.h>
 #include <time.h>
-#include<unistd.h>
+
 #include <rocksdb/db.h>
 #include <rocksdb/options.h>
-#include "rocksdb.hpp"
 #include <rocksdb/write_batch.h>
+
+#include "../core/libcyclone.hpp"
+#include "../core/logging.hpp"
+#include "../core/clock.hpp"
+#include "rocksdb.hpp"
 
 // Rate measurement stuff
 static unsigned long *marks;
@@ -82,7 +84,7 @@ void callback(const unsigned char *data,
 {
   cookie->ret_value  = malloc(len);
   cookie->ret_size   = len;
-  rock_kv_t *rock = (rock_kv_t *)data;
+  rockskv_t *rock = (rockskv_t *)data;
   if(rock->op == OP_PUT) {
     rocksdb::WriteOptions write_options;
     if(use_rocksdbwal) {
@@ -93,7 +95,7 @@ void callback(const unsigned char *data,
       write_options.sync       = false;
       write_options.disableWAL = true;
     }
-    if(len == sizeof(rock_kv_t)) { // single put
+    if(len == sizeof(rockskv_t)) { // single put
       rocksdb::Slice key((const char *)&rock->key, 8);
       rocksdb::Slice value((const char *)&rock->value[0], value_sz);
       rocksdb::Status s = db->Put(write_options, 
@@ -107,6 +109,7 @@ void callback(const unsigned char *data,
     else {
       int leader = __builtin_ffsl(cookie->core_mask) - 1;
       if(leader == cookie->core_id) { // Multi put
+		  assert(0);
 	rocksdb::WriteBatch batch;
 	int bytes  = len;
 	const unsigned char *buffer = data;
@@ -115,8 +118,8 @@ void callback(const unsigned char *data,
 	    rocksdb::Slice key((const char *)&rock->key, 8);
 	    rocksdb::Slice value((const char *)&rock->value[0], value_sz);
 	    batch.Put(key, value);
-	    buffer = buffer + sizeof(rock_kv_t);
-	    bytes -= sizeof(rock_kv_t);
+	    buffer = buffer + sizeof(rockskv_t);
+	    bytes -= sizeof(rockskv_t);
 	  }
 	  else {
 	    rock_kv_pair_t *kv = (rock_kv_pair_t *)buffer;
@@ -142,7 +145,7 @@ void callback(const unsigned char *data,
     memcpy(cookie->ret_value, data, len);
   }
   else {
-    rock_kv_t *rock_back = (rock_kv_t *)cookie->ret_value;
+    rockskv_t *rock_back = (rockskv_t *)cookie->ret_value;
     rocksdb::Slice key((const char *)&rock->key, 8);
     std::string value;
     rocksdb::Status s = db->Get(rocksdb::ReadOptions(),
@@ -172,6 +175,7 @@ int wal_callback(const unsigned char *data,
 		 rpc_cookie_t *cookie)
 {
   if(use_flashlog) {
+	assert(0);
     int idx = log_append(logs[cookie->core_id],
 			 (const char *)data,
 			 len, 
@@ -207,8 +211,8 @@ void opendb(){
   options.max_background_flushes = num_threads;
   options.max_write_buffer_number = num_threads;
   options.wal_dir = log_dir;
-  options.env->set_affinity(num_quorums + executor_threads, 
-			    num_quorums + executor_threads + num_threads);
+  //options.env->set_affinity(num_quorums + executor_threads, 
+  //			    num_quorums + executor_threads + num_threads);
   rocksdb::Status s = rocksdb::DB::Open(options, data_dir, &db);
   if (!s.ok()){
     BOOST_LOG_TRIVIAL(fatal) << s.ToString().c_str();
@@ -238,12 +242,12 @@ int main(int argc, char *argv[])
 		       atoi(argv[6]) + num_queues*num_quorums + executor_threads);
   
 
-  char log_path[50];
+/*  char log_path[50];
   for(int i=0;i<executor_threads;i++) {
     sprintf(log_path, "%s/flash_log%d", log_dir, i);
     logs[i] = create_flash_log(log_path);
   }
-  
+*/ 
   opendb();
   
   

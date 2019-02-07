@@ -28,6 +28,8 @@ __pmemkv_ncc = 'pmemkv_ncc'
 __volatile_pmemkv = 'volatile_pmemkv'
 __volatile_pmemkv_ncc = 'volatile_pmemkv_ncc'
 
+__rocksdb = 'rocksdb'
+
 #memory types
 __dram = 'dram'
 __nvram = 'nvram'
@@ -45,6 +47,7 @@ wl.append(__pmemkv)
 wl.append(__pmemkv_ncc)
 wl.append(__volatile_pmemkv)
 wl.append(__volatile_pmemkv_ncc)
+wl.append(__rocksdb)
 
 wl.append(__empty)
 
@@ -118,7 +121,7 @@ def stat(f):
 
 #utility script for running blizzard tests
 
-def clean():
+def clean(args):
     print 'cleaning deployed servers/clients'
 
 
@@ -273,7 +276,8 @@ if __name__ == '__main__':
     db = args.deploy_bins
     dc = args.deploy_configs
     clct = args.collect
-
+    if args.clean is True:
+        clean(args)
     if db == True:
         deploy_bin(args)
     if g == True:
