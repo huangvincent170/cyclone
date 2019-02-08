@@ -33,11 +33,11 @@ project(pmemkv)
 
 set(CMAKE_CXX_STANDARD 11)
 set(SOURCE_FILES src/pmemkv.cc src/pmemkv.h
-    src/engines/blackhole.h src/engines/blackhole.cc
-    src/engines/kvtree2.h src/engines/kvtree2.cc
-    src/engines/kvtree3.h src/engines/kvtree3.cc
-    src/engines/btree.h src/engines/btree.cc
-    src/engines/btree/persistent_b_tree.h src/engines/btree/pstring.h
+	#    src/engines/blackhole.h src/engines/blackhole.cc
+	#src/engines/kvtree2.h src/engines/kvtree2.cc
+	src/engines/kvtree3.h src/engines/kvtree3.cc
+	#src/engines/btree.h src/engines/btree.cc
+	#src/engines/btree/persistent_b_tree.h src/engines/btree/pstring.h
 )
 set(3RDPARTY ${PROJECT_SOURCE_DIR}/3rdparty)
 set(GTEST_VERSION 1.7.0)
@@ -80,8 +80,8 @@ add_library(pmemkv SHARED ${SOURCE_FILES})
 target_link_libraries(pmemkv ${PMEMOBJ++_LIBRARIES})
 
 add_executable(pmemkv_test tests/pmemkv_test.cc tests/mock_tx_alloc.cc
-               tests/engines/blackhole_test.cc
-               tests/engines/btree_test.cc
-               tests/engines/kvtree_test.cc
-)
+	tests/engines/kvtree_test.cc
+	)
+	#               tests/engines/blackhole_test.cc
+	#           tests/engines/btree_test.cc
 target_link_libraries(pmemkv_test pmemkv libgtest ${CMAKE_DL_LIBS})
