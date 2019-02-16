@@ -1,0 +1,426 @@
+!_TAG_FILE_FORMAT	2	/extended format; --format=1 will not append ;" to lines/
+!_TAG_FILE_SORTED	1	/0=unsorted, 1=sorted, 2=foldcase/
+!_TAG_PROGRAM_AUTHOR	Darren Hiebert	/dhiebert@users.sourceforge.net/
+!_TAG_PROGRAM_NAME	Exuberant Ctags	//
+!_TAG_PROGRAM_URL	http://ctags.sourceforge.net	/official site/
+!_TAG_PROGRAM_VERSION	5.9~svn20110310	//
+ARCH_CPU_ARM64_FAMILY	./port/atomic_pointer.h	236;"	d
+ARCH_CPU_ARM64_FAMILY	./port/atomic_pointer.h	39;"	d
+ARCH_CPU_ARM_FAMILY	./port/atomic_pointer.h	235;"	d
+ARCH_CPU_ARM_FAMILY	./port/atomic_pointer.h	37;"	d
+ARCH_CPU_MIPS_FAMILY	./port/atomic_pointer.h	43;"	d
+ARCH_CPU_PPC_FAMILY	./port/atomic_pointer.h	237;"	d
+ARCH_CPU_PPC_FAMILY	./port/atomic_pointer.h	41;"	d
+ARCH_CPU_X86_FAMILY	./port/atomic_pointer.h	234;"	d
+ARCH_CPU_X86_FAMILY	./port/atomic_pointer.h	33;"	d
+ARCH_CPU_X86_FAMILY	./port/atomic_pointer.h	35;"	d
+AcceleratedCRC32C	./port/port_posix.h	/^inline uint32_t AcceleratedCRC32C(uint32_t crc, const char* buf, size_t size) {$/;"	f	namespace:leveldb::port
+Acquire	./util/env_posix.cc	/^  bool Acquire() {$/;"	f	class:leveldb::__anon2::Limiter
+Acquire_Load	./port/atomic_pointer.h	/^  inline void* Acquire_Load() const {$/;"	f	class:leveldb::port::AtomicPointer
+Add	./util/histogram.cc	/^void Histogram::Add(double value) {$/;"	f	class:leveldb::Histogram
+AddBytes	./db_bench.cc	/^    void AddBytes(int64_t n) {$/;"	f	class:Stats
+AddMessage	./db_bench.cc	/^    void AddMessage(Slice msg) {$/;"	f	class:Stats
+Append	./util/env_posix.cc	/^  virtual Status Append(const Slice& data) {$/;"	f	class:leveldb::__anon2::PosixWritableFile
+AppendEscapedStringTo	./util/logging.cc	/^void AppendEscapedStringTo(std::string* str, const Slice& value) {$/;"	f	namespace:leveldb
+AppendNumberTo	./util/logging.cc	/^void AppendNumberTo(std::string* str, uint64_t num) {$/;"	f	namespace:leveldb
+AppendWithSpace	./db_bench.cc	/^static void AppendWithSpace(std::string *str, Slice msg) {$/;"	f	file:
+AssertHeld	./port/port_posix.h	/^  void AssertHeld() { }$/;"	f	class:leveldb::port::Mutex
+AtomicPointer	./port/atomic_pointer.h	/^  AtomicPointer() { }$/;"	f	class:leveldb::port::AtomicPointer
+AtomicPointer	./port/atomic_pointer.h	/^  explicit AtomicPointer(void* p) : rep_(p) {}$/;"	f	class:leveldb::port::AtomicPointer
+AtomicPointer	./port/atomic_pointer.h	/^class AtomicPointer {$/;"	c	namespace:leveldb::port
+Average	./util/histogram.cc	/^double Histogram::Average() const {$/;"	f	class:leveldb::Histogram
+BGItem	./util/env_posix.cc	/^  struct BGItem { void* arg; void (*function)(void*); };$/;"	s	class:leveldb::__anon2::PosixEnv	file:
+BGQueue	./util/env_posix.cc	/^  typedef std::deque<BGItem> BGQueue;$/;"	t	class:leveldb::__anon2::PosixEnv	file:
+BGThread	./util/env_posix.cc	/^void PosixEnv::BGThread() {$/;"	f	class:leveldb::__anon2::PosixEnv
+BGThreadWrapper	./util/env_posix.cc	/^  static void* BGThreadWrapper(void* arg) {$/;"	f	class:leveldb::__anon2::PosixEnv	file:
+Benchmark	./db_bench.cc	/^    Benchmark()$/;"	f	class:Benchmark
+Benchmark	./db_bench.cc	/^class Benchmark {$/;"	c	file:
+Clear	./util/histogram.cc	/^void Histogram::Clear() {$/;"	f	class:leveldb::Histogram
+Close	./util/env_posix.cc	/^  virtual Status Close() {$/;"	f	class:leveldb::__anon2::PosixWritableFile
+Code	./include/leveldb/status.h	/^  enum Code {$/;"	g	class:leveldb::Status
+CondVar	./port/port_posix.cc	/^CondVar::CondVar(Mutex* mu)$/;"	f	class:leveldb::port::CondVar
+CondVar	./port/port_posix.h	/^class CondVar {$/;"	c	namespace:leveldb::port
+ConsumeDecimalNumber	./util/logging.cc	/^bool ConsumeDecimalNumber(Slice* in, uint64_t* val) {$/;"	f	namespace:leveldb
+CopyState	./util/status.cc	/^const char* Status::CopyState(const char* state) {$/;"	f	class:leveldb::Status
+Corruption	./include/leveldb/status.h	/^  static Status Corruption(const Slice& msg, const Slice& msg2 = Slice()) {$/;"	f	class:leveldb::Status
+CreateDir	./include/leveldb/env.h	/^  Status CreateDir(const std::string& d) { return target_->CreateDir(d); }$/;"	f	class:leveldb::EnvWrapper
+CreateDir	./util/env_posix.cc	/^  virtual Status CreateDir(const std::string& name) {$/;"	f	class:leveldb::__anon2::PosixEnv
+Default	./util/env_posix.cc	/^Env* Env::Default() {$/;"	f	class:leveldb::Env
+DeleteDir	./include/leveldb/env.h	/^  Status DeleteDir(const std::string& d) { return target_->DeleteDir(d); }$/;"	f	class:leveldb::EnvWrapper
+DeleteDir	./util/env_posix.cc	/^  virtual Status DeleteDir(const std::string& name) {$/;"	f	class:leveldb::__anon2::PosixEnv
+DeleteFile	./include/leveldb/env.h	/^  Status DeleteFile(const std::string& f) { return target_->DeleteFile(f); }$/;"	f	class:leveldb::EnvWrapper
+DeleteFile	./util/env_posix.cc	/^  virtual Status DeleteFile(const std::string& fname) {$/;"	f	class:leveldb::__anon2::PosixEnv
+DeleteRandom	./db_bench.cc	/^    void DeleteRandom(ThreadState *thread) {$/;"	f	class:Benchmark	file:
+DeleteSeq	./db_bench.cc	/^    void DeleteSeq(ThreadState *thread) {$/;"	f	class:Benchmark	file:
+DoDelete	./db_bench.cc	/^    void DoDelete(ThreadState *thread, bool seq) {$/;"	f	class:Benchmark	file:
+DoRead	./db_bench.cc	/^    void DoRead(ThreadState *thread, bool seq, bool missing) {$/;"	f	class:Benchmark	file:
+DoWrite	./db_bench.cc	/^    void DoWrite(ThreadState *thread, bool seq) {$/;"	f	class:Benchmark	file:
+DoWriteStringToFile	./util/env.cc	/^static Status DoWriteStringToFile(Env* env, const Slice& data,$/;"	f	namespace:leveldb
+EXCLUSIVE_LOCKS_REQUIRED	./port/thread_annotations.h	13;"	d
+EXCLUSIVE_LOCK_FUNCTION	./port/thread_annotations.h	37;"	d
+EXCLUSIVE_LOCK_FUNCTION	./util/mutexlock.h	/^  explicit MutexLock(port::Mutex *mu) EXCLUSIVE_LOCK_FUNCTION(mu)$/;"	f	class:leveldb::MutexLock
+EXCLUSIVE_TRYLOCK_FUNCTION	./port/thread_annotations.h	45;"	d
+Env	./include/leveldb/env.h	/^  Env() { }$/;"	f	class:leveldb::Env
+Env	./include/leveldb/env.h	/^class Env {$/;"	c	namespace:leveldb
+EnvPosixTestHelper	./util/env_posix_test_helper.h	/^class EnvPosixTestHelper {$/;"	c	namespace:leveldb
+EnvWrapper	./include/leveldb/env.h	/^  explicit EnvWrapper(Env* t) : target_(t) { }$/;"	f	class:leveldb::EnvWrapper
+EnvWrapper	./include/leveldb/env.h	/^class EnvWrapper : public Env {$/;"	c	namespace:leveldb
+EscapeString	./util/logging.cc	/^std::string EscapeString(const Slice& value) {$/;"	f	namespace:leveldb
+FLAGS_benchmarks	./db_bench.cc	/^static const char *FLAGS_benchmarks =$/;"	v	file:
+FLAGS_db	./db_bench.cc	/^static const char *FLAGS_db = NULL;$/;"	v	file:
+FLAGS_db_size_in_gb	./db_bench.cc	/^static int FLAGS_db_size_in_gb = 0;$/;"	v	file:
+FLAGS_engine	./db_bench.cc	/^static const char *FLAGS_engine = "kvtree3";$/;"	v	file:
+FLAGS_histogram	./db_bench.cc	/^static bool FLAGS_histogram = false;$/;"	v	file:
+FLAGS_num	./db_bench.cc	/^static int FLAGS_num = 1000000;$/;"	v	file:
+FLAGS_reads	./db_bench.cc	/^static int FLAGS_reads = -1;$/;"	v	file:
+FLAGS_threads	./db_bench.cc	/^static int FLAGS_threads = 1;$/;"	v	file:
+FLAGS_value_size	./db_bench.cc	/^static int FLAGS_value_size = 100;$/;"	v	file:
+FileExists	./include/leveldb/env.h	/^  bool FileExists(const std::string& f) { return target_->FileExists(f); }$/;"	f	class:leveldb::EnvWrapper
+FileExists	./util/env_posix.cc	/^  virtual bool FileExists(const std::string& fname) {$/;"	f	class:leveldb::__anon2::PosixEnv
+FileLock	./include/leveldb/env.h	/^  FileLock() { }$/;"	f	class:leveldb::FileLock
+FileLock	./include/leveldb/env.h	/^class FileLock {$/;"	c	namespace:leveldb
+FinishedSingleOp	./db_bench.cc	/^    void FinishedSingleOp() {$/;"	f	class:Stats
+Flush	./util/env_posix.cc	/^  virtual Status Flush() {$/;"	f	class:leveldb::__anon2::PosixWritableFile
+FlushBuffered	./util/env_posix.cc	/^  Status FlushBuffered() {$/;"	f	class:leveldb::__anon2::PosixWritableFile	file:
+GetAllowed	./util/env_posix.cc	/^  intptr_t GetAllowed() const {$/;"	f	class:leveldb::__anon2::Limiter	file:
+GetChildren	./include/leveldb/env.h	/^  Status GetChildren(const std::string& dir, std::vector<std::string>* r) {$/;"	f	class:leveldb::EnvWrapper
+GetChildren	./util/env_posix.cc	/^  virtual Status GetChildren(const std::string& dir,$/;"	f	class:leveldb::__anon2::PosixEnv
+GetFileSize	./include/leveldb/env.h	/^  Status GetFileSize(const std::string& f, uint64_t* s) {$/;"	f	class:leveldb::EnvWrapper
+GetFileSize	./util/env_posix.cc	/^  virtual Status GetFileSize(const std::string& fname, uint64_t* size) {$/;"	f	class:leveldb::__anon2::PosixEnv
+GetHeapProfile	./port/port_posix.h	/^inline bool GetHeapProfile(void (*func)(void*, const char*, int), void* arg) {$/;"	f	namespace:leveldb::port
+GetTestDirectory	./include/leveldb/env.h	/^  virtual Status GetTestDirectory(std::string* path) {$/;"	f	class:leveldb::EnvWrapper
+GetTestDirectory	./util/env_posix.cc	/^  virtual Status GetTestDirectory(std::string* result) {$/;"	f	class:leveldb::__anon2::PosixEnv
+Histogram	./util/histogram.h	/^  Histogram() { }$/;"	f	class:leveldb::Histogram
+Histogram	./util/histogram.h	/^class Histogram {$/;"	c	namespace:leveldb
+IOError	./include/leveldb/status.h	/^  static Status IOError(const Slice& msg, const Slice& msg2 = Slice()) {$/;"	f	class:leveldb::Status
+InitDefaultEnv	./util/env_posix.cc	/^static void InitDefaultEnv() { default_env = new PosixEnv; }$/;"	f	namespace:leveldb
+InitOnce	./port/port_posix.cc	/^void InitOnce(OnceType* once, void (*initializer)()) {$/;"	f	namespace:leveldb::port
+Insert	./util/env_posix.cc	/^  bool Insert(const std::string& fname) {$/;"	f	class:leveldb::__anon2::PosixLockTable
+InvalidArgument	./include/leveldb/status.h	/^  static Status InvalidArgument(const Slice& msg, const Slice& msg2 = Slice()) {$/;"	f	class:leveldb::Status
+IsCorruption	./include/leveldb/status.h	/^  bool IsCorruption() const { return code() == kCorruption; }$/;"	f	class:leveldb::Status
+IsIOError	./include/leveldb/status.h	/^  bool IsIOError() const { return code() == kIOError; }$/;"	f	class:leveldb::Status
+IsInvalidArgument	./include/leveldb/status.h	/^  bool IsInvalidArgument() const { return code() == kInvalidArgument; }$/;"	f	class:leveldb::Status
+IsNotFound	./include/leveldb/status.h	/^  bool IsNotFound() const { return code() == kNotFound; }$/;"	f	class:leveldb::Status
+IsNotSupportedError	./include/leveldb/status.h	/^  bool IsNotSupportedError() const { return code() == kNotSupported; }$/;"	f	class:leveldb::Status
+LEVELDB_HAVE_MEMORY_BARRIER	./port/atomic_pointer.h	233;"	d
+LEVELDB_HAVE_MEMORY_BARRIER	./port/atomic_pointer.h	54;"	d
+LEVELDB_ONCE_INIT	./port/port_posix.h	107;"	d
+LOCKABLE	./port/thread_annotations.h	29;"	d
+LOCKS_EXCLUDED	./port/thread_annotations.h	21;"	d
+LOCK_RETURNED	./port/thread_annotations.h	25;"	d
+Limiter	./util/env_posix.cc	/^  Limiter(intptr_t n) {$/;"	f	class:leveldb::__anon2::Limiter
+Limiter	./util/env_posix.cc	/^class Limiter {$/;"	c	namespace:leveldb::__anon2	file:
+Lock	./port/port_posix.cc	/^void Mutex::Lock() { PthreadCall("lock", pthread_mutex_lock(&mu_)); }$/;"	f	class:leveldb::port::Mutex
+LockFile	./include/leveldb/env.h	/^  Status LockFile(const std::string& f, FileLock** l) {$/;"	f	class:leveldb::EnvWrapper
+LockFile	./util/env_posix.cc	/^  virtual Status LockFile(const std::string& fname, FileLock** lock) {$/;"	f	class:leveldb::__anon2::PosixEnv
+LockOrUnlock	./util/env_posix.cc	/^static int LockOrUnlock(int fd, bool lock) {$/;"	f	namespace:leveldb::__anon2
+Log	./util/env.cc	/^void Log(Logger* info_log, const char* format, ...) {$/;"	f	namespace:leveldb
+Logger	./include/leveldb/env.h	/^  Logger() { }$/;"	f	class:leveldb::Logger
+Logger	./include/leveldb/env.h	/^class Logger {$/;"	c	namespace:leveldb
+Logv	./util/posix_logger.h	/^  virtual void Logv(const char* format, va_list ap) {$/;"	f	class:leveldb::PosixLogger
+MaxMmaps	./util/env_posix.cc	/^static int MaxMmaps() {$/;"	f	namespace:leveldb::__anon2
+MaxOpenFiles	./util/env_posix.cc	/^static intptr_t MaxOpenFiles() {$/;"	f	namespace:leveldb::__anon2
+Median	./util/histogram.cc	/^double Histogram::Median() const {$/;"	f	class:leveldb::Histogram
+Merge	./db_bench.cc	/^    void Merge(const Stats &other) {$/;"	f	class:Stats
+Merge	./util/histogram.cc	/^void Histogram::Merge(const Histogram& other) {$/;"	f	class:leveldb::Histogram
+Mutex	./port/port_posix.cc	/^Mutex::Mutex() { PthreadCall("init mutex", pthread_mutex_init(&mu_, NULL)); }$/;"	f	class:leveldb::port::Mutex
+Mutex	./port/port_posix.h	/^class Mutex {$/;"	c	namespace:leveldb::port
+MutexLock	./util/mutexlock.h	/^class SCOPED_LOCKABLE MutexLock {$/;"	c	namespace:leveldb
+NO_THREAD_SAFETY_ANALYSIS	./port/thread_annotations.h	57;"	d
+NewAppendableFile	./include/leveldb/env.h	/^  Status NewAppendableFile(const std::string& f, WritableFile** r) {$/;"	f	class:leveldb::EnvWrapper
+NewAppendableFile	./util/env.cc	/^Status Env::NewAppendableFile(const std::string& fname, WritableFile** result) {$/;"	f	class:leveldb::Env
+NewAppendableFile	./util/env_posix.cc	/^  virtual Status NewAppendableFile(const std::string& fname,$/;"	f	class:leveldb::__anon2::PosixEnv
+NewLogger	./include/leveldb/env.h	/^  virtual Status NewLogger(const std::string& fname, Logger** result) {$/;"	f	class:leveldb::EnvWrapper
+NewLogger	./util/env_posix.cc	/^  virtual Status NewLogger(const std::string& fname, Logger** result) {$/;"	f	class:leveldb::__anon2::PosixEnv
+NewRandomAccessFile	./include/leveldb/env.h	/^  Status NewRandomAccessFile(const std::string& f, RandomAccessFile** r) {$/;"	f	class:leveldb::EnvWrapper
+NewRandomAccessFile	./util/env_posix.cc	/^  virtual Status NewRandomAccessFile(const std::string& fname,$/;"	f	class:leveldb::__anon2::PosixEnv
+NewSequentialFile	./include/leveldb/env.h	/^  Status NewSequentialFile(const std::string& f, SequentialFile** r) {$/;"	f	class:leveldb::EnvWrapper
+NewSequentialFile	./util/env_posix.cc	/^  virtual Status NewSequentialFile(const std::string& fname,$/;"	f	class:leveldb::__anon2::PosixEnv
+NewWritableFile	./include/leveldb/env.h	/^  Status NewWritableFile(const std::string& f, WritableFile** r) {$/;"	f	class:leveldb::EnvWrapper
+NewWritableFile	./util/env_posix.cc	/^  virtual Status NewWritableFile(const std::string& fname,$/;"	f	class:leveldb::__anon2::PosixEnv
+Next	./util/random.h	/^  uint32_t Next() {$/;"	f	class:leveldb::Random
+NoBarrier_Load	./port/atomic_pointer.h	/^  inline void* NoBarrier_Load() const { return rep_; }$/;"	f	class:leveldb::port::AtomicPointer
+NoBarrier_Store	./port/atomic_pointer.h	/^  inline void NoBarrier_Store(void* v) { rep_ = v; }$/;"	f	class:leveldb::port::AtomicPointer
+NotFound	./include/leveldb/status.h	/^  static Status NotFound(const Slice& msg, const Slice& msg2 = Slice()) {$/;"	f	class:leveldb::Status
+NotSupported	./include/leveldb/status.h	/^  static Status NotSupported(const Slice& msg, const Slice& msg2 = Slice()) {$/;"	f	class:leveldb::Status
+NowMicros	./include/leveldb/env.h	/^  uint64_t NowMicros() {$/;"	f	class:leveldb::EnvWrapper
+NowMicros	./util/env_posix.cc	/^  virtual uint64_t NowMicros() {$/;"	f	class:leveldb::__anon2::PosixEnv
+NumberToString	./util/logging.cc	/^std::string NumberToString(uint64_t num) {$/;"	f	namespace:leveldb
+OK	./include/leveldb/status.h	/^  static Status OK() { return Status(); }$/;"	f	class:leveldb::Status
+OnceType	./port/port_posix.h	/^typedef pthread_once_t OnceType;$/;"	t	namespace:leveldb::port
+OneIn	./util/random.h	/^  bool OneIn(int n) { return (Next() % n) == 0; }$/;"	f	class:leveldb::Random
+Open	./db_bench.cc	/^    void Open() {$/;"	f	class:Benchmark	file:
+PLATFORM_IS_LITTLE_ENDIAN	./port/port_posix.h	10;"	d
+PLATFORM_IS_LITTLE_ENDIAN	./port/port_posix.h	14;"	d
+PLATFORM_IS_LITTLE_ENDIAN	./port/port_posix.h	20;"	d
+PLATFORM_IS_LITTLE_ENDIAN	./port/port_posix.h	22;"	d
+PLATFORM_IS_LITTLE_ENDIAN	./port/port_posix.h	28;"	d
+PLATFORM_IS_LITTLE_ENDIAN	./port/port_posix.h	30;"	d
+PLATFORM_IS_LITTLE_ENDIAN	./port/port_posix.h	36;"	d
+PLATFORM_IS_LITTLE_ENDIAN	./port/port_posix.h	53;"	d
+PLATFORM_IS_LITTLE_ENDIAN	./port/port_posix.h	72;"	d
+PORT_ATOMIC_POINTER_H_	./port/atomic_pointer.h	19;"	d
+Percentile	./util/histogram.cc	/^double Histogram::Percentile(double p) const {$/;"	f	class:leveldb::Histogram
+PosixEnv	./util/env_posix.cc	/^PosixEnv::PosixEnv()$/;"	f	class:leveldb::__anon2::PosixEnv
+PosixEnv	./util/env_posix.cc	/^class PosixEnv : public Env {$/;"	c	namespace:leveldb::__anon2	file:
+PosixError	./util/env_posix.cc	/^static Status PosixError(const std::string& context, int err_number) {$/;"	f	namespace:leveldb::__anon2
+PosixFileLock	./util/env_posix.cc	/^class PosixFileLock : public FileLock {$/;"	c	namespace:leveldb::__anon2	file:
+PosixLockTable	./util/env_posix.cc	/^class PosixLockTable {$/;"	c	namespace:leveldb::__anon2	file:
+PosixLogger	./util/posix_logger.h	/^  PosixLogger(FILE* f, uint64_t (*gettid)()) : file_(f), gettid_(gettid) { }$/;"	f	class:leveldb::PosixLogger
+PosixLogger	./util/posix_logger.h	/^class PosixLogger : public Logger {$/;"	c	namespace:leveldb
+PosixMmapReadableFile	./util/env_posix.cc	/^  PosixMmapReadableFile(const std::string& fname, void* base, size_t length,$/;"	f	class:leveldb::__anon2::PosixMmapReadableFile
+PosixMmapReadableFile	./util/env_posix.cc	/^class PosixMmapReadableFile: public RandomAccessFile {$/;"	c	namespace:leveldb::__anon2	file:
+PosixRandomAccessFile	./util/env_posix.cc	/^  PosixRandomAccessFile(const std::string& fname, int fd, Limiter* limiter)$/;"	f	class:leveldb::__anon2::PosixRandomAccessFile
+PosixRandomAccessFile	./util/env_posix.cc	/^class PosixRandomAccessFile: public RandomAccessFile {$/;"	c	namespace:leveldb::__anon2	file:
+PosixSequentialFile	./util/env_posix.cc	/^  PosixSequentialFile(const std::string& fname, int fd)$/;"	f	class:leveldb::__anon2::PosixSequentialFile
+PosixSequentialFile	./util/env_posix.cc	/^class PosixSequentialFile: public SequentialFile {$/;"	c	namespace:leveldb::__anon2	file:
+PosixWritableFile	./util/env_posix.cc	/^  PosixWritableFile(const std::string& fname, int fd)$/;"	f	class:leveldb::__anon2::PosixWritableFile
+PosixWritableFile	./util/env_posix.cc	/^class PosixWritableFile : public WritableFile {$/;"	c	namespace:leveldb::__anon2	file:
+PrintEnvironment	./db_bench.cc	/^    void PrintEnvironment() {$/;"	f	class:Benchmark	file:
+PrintHeader	./db_bench.cc	/^    void PrintHeader() {$/;"	f	class:Benchmark	file:
+PrintWarnings	./db_bench.cc	/^    void PrintWarnings() {$/;"	f	class:Benchmark	file:
+PthreadCall	./port/port_posix.cc	/^static void PthreadCall(const char* label, int result) {$/;"	f	namespace:leveldb::port
+PthreadCall	./util/env_posix.cc	/^  void PthreadCall(const char* label, int result) {$/;"	f	class:leveldb::__anon2::PosixEnv	file:
+Random	./util/random.h	/^  explicit Random(uint32_t s) : seed_(s & 0x7fffffffu) {$/;"	f	class:leveldb::Random
+Random	./util/random.h	/^class Random {$/;"	c	namespace:leveldb
+RandomAccessFile	./include/leveldb/env.h	/^  RandomAccessFile() { }$/;"	f	class:leveldb::RandomAccessFile
+RandomAccessFile	./include/leveldb/env.h	/^class RandomAccessFile {$/;"	c	namespace:leveldb
+Read	./util/env_posix.cc	/^  virtual Status Read(size_t n, Slice* result, char* scratch) {$/;"	f	class:leveldb::__anon2::PosixSequentialFile
+Read	./util/env_posix.cc	/^  virtual Status Read(uint64_t offset, size_t n, Slice* result,$/;"	f	class:leveldb::__anon2::PosixMmapReadableFile
+Read	./util/env_posix.cc	/^  virtual Status Read(uint64_t offset, size_t n, Slice* result,$/;"	f	class:leveldb::__anon2::PosixRandomAccessFile
+ReadFileToString	./util/env.cc	/^Status ReadFileToString(Env* env, const std::string& fname, std::string* data) {$/;"	f	namespace:leveldb
+ReadMissing	./db_bench.cc	/^    void ReadMissing(ThreadState *thread) {$/;"	f	class:Benchmark	file:
+ReadRandom	./db_bench.cc	/^    void ReadRandom(ThreadState *thread) {$/;"	f	class:Benchmark	file:
+ReadSeq	./db_bench.cc	/^    void ReadSeq(ThreadState *thread) {$/;"	f	class:Benchmark	file:
+Release	./util/env_posix.cc	/^  void Release() {$/;"	f	class:leveldb::__anon2::Limiter
+Release_Store	./port/atomic_pointer.h	/^  inline void Release_Store(void* v) {$/;"	f	class:leveldb::port::AtomicPointer
+Remove	./util/env_posix.cc	/^  void Remove(const std::string& fname) {$/;"	f	class:leveldb::__anon2::PosixLockTable
+RenameFile	./include/leveldb/env.h	/^  Status RenameFile(const std::string& s, const std::string& t) {$/;"	f	class:leveldb::EnvWrapper
+RenameFile	./util/env_posix.cc	/^  virtual Status RenameFile(const std::string& src, const std::string& target) {$/;"	f	class:leveldb::__anon2::PosixEnv
+Report	./db_bench.cc	/^    void Report(const Slice &name) {$/;"	f	class:Stats
+Run	./db_bench.cc	/^    void Run() {$/;"	f	class:Benchmark
+RunBenchmark	./db_bench.cc	/^    void RunBenchmark(int n, Slice name,$/;"	f	class:Benchmark	file:
+SCOPED_LOCKABLE	./port/thread_annotations.h	33;"	d
+SHARED_LOCKS_REQUIRED	./port/thread_annotations.h	17;"	d
+SHARED_LOCK_FUNCTION	./port/thread_annotations.h	41;"	d
+SHARED_TRYLOCK_FUNCTION	./port/thread_annotations.h	49;"	d
+STORAGE_LEVELDB_INCLUDE_ENV_H_	./include/leveldb/env.h	14;"	d
+STORAGE_LEVELDB_INCLUDE_SLICE_H_	./include/leveldb/slice.h	16;"	d
+STORAGE_LEVELDB_INCLUDE_STATUS_H_	./include/leveldb/status.h	14;"	d
+STORAGE_LEVELDB_PORT_PORT_POSIX_H_	./port/port_posix.h	8;"	d
+STORAGE_LEVELDB_PORT_THREAD_ANNOTATIONS_H_	./port/thread_annotations.h	6;"	d
+STORAGE_LEVELDB_UTIL_ENV_POSIX_TEST_HELPER_H_	./util/env_posix_test_helper.h	6;"	d
+STORAGE_LEVELDB_UTIL_HISTOGRAM_H_	./util/histogram.h	6;"	d
+STORAGE_LEVELDB_UTIL_LOGGING_H_	./util/logging.h	9;"	d
+STORAGE_LEVELDB_UTIL_MUTEXLOCK_H_	./util/mutexlock.h	6;"	d
+STORAGE_LEVELDB_UTIL_POSIX_LOGGER_H_	./util/posix_logger.h	9;"	d
+STORAGE_LEVELDB_UTIL_RANDOM_H_	./util/random.h	6;"	d
+Schedule	./include/leveldb/env.h	/^  void Schedule(void (*f)(void*), void* a) {$/;"	f	class:leveldb::EnvWrapper
+Schedule	./util/env_posix.cc	/^void PosixEnv::Schedule(void (*function)(void*), void* arg) {$/;"	f	class:leveldb::__anon2::PosixEnv
+SequentialFile	./include/leveldb/env.h	/^  SequentialFile() { }$/;"	f	class:leveldb::SequentialFile
+SequentialFile	./include/leveldb/env.h	/^class SequentialFile {$/;"	c	namespace:leveldb
+SetAllowed	./util/env_posix.cc	/^  void SetAllowed(intptr_t v) {$/;"	f	class:leveldb::__anon2::Limiter	file:
+SetReadOnlyFDLimit	./util/env_posix.cc	/^void EnvPosixTestHelper::SetReadOnlyFDLimit(int limit) {$/;"	f	class:leveldb::EnvPosixTestHelper
+SetReadOnlyMMapLimit	./util/env_posix.cc	/^void EnvPosixTestHelper::SetReadOnlyMMapLimit(int limit) {$/;"	f	class:leveldb::EnvPosixTestHelper
+SharedState	./db_bench.cc	/^    SharedState() : cv(&mu) {}$/;"	f	struct:SharedState
+SharedState	./db_bench.cc	/^struct SharedState {$/;"	s	file:
+Signal	./port/port_posix.cc	/^void CondVar::Signal() {$/;"	f	class:leveldb::port::CondVar
+SignalAll	./port/port_posix.cc	/^void CondVar::SignalAll() {$/;"	f	class:leveldb::port::CondVar
+Skewed	./util/random.h	/^  uint32_t Skewed(int max_log) {$/;"	f	class:leveldb::Random
+Skip	./util/env_posix.cc	/^  virtual Status Skip(uint64_t n) {$/;"	f	class:leveldb::__anon2::PosixSequentialFile
+SleepForMicroseconds	./include/leveldb/env.h	/^  void SleepForMicroseconds(int micros) {$/;"	f	class:leveldb::EnvWrapper
+SleepForMicroseconds	./util/env_posix.cc	/^  virtual void SleepForMicroseconds(int micros) {$/;"	f	class:leveldb::__anon2::PosixEnv
+Slice	./include/leveldb/slice.h	/^  Slice() : data_(""), size_(0) { }$/;"	f	class:leveldb::Slice
+Slice	./include/leveldb/slice.h	/^  Slice(const char* d, size_t n) : data_(d), size_(n) { }$/;"	f	class:leveldb::Slice
+Slice	./include/leveldb/slice.h	/^  Slice(const char* s) : data_(s), size_(strlen(s)) { }$/;"	f	class:leveldb::Slice
+Slice	./include/leveldb/slice.h	/^  Slice(const std::string& s) : data_(s.data()), size_(s.size()) { }$/;"	f	class:leveldb::Slice
+Slice	./include/leveldb/slice.h	/^class Slice {$/;"	c	namespace:leveldb
+Snappy_Compress	./port/port_posix.h	/^inline bool Snappy_Compress(const char* input, size_t length,$/;"	f	namespace:leveldb::port
+Snappy_GetUncompressedLength	./port/port_posix.h	/^inline bool Snappy_GetUncompressedLength(const char* input, size_t length,$/;"	f	namespace:leveldb::port
+Snappy_Uncompress	./port/port_posix.h	/^inline bool Snappy_Uncompress(const char* input, size_t length,$/;"	f	namespace:leveldb::port
+StandardDeviation	./util/histogram.cc	/^double Histogram::StandardDeviation() const {$/;"	f	class:leveldb::Histogram
+Start	./db_bench.cc	/^    void Start() {$/;"	f	class:Stats
+StartThread	./include/leveldb/env.h	/^  void StartThread(void (*f)(void*), void* a) {$/;"	f	class:leveldb::EnvWrapper
+StartThread	./util/env_posix.cc	/^void PosixEnv::StartThread(void (*function)(void* arg), void* arg) {$/;"	f	class:leveldb::__anon2::PosixEnv
+StartThreadState	./util/env_posix.cc	/^struct StartThreadState {$/;"	s	namespace:leveldb::__anon2::__anon3	file:
+StartThreadWrapper	./util/env_posix.cc	/^static void* StartThreadWrapper(void* arg) {$/;"	f	namespace:leveldb::__anon2
+Stats	./db_bench.cc	/^    Stats() { Start(); }$/;"	f	class:Stats
+Stats	./db_bench.cc	/^class Stats {$/;"	c	file:
+Status	./include/leveldb/status.h	/^  Status() : state_(NULL) { }$/;"	f	class:leveldb::Status
+Status	./include/leveldb/status.h	/^class Status {$/;"	c	namespace:leveldb
+Status	./include/leveldb/status.h	/^inline Status::Status(const Status& s) {$/;"	f	class:leveldb::Status
+Status	./util/status.cc	/^Status::Status(Code code, const Slice& msg, const Slice& msg2) {$/;"	f	class:leveldb::Status
+Stop	./db_bench.cc	/^    void Stop() {$/;"	f	class:Stats
+Sync	./util/env_posix.cc	/^  virtual Status Sync() {$/;"	f	class:leveldb::__anon2::PosixWritableFile
+SyncDirIfManifest	./util/env_posix.cc	/^  Status SyncDirIfManifest() {$/;"	f	class:leveldb::__anon2::PosixWritableFile
+ThreadArg	./db_bench.cc	/^    struct ThreadArg {$/;"	s	class:Benchmark	file:
+ThreadBody	./db_bench.cc	/^    static void ThreadBody(void *v) {$/;"	f	class:Benchmark	file:
+ThreadState	./db_bench.cc	/^    ThreadState(int index)$/;"	f	struct:ThreadState
+ThreadState	./db_bench.cc	/^struct ThreadState {$/;"	s	file:
+ToString	./include/leveldb/slice.h	/^  std::string ToString() const { return std::string(data_, size_); }$/;"	f	class:leveldb::Slice
+ToString	./util/histogram.cc	/^std::string Histogram::ToString() const {$/;"	f	class:leveldb::Histogram
+ToString	./util/status.cc	/^std::string Status::ToString() const {$/;"	f	class:leveldb::Status
+TrimSpace	./db_bench.cc	/^static Slice TrimSpace(Slice s) {$/;"	f	file:
+UNLOCK_FUNCTION	./port/thread_annotations.h	53;"	d
+UNLOCK_FUNCTION	./util/mutexlock.h	/^  ~MutexLock() UNLOCK_FUNCTION() { this->mu_->Unlock(); }$/;"	f	class:leveldb::MutexLock
+USAGE	./db_bench.cc	/^static const string USAGE =$/;"	v	file:
+Uniform	./util/random.h	/^  uint32_t Uniform(int n) { return Next() % n; }$/;"	f	class:leveldb::Random
+Unlock	./port/port_posix.cc	/^void Mutex::Unlock() { PthreadCall("unlock", pthread_mutex_unlock(&mu_)); }$/;"	f	class:leveldb::port::Mutex
+UnlockFile	./include/leveldb/env.h	/^  Status UnlockFile(FileLock* l) { return target_->UnlockFile(l); }$/;"	f	class:leveldb::EnvWrapper
+UnlockFile	./util/env_posix.cc	/^  virtual Status UnlockFile(FileLock* lock) {$/;"	f	class:leveldb::__anon2::PosixEnv
+Wait	./port/port_posix.cc	/^void CondVar::Wait() {$/;"	f	class:leveldb::port::CondVar
+WritableFile	./include/leveldb/env.h	/^  WritableFile() { }$/;"	f	class:leveldb::WritableFile
+WritableFile	./include/leveldb/env.h	/^class WritableFile {$/;"	c	namespace:leveldb
+WriteRandom	./db_bench.cc	/^    void WriteRandom(ThreadState *thread) {$/;"	f	class:Benchmark	file:
+WriteRaw	./util/env_posix.cc	/^  Status WriteRaw(const char* p, size_t n) {$/;"	f	class:leveldb::__anon2::PosixWritableFile	file:
+WriteSeq	./db_bench.cc	/^    void WriteSeq(ThreadState *thread) {$/;"	f	class:Benchmark	file:
+WriteStringToFile	./util/env.cc	/^Status WriteStringToFile(Env* env, const Slice& data,$/;"	f	namespace:leveldb
+WriteStringToFileSync	./util/env.cc	/^Status WriteStringToFileSync(Env* env, const Slice& data,$/;"	f	namespace:leveldb
+allowed_	./util/env_posix.cc	/^  port::AtomicPointer allowed_;$/;"	m	class:leveldb::__anon2::Limiter	file:
+arg	./util/env_posix.cc	/^  struct BGItem { void* arg; void (*function)(void*); };$/;"	m	struct:leveldb::__anon2::PosixEnv::BGItem	file:
+arg	./util/env_posix.cc	/^  void* arg;$/;"	m	struct:leveldb::__anon2::__anon3::StartThreadState	file:
+bgsignal_	./util/env_posix.cc	/^  pthread_cond_t bgsignal_;$/;"	m	class:leveldb::__anon2::PosixEnv	file:
+bgthread_	./util/env_posix.cc	/^  pthread_t bgthread_;$/;"	m	class:leveldb::__anon2::PosixEnv	file:
+bm	./db_bench.cc	/^        Benchmark *bm;$/;"	m	struct:Benchmark::ThreadArg	file:
+buckets_	./util/histogram.h	/^  double buckets_[kNumBuckets];$/;"	m	class:leveldb::Histogram
+buf_	./util/env_posix.cc	/^  char buf_[kBufSize];$/;"	m	class:leveldb::__anon2::PosixWritableFile	file:
+bytes_	./db_bench.cc	/^    int64_t bytes_;$/;"	m	class:Stats	file:
+clear	./include/leveldb/slice.h	/^  void clear() { data_ = ""; size_ = 0; }$/;"	f	class:leveldb::Slice
+code	./include/leveldb/status.h	/^  Code code() const {$/;"	f	class:leveldb::Status
+compare	./include/leveldb/slice.h	/^inline int Slice::compare(const Slice& b) const {$/;"	f	class:leveldb::Slice
+cv	./db_bench.cc	/^    port::CondVar cv;$/;"	m	struct:SharedState	file:
+cv_	./port/port_posix.h	/^  pthread_cond_t cv_;$/;"	m	class:leveldb::port::CondVar
+data	./include/leveldb/slice.h	/^  const char* data() const { return data_; }$/;"	f	class:leveldb::Slice
+data_	./include/leveldb/slice.h	/^  const char* data_;$/;"	m	class:leveldb::Slice
+default_env	./util/env_posix.cc	/^static Env* default_env;$/;"	m	namespace:leveldb	file:
+done_	./db_bench.cc	/^    int done_;$/;"	m	class:Stats	file:
+empty	./include/leveldb/slice.h	/^  bool empty() const { return size_ == 0; }$/;"	f	class:leveldb::Slice
+fd_	./util/env_posix.cc	/^  int fd_;$/;"	m	class:leveldb::__anon2::PosixFileLock	file:
+fd_	./util/env_posix.cc	/^  int fd_;$/;"	m	class:leveldb::__anon2::PosixRandomAccessFile	file:
+fd_	./util/env_posix.cc	/^  int fd_;$/;"	m	class:leveldb::__anon2::PosixSequentialFile	file:
+fd_	./util/env_posix.cc	/^  int fd_;$/;"	m	class:leveldb::__anon2::PosixWritableFile	file:
+fd_limit_	./util/env_posix.cc	/^  Limiter fd_limit_;$/;"	m	class:leveldb::__anon2::PosixEnv	file:
+fdatasync	./port/port_posix.h	59;"	d
+fdatasync	./port/port_posix.h	65;"	d
+file_	./util/posix_logger.h	/^  FILE* file_;$/;"	m	class:leveldb::PosixLogger
+filename_	./util/env_posix.cc	/^  std::string filename_;$/;"	m	class:leveldb::__anon2::PosixMmapReadableFile	file:
+filename_	./util/env_posix.cc	/^  std::string filename_;$/;"	m	class:leveldb::__anon2::PosixRandomAccessFile	file:
+filename_	./util/env_posix.cc	/^  std::string filename_;$/;"	m	class:leveldb::__anon2::PosixSequentialFile	file:
+filename_	./util/env_posix.cc	/^  std::string filename_;$/;"	m	class:leveldb::__anon2::PosixWritableFile	file:
+finish_	./db_bench.cc	/^    double finish_;$/;"	m	class:Stats	file:
+function	./util/env_posix.cc	/^  struct BGItem { void* arg; void (*function)(void*); };$/;"	m	struct:leveldb::__anon2::PosixEnv::BGItem	file:
+gettid	./util/env_posix.cc	/^  static uint64_t gettid() {$/;"	f	class:leveldb::__anon2::PosixEnv
+gettid_	./util/posix_logger.h	/^  uint64_t (*gettid_)();  \/\/ Return the thread id for the current thread$/;"	m	class:leveldb::PosixLogger
+hist_	./db_bench.cc	/^    Histogram hist_;$/;"	m	class:Stats	file:
+kBucketLimit	./util/histogram.cc	/^const double Histogram::kBucketLimit[kNumBuckets] = {$/;"	m	class:leveldb::Histogram	file:
+kBucketLimit	./util/histogram.h	/^  static const double kBucketLimit[kNumBuckets];$/;"	m	class:leveldb::Histogram
+kBufSize	./util/env_posix.cc	/^static const size_t kBufSize = 65536;$/;"	m	namespace:leveldb::__anon2	file:
+kCorruption	./include/leveldb/status.h	/^    kCorruption = 2,$/;"	e	enum:leveldb::Status::Code
+kIOError	./include/leveldb/status.h	/^    kIOError = 5$/;"	e	enum:leveldb::Status::Code
+kInvalidArgument	./include/leveldb/status.h	/^    kInvalidArgument = 4,$/;"	e	enum:leveldb::Status::Code
+kLittleEndian	./port/port_posix.h	/^static const bool kLittleEndian = PLATFORM_IS_LITTLE_ENDIAN;$/;"	m	namespace:leveldb::port
+kNotFound	./include/leveldb/status.h	/^    kNotFound = 1,$/;"	e	enum:leveldb::Status::Code
+kNotSupported	./include/leveldb/status.h	/^    kNotSupported = 3,$/;"	e	enum:leveldb::Status::Code
+kNumBuckets	./util/histogram.h	/^  enum { kNumBuckets = 154 };$/;"	e	enum:leveldb::Histogram::__anon1
+kOk	./include/leveldb/status.h	/^    kOk = 0,$/;"	e	enum:leveldb::Status::Code
+kv_	./db_bench.cc	/^    pmemkv::KVEngine *kv_;$/;"	m	class:Benchmark	file:
+last_op_finish_	./db_bench.cc	/^    double last_op_finish_;$/;"	m	class:Stats	file:
+length_	./util/env_posix.cc	/^  size_t length_;$/;"	m	class:leveldb::__anon2::PosixMmapReadableFile	file:
+leveldb	./include/leveldb/env.h	/^namespace leveldb {$/;"	n
+leveldb	./include/leveldb/slice.h	/^namespace leveldb {$/;"	n
+leveldb	./include/leveldb/status.h	/^namespace leveldb {$/;"	n
+leveldb	./port/atomic_pointer.h	/^namespace leveldb {$/;"	n
+leveldb	./port/port_posix.cc	/^namespace leveldb {$/;"	n	file:
+leveldb	./port/port_posix.h	/^namespace leveldb {$/;"	n
+leveldb	./util/env.cc	/^namespace leveldb {$/;"	n	file:
+leveldb	./util/env_posix.cc	/^namespace leveldb {$/;"	n	file:
+leveldb	./util/env_posix_test_helper.h	/^namespace leveldb {$/;"	n
+leveldb	./util/histogram.cc	/^namespace leveldb {$/;"	n	file:
+leveldb	./util/histogram.h	/^namespace leveldb {$/;"	n
+leveldb	./util/logging.cc	/^namespace leveldb {$/;"	n	file:
+leveldb	./util/logging.h	/^namespace leveldb {$/;"	n
+leveldb	./util/mutexlock.h	/^namespace leveldb {$/;"	n
+leveldb	./util/posix_logger.h	/^namespace leveldb {$/;"	n
+leveldb	./util/random.h	/^namespace leveldb {$/;"	n
+leveldb	./util/status.cc	/^namespace leveldb {$/;"	n	file:
+limiter_	./util/env_posix.cc	/^  Limiter* limiter_;$/;"	m	class:leveldb::__anon2::PosixMmapReadableFile	file:
+limiter_	./util/env_posix.cc	/^  Limiter* limiter_;$/;"	m	class:leveldb::__anon2::PosixRandomAccessFile	file:
+locked_files_	./util/env_posix.cc	/^  std::set<std::string> locked_files_;$/;"	m	class:leveldb::__anon2::PosixLockTable	file:
+locks_	./util/env_posix.cc	/^  PosixLockTable locks_;$/;"	m	class:leveldb::__anon2::PosixEnv	file:
+main	./db_bench.cc	/^int main(int argc, char **argv) {$/;"	f
+max_	./util/histogram.h	/^  double max_;$/;"	m	class:leveldb::Histogram
+message_	./db_bench.cc	/^    std::string message_;$/;"	m	class:Stats	file:
+method	./db_bench.cc	/^        void (Benchmark::*method)(ThreadState *);$/;"	m	struct:Benchmark::ThreadArg	file:
+min_	./util/histogram.h	/^  double min_;$/;"	m	class:leveldb::Histogram
+mmap_limit	./util/env_posix.cc	/^static int mmap_limit = -1;$/;"	m	namespace:leveldb::__anon2	file:
+mmap_limit_	./util/env_posix.cc	/^  Limiter mmap_limit_;$/;"	m	class:leveldb::__anon2::PosixEnv	file:
+mmapped_region_	./util/env_posix.cc	/^  void* mmapped_region_;$/;"	m	class:leveldb::__anon2::PosixMmapReadableFile	file:
+mu	./db_bench.cc	/^    port::Mutex mu;$/;"	m	struct:SharedState	file:
+mu_	./port/port_posix.h	/^  Mutex* mu_;$/;"	m	class:leveldb::port::CondVar
+mu_	./port/port_posix.h	/^  pthread_mutex_t mu_;$/;"	m	class:leveldb::port::Mutex
+mu_	./util/env_posix.cc	/^  port::Mutex mu_;$/;"	m	class:leveldb::__anon2::Limiter	file:
+mu_	./util/env_posix.cc	/^  port::Mutex mu_;$/;"	m	class:leveldb::__anon2::PosixLockTable	file:
+mu_	./util/env_posix.cc	/^  pthread_mutex_t mu_;$/;"	m	class:leveldb::__anon2::PosixEnv	file:
+mu_	./util/mutexlock.h	/^  port::Mutex *const mu_;$/;"	m	class:leveldb::MutexLock::port
+name_	./util/env_posix.cc	/^  std::string name_;$/;"	m	class:leveldb::__anon2::PosixFileLock	file:
+next_report_	./db_bench.cc	/^    int next_report_;$/;"	m	class:Stats	file:
+num_	./db_bench.cc	/^    int num_;$/;"	m	class:Benchmark	file:
+num_	./util/histogram.h	/^  double num_;$/;"	m	class:leveldb::Histogram
+num_done	./db_bench.cc	/^    int num_done;$/;"	m	struct:SharedState	file:
+num_initialized	./db_bench.cc	/^    int num_initialized;$/;"	m	struct:SharedState	file:
+ok	./include/leveldb/status.h	/^  bool ok() const { return (state_ == NULL); }$/;"	f	class:leveldb::Status
+once	./util/env_posix.cc	/^static pthread_once_t once = PTHREAD_ONCE_INIT;$/;"	m	namespace:leveldb	file:
+open_read_only_file_limit	./util/env_posix.cc	/^static int open_read_only_file_limit = -1;$/;"	m	namespace:leveldb::__anon2	file:
+operator !=	./include/leveldb/slice.h	/^inline bool operator!=(const Slice& x, const Slice& y) {$/;"	f	namespace:leveldb
+operator =	./include/leveldb/status.h	/^inline void Status::operator=(const Status& s) {$/;"	f	class:leveldb::Status
+operator ==	./include/leveldb/slice.h	/^inline bool operator==(const Slice& x, const Slice& y) {$/;"	f	namespace:leveldb
+operator []	./include/leveldb/slice.h	/^  char operator[](size_t n) const {$/;"	f	class:leveldb::Slice
+port	./port/atomic_pointer.h	/^namespace port {$/;"	n	namespace:leveldb
+port	./port/port_posix.cc	/^namespace port {$/;"	n	namespace:leveldb	file:
+port	./port/port_posix.h	/^namespace port {$/;"	n	namespace:leveldb
+pos_	./util/env_posix.cc	/^  size_t pos_;$/;"	m	class:leveldb::__anon2::PosixWritableFile	file:
+queue_	./util/env_posix.cc	/^  BGQueue queue_;$/;"	m	class:leveldb::__anon2::PosixEnv	file:
+rand	./db_bench.cc	/^    Random rand;         \/\/ Has different seeds for different threads$/;"	m	struct:ThreadState	file:
+reads_	./db_bench.cc	/^    int reads_;$/;"	m	class:Benchmark	file:
+remove_prefix	./include/leveldb/slice.h	/^  void remove_prefix(size_t n) {$/;"	f	class:leveldb::Slice
+rep_	./port/atomic_pointer.h	/^  void* rep_;$/;"	m	class:leveldb::port::AtomicPointer
+seconds_	./db_bench.cc	/^    double seconds_;$/;"	m	class:Stats	file:
+seed_	./util/random.h	/^  uint32_t seed_;$/;"	m	class:leveldb::Random
+shared	./db_bench.cc	/^        SharedState *shared;$/;"	m	struct:Benchmark::ThreadArg	file:
+shared	./db_bench.cc	/^    SharedState *shared;$/;"	m	struct:ThreadState	file:
+size	./include/leveldb/slice.h	/^  size_t size() const { return size_; }$/;"	f	class:leveldb::Slice
+size_	./include/leveldb/slice.h	/^  size_t size_;$/;"	m	class:leveldb::Slice
+start	./db_bench.cc	/^    bool start;$/;"	m	struct:SharedState	file:
+start_	./db_bench.cc	/^    double start_;$/;"	m	class:Stats	file:
+started_bgthread_	./util/env_posix.cc	/^  bool started_bgthread_;$/;"	m	class:leveldb::__anon2::PosixEnv	file:
+starts_with	./include/leveldb/slice.h	/^  bool starts_with(const Slice& x) const {$/;"	f	class:leveldb::Slice
+state_	./include/leveldb/status.h	/^  const char* state_;$/;"	m	class:leveldb::Status
+stats	./db_bench.cc	/^    Stats stats;$/;"	m	struct:ThreadState	file:
+sum_	./util/histogram.h	/^  double sum_;$/;"	m	class:leveldb::Histogram
+sum_squares_	./util/histogram.h	/^  double sum_squares_;$/;"	m	class:leveldb::Histogram
+target	./include/leveldb/env.h	/^  Env* target() const { return target_; }$/;"	f	class:leveldb::EnvWrapper
+target_	./include/leveldb/env.h	/^  Env* target_;$/;"	m	class:leveldb::EnvWrapper
+temporary_fd_	./util/env_posix.cc	/^  bool temporary_fd_;  \/\/ If true, fd_ is -1 and we open on every read.$/;"	m	class:leveldb::__anon2::PosixRandomAccessFile	file:
+thread	./db_bench.cc	/^        ThreadState *thread;$/;"	m	struct:Benchmark::ThreadArg	file:
+tid	./db_bench.cc	/^    int tid;             \/\/ 0..n-1 when running in n threads$/;"	m	struct:ThreadState	file:
+total	./db_bench.cc	/^    int total;$/;"	m	struct:SharedState	file:
+user_function	./util/env_posix.cc	/^  void (*user_function)(void*);$/;"	m	struct:leveldb::__anon2::__anon3::StartThreadState	file:
+value_size_	./db_bench.cc	/^    int value_size_;$/;"	m	class:Benchmark	file:
+~Benchmark	./db_bench.cc	/^    ~Benchmark() {$/;"	f	class:Benchmark
+~CondVar	./port/port_posix.cc	/^CondVar::~CondVar() { PthreadCall("destroy cv", pthread_cond_destroy(&cv_)); }$/;"	f	class:leveldb::port::CondVar
+~Env	./util/env.cc	/^Env::~Env() {$/;"	f	class:leveldb::Env
+~EnvWrapper	./util/env.cc	/^EnvWrapper::~EnvWrapper() {$/;"	f	class:leveldb::EnvWrapper
+~FileLock	./util/env.cc	/^FileLock::~FileLock() {$/;"	f	class:leveldb::FileLock
+~Histogram	./util/histogram.h	/^  ~Histogram() { }$/;"	f	class:leveldb::Histogram
+~Logger	./util/env.cc	/^Logger::~Logger() {$/;"	f	class:leveldb::Logger
+~Mutex	./port/port_posix.cc	/^Mutex::~Mutex() { PthreadCall("destroy mutex", pthread_mutex_destroy(&mu_)); }$/;"	f	class:leveldb::port::Mutex
+~PosixEnv	./util/env_posix.cc	/^  virtual ~PosixEnv() {$/;"	f	class:leveldb::__anon2::PosixEnv
+~PosixLogger	./util/posix_logger.h	/^  virtual ~PosixLogger() {$/;"	f	class:leveldb::PosixLogger
+~PosixMmapReadableFile	./util/env_posix.cc	/^  virtual ~PosixMmapReadableFile() {$/;"	f	class:leveldb::__anon2::PosixMmapReadableFile
+~PosixRandomAccessFile	./util/env_posix.cc	/^  virtual ~PosixRandomAccessFile() {$/;"	f	class:leveldb::__anon2::PosixRandomAccessFile
+~PosixSequentialFile	./util/env_posix.cc	/^  virtual ~PosixSequentialFile() { close(fd_); }$/;"	f	class:leveldb::__anon2::PosixSequentialFile
+~PosixWritableFile	./util/env_posix.cc	/^  ~PosixWritableFile() {$/;"	f	class:leveldb::__anon2::PosixWritableFile
+~RandomAccessFile	./util/env.cc	/^RandomAccessFile::~RandomAccessFile() {$/;"	f	class:leveldb::RandomAccessFile
+~SequentialFile	./util/env.cc	/^SequentialFile::~SequentialFile() {$/;"	f	class:leveldb::SequentialFile
+~Status	./include/leveldb/status.h	/^  ~Status() { delete[] state_; }$/;"	f	class:leveldb::Status
+~WritableFile	./util/env.cc	/^WritableFile::~WritableFile() {$/;"	f	class:leveldb::WritableFile
