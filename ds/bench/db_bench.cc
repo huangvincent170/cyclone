@@ -42,7 +42,7 @@
 #include "histogram.h"
 #include "mutexlock.h"
 #include "random.h"
-#include "libpmemkv.h"
+#include "pmemkv.h"
 
 static const string USAGE =
         "pmemkv_bench\n"
