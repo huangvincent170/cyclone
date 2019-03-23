@@ -8,12 +8,12 @@ counter_coordinator_driver counter_driver_mt counter_driver_noop_mt
 #all: echo_server echo_client echo_async_client
 #all: echo_server echo_client pmemkv_client pmemkv_server
 
-#server: echo_server pmemkv_server
-server: rocksdb_server
+#server: echo_server pmemkv_server rocksdb_server
+server: blizmap_server
 
 #client: echo_client echo_async_client pmemkv_client pmemkv_async_client
-#client: pmemkv_async_client echo_async_client
-client: rocksdb_client
+#client: pmemkv_async_client echo_async_client rocksdb_async_client
+client: blizmap_async_client
 
 CXXFLAGS = -O3 -DBOOST_LOG_DYN_LINK -DBOOST_THREAD_DYN_LINK
 CXXFLAGS += $(CPPFLAGS)
@@ -55,8 +55,19 @@ PMEMKV_HOME=../pmemkv
 PMEMKV_CXXFLAGS=-std=c++11 -I${PMEMKV_HOME}/src 
 PMEMKV_LIBS=${PMEMKV_HOME}/bin/libpmemkv.a
 
+#containers
+PMEMOBJ_CPP?=/home/pfernando/libpmemobj-cpp
+BLIZMAP_CXXFLAGS=-I${PMEMOBJ_CPP}/include
+
 #BOOST_THREAD_LIB=-lboost_thread-mt
 BOOST_THREAD_LIB=-lboost_thread
+
+
+blizmap_server:bliz_map.cpp
+	$(CXX) $(SERVER_CXXFLAGS) $(BLIZMAP_CXXFLAGS)  bliz_map.cpp $(BOOST_THREAD_LIB) $(BLIZMAP_LIBS) $(SERVER_LIBS) -o $@
+
+blizmap_async_client:bliz_map_client.cpp
+	$(CXX) $(CLIENT_CXXFLAGS) bliz_map_client.cpp $(BOOST_THREAD_LIB) $(CLIENT_LIBS) -o $@
 
 echo_server:echo_server.cpp
 	$(CXX) $(SERVER_CXXFLAGS) echo_server.cpp $(BOOST_THREAD_LIB) $(SERVER_LIBS) -o $@
@@ -100,6 +111,9 @@ pmemkv_async_client:pmemkv_async_client.cpp
 rocksdb_client:rocksdb_client.cpp 
 	$(CXX) $(CLIENT_CXXFLAGS) rocksdb_client.cpp $(BOOST_THREAD_LIB) $(CLIENT_LIBS) -o $@
 
+rocksdb_async_client:rocksdb_async_client.cpp 
+	$(CXX) $(CLIENT_CXXFLAGS) rocksdb_async_client.cpp $(BOOST_THREAD_LIB) $(CLIENT_LIBS) -o $@
+
 fb_client:fb_client.cpp 
 	$(CXX) $(CXXFLAGS) -std=c++0x fb_client.cpp $(BOOST_THREAD_LIB) $(LIBS) -o $@
 
@@ -115,10 +129,8 @@ echo_client_multicore:echo_client_multicore.cpp
 .PHONY:clean
 
 clean:
-	rm -f counter_server counter_driver \
-counter_coordinator counter_delete_node counter_add_node \
-counter_loader counter_driver_mt common.o counter_driver_noop_mt \
-echo_server echo_client echo_async_client echo_client_multicore rocksdb_server rocksdb_client \
-echo_logserver rocksdb_loader rocksdb_checkpoint rocksdb_client_multicore \
-rocksdb_merge_server rocksdb_merge_client fb_loader fb_server fb_client \
+	rm -f \
+echo_server echo_client echo_async_client \
+rocksdb_server rocksdb_client rocksdb_async_client \
+rocksdb_loader rocksdb_checkpoint \
 pmemkv_client pmemkv_async_client pmemkv_server
