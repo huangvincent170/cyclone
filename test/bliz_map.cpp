@@ -75,7 +75,8 @@ rpc_callbacks_t rpc_callbacks =
 #define LAYOUT "hashmap"
 #define POOLSIZE 1024*1024*64
 #define CREATE_MODE_RW (S_IWUSR | S_IRUSR)
-const char* file = "/dev/shm/concurrent_hash_map";
+//const char* file = "/dev/shm/concurrent_hash_map";
+const char* file = "/mnt/pmem1/blizmap";
 
 void create_map(){
 	if (file_exists(file) != 0)
