@@ -110,6 +110,7 @@ int exec_rpc_internal(rpc_t *rpc,
 	init_rpc_cookie_info(cookie, rpc, wal);
 	while(wal->rep == REP_UNKNOWN);
 	LT_END(trcekey_raft, rpc);
+	LT_THROUGHPUT_START(trcekey_pipe1,1);
 	if(wal->rep != REP_SUCCESS) {
 		return -1;
 	}
@@ -122,7 +123,7 @@ int exec_rpc_internal(rpc_t *rpc,
 			return -1;
 		}
 	}
-
+	LT_THROUGHPUT_END(trcekey_pipe1,1);
 	const unsigned char * user_data = (const unsigned char *)(rpc + 1);
 	int checkpoint_idx = app_callbacks.flashlog_callback
 		((const unsigned char *)rpc, len + sizeof(rpc_t), cookie);
