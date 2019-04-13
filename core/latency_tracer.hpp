@@ -7,6 +7,8 @@ enum trcekey{
 	trcekey_app_wr,
 	trcekey_app_ro,
 	trcekey_other,
+	trcekey_pipe1,
+	trcekey_pipe2,
 	MAX_LT_TRACE
 };
 
@@ -17,8 +19,13 @@ enum trcekey{
 #define LT_PAUSE(key, rpc)
 #define LT_END(key, rpc)
 
+/* calculating batched operations. e.g.: log writes */
 #define LT_LOCAL_START_BATCH(key, count)
 #define LT_LOCAL_END_BATCH(key, count)
+
+/* calculating throughput at pipeline stages */
+#define LT_THROUGHPUT_START(key,count)
+#define LT_THROUGHPUT_END(key,count)
 
 #define LT_PRINT() 
 
@@ -35,6 +42,8 @@ static const char *print_headers[MAX_LT_TRACE] =
 	"APP_WR",
 	"APP_RO",
 	"OTHER",
+	"PIPE1",
+	"PIPE2"
 };
 
 enum lt_state{
@@ -48,6 +57,7 @@ typedef struct lt_counter_{
 	unsigned long stime; // start time for local counters
 	unsigned long count;
 	unsigned int batch_count; // keeping track of how many message when batched timing
+	unsigned long etime; // end time for throughput counter
 	int state;
 }lt_counter_t;
 
@@ -107,6 +117,9 @@ static uint64_t read_tsc(void)
 #define LT_LOCAL_START_BATCH(key, count)  ltracer.start_local_counter(key,count)
 #define LT_LOCAL_END_BATCH(key, count)  ltracer.end_local_counter(key,count)
 
+#define LT_THROUGHPUT_START(key,count) ltracer.start_throughput_counter(key,count)
+#define LT_THROUGHPUT_END(key,count) ltracer.end_throughput_counter(key,count)
+
 #define LT_PRINT() ltracer.print_trace()
 
 
@@ -118,6 +131,7 @@ typedef struct lt_tracer_{
 		for(i=0; i < MAX_LT_TRACE; i++){
 			counters[i].ttime = 0;
 			counters[i].stime = 0;
+			counters[i].etime = 0;
 			counters[i].count = 0;
 			counters[i].batch_count = 1;
 		}
@@ -175,15 +189,40 @@ typedef struct lt_tracer_{
 		return 0;
 	}
 
+	int start_throughput_counter(enum trcekey key, int count){
+		if(key >= MAX_LT_TRACE){
+			printf("invalid counter key\n");
+			exit(1);
+		}	
+		if(counters[key].count == 0 ) //if first invocation after reset
+			counters[key].stime = tracer_current_time();
+		return 0;
+	}
 
+	int end_throughput_counter(enum trcekey key, int count){
+		if(key >= MAX_LT_TRACE){
+			printf("invalid counter key\n");
+			exit(1);
+		}	
+		counters[key].etime =  tracer_current_time();
+		counters[key].count += count;
+		return 0;
+	}
+	
 	void print_trace(){
 		float time[MAX_LT_TRACE];
 		int i;
 		for(i=0; i < MAX_LT_TRACE;i ++){
-			time[i] = (counters[i].count == 0) ? 0 : 
+			if(i == trcekey_pipe1){
+				time[i] = (counters[i].count == 0) ? 0 : 
+				(counters[i].etime - counters[i].stime)/((float)counters[i].count);
+			}else{
+				time[i] = (counters[i].count == 0) ? 0 : 
 				counters[i].ttime/((float)counters[i].count);
+			}
 		}
 			printf( "%s : %.5f  "
+					"%s : %.5f  "
 					"%s : %.5f  "
 					"%s : %.5f  "
 					"%s : %.5f  "
@@ -193,9 +232,10 @@ typedef struct lt_tracer_{
 					print_headers[1], time[1],
 					print_headers[2], time[2],
 					print_headers[3], time[3],
-					print_headers[4], time[4]); 
+					print_headers[4], time[4],
+					print_headers[5], time[5]); 
 
-			printf( "%s : %lu , %lu  "
+			/* printf( "%s : %lu , %lu  "
 					"%s : %lu , %lu  "
 					"%s : %lu , %lu  "
 					"%s : %lu , %lu  "
@@ -206,7 +246,7 @@ typedef struct lt_tracer_{
 					print_headers[2], counters[2].ttime,counters[2].count,
 					print_headers[3], counters[3].ttime,counters[3].count,
 					print_headers[4], counters[4].ttime,counters[4].count);
-
+			*/
 		init_tracer();
 		return;
 	}
