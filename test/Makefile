@@ -8,12 +8,13 @@ counter_coordinator_driver counter_driver_mt counter_driver_noop_mt
 #all: echo_server echo_client echo_async_client
 #all: echo_server echo_client pmemkv_client pmemkv_server
 
-#server: echo_server pmemkv_server rocksdb_server
-server: blizmap_server
+server: rocksdb_loader rocksdb_checkpoint
+#server: blizmap_server
 
 #client: echo_client echo_async_client pmemkv_client pmemkv_async_client
 #client: pmemkv_async_client echo_async_client rocksdb_async_client
-client: blizmap_async_client
+#client: blizmap_async_client
+client: rocksdb_async_client
 
 CXXFLAGS = -O3 -DBOOST_LOG_DYN_LINK -DBOOST_THREAD_DYN_LINK
 CXXFLAGS += $(CPPFLAGS)
@@ -47,7 +48,7 @@ CLIENT_LIBS += ${PMEM_CLIB}/libpmemobj.a ${PMEM_CLIB}/libpmem.a -lndctl -ldaxctl
 #Rocksdb 
 ROCKS_HOME=/home/pfernando/rocksdb
 ROCKS_CXXFLAGS=-std=c++11 -I${ROCKS_HOME}/include/ -L${ROCKS_HOME} -DROCKSDB_PLATFORM_POSIX -DROCKSDB_LIB_IO_POSIX  -DOS_LINUX -fno-builtin-memcmp -DROCKSDB_FALLOCATE_PRESENT -DSNAPPY -DGFLAGS=gflags -DZLIB -DBZIP2 -DZSTD -DNUMA -DROCKSDB_MALLOC_USABLE_SIZE -DROCKSDB_PTHREAD_ADAPTIVE_MUTEX -DROCKSDB_BACKTRACE -march=native  "-DROCKSDB_JEMALLOC"
-ROCKS_LIBS += ${ROCKS_HOME}/librocksdb.a ${ROCKS_HOME}/libbz2.a ${ROCKS_HOME}/libz.a ${ROCKS_HOME}/libsnappy.a -lsnappy -lgflags -lz -lbz2 -lzstd 
+ROCKS_LIBS += ${ROCKS_HOME}/librocksdb.a ${ROCKS_HOME}/libbz2.a ${ROCKS_HOME}/libz.a ${ROCKS_HOME}/libsnappy.a -lsnappy -lgflags -lz -lbz2 -lzstd -lpthread
 
 
 #pmemkv
