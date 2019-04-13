@@ -13,7 +13,7 @@ typedef struct rock_kv_pair_st {
   unsigned long key;
   char value[value_sz];
 }rock_kv_pair_t;
-//const char *preload_dir = "/dev/shm/preloaded";
+const char *preload_dir = "/mnt/pmem1/preloaded";
 const char *data_dir = "/mnt/pmem1/rocksdata";
 const char *log_dir  = "/mnt/pmem1/rockswal";
 const unsigned long rocks_keys = 100000000;
