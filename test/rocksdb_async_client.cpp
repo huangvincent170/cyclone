@@ -231,6 +231,7 @@ int main(int argc, const char *argv[]) {
 	int client_id_stop  = atoi(argv[2]);
 	driver_args_t *dargs;
 	void **prev_handles;
+	timeout_vector = new std::vector<struct cb_st *>();
 	cyclone_network_init(argv[7], 1, atoi(argv[3]), 
 			2 + client_id_stop - client_id_start); // 2 - sync and async queues
 	driver_args_t ** dargs_array =
