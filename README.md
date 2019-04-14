@@ -43,7 +43,29 @@ Install DPDK network stack on server/client machines using DPDK installation [gu
 * 10/100GigE ethernet connected machines. Minimum number of machines needed is two (Server and client).
 NVM persistent memory modules. Alternatively, we can emulate NVM using DRAM.
 
-## Build Code
+## Build code
 
 First we clone external code in to project git tree by;
+
 ```git submodule update --init --recursive```
+
+Form the top level directory, issue
+
+```make```
+
+This will build the ```raft``` and Blizzard ```core``` libraries. 
+Next, build the Blizzard applications/data-structures by issueing ```make``` from the 
+```test``` directory.
+
+## Run code
+
+First, configure the cluster details in ```utils-arch-cluster``` directory.
+* Configuring machine details in ```cluster-dpdk.ini```
+* Configuring cluster configurations in ```example.ini```
+
+Next,from ```utils-gloabl``` directory, execute;
+
+```numbers.sh```
+
+The script is a driver for ```runscript.py``` file.
+
