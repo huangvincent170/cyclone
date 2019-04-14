@@ -17,32 +17,32 @@ same. We replicate logical operation to the remote node, as opposed to value rep
 We show that with carefully optimized NVM aware operation replication layer + NVM aware data structures, we can provide
 both persistent and reliability gurantees for application data with minimal overhead.
 
-##Code structure
+## Code structure
 
 We are using Intel's Cyclone codebase as our starting point. The Cylone implements a efficient log replication
 layer based on Intel DPDK user-space network stack. However, the original Intel software was supporting DRAM + SSD
 as their storage engine. We port them to be NVM aware.
 We only describe important directories. Some of the directories are not used anymore.
 
-*core -  Intel DPDK based NVM aware log replication layer. We extend the software with NVM awareness.
-*raft - RAFT replication engine used for operation replication.
-*utils-arch-cluster - Contains, configuration files for RAFT cluster configuration
-*utils-gloabl - Scripts for server side cluster deployment and client deployment.
-*test - Workloads/data-structures implmentations that work with operation replication.
-*pmdk - An external dependency for Intel's PMDK code base. We use pmem transactional objects as a dependency.
+* core -  Intel DPDK based NVM aware log replication layer. We extend the software with NVM awareness. 
+* raft - RAFT replication engine used for operation replication. 
+* utils-arch-cluster - Contains, configuration files for RAFT cluster configuration
+* utils-gloabl - Scripts for server side cluster deployment and client deployment.
+* test - Workloads/data-structures implmentations that work with operation replication.
+* pmdk - An external dependency for Intel's PMDK code base. We use pmem transactional objects as a dependency.
 
-##Dependencies.
+## Dependencies.
 
-###Software
+### Software
 
 Intel DPDK software stack.
 
-###Hardware
+### Hardware
 
 10/100GigE ethernet connected machines. Minimum number of machines needed is two (Server and client).
 NVM persistent memory modules. Alternatively, we can emulate NVM using DRAM.
 
-##Build Code
+## Build Code
 
 First we clone external code in to project git tree by;
 git submodule update --init --recursive
