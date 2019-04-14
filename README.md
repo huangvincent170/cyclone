@@ -35,14 +35,15 @@ We only describe important directories. Some of the directories are not used any
 
 ### Software
 
-Intel DPDK software stack.
+* Intel DPDK software stack.
+Install DPDK network stack on server/client machines using DPDK installation [guide](http://core.dpdk.org/doc/quick-start/).
 
 ### Hardware
 
-10/100GigE ethernet connected machines. Minimum number of machines needed is two (Server and client).
+* 10/100GigE ethernet connected machines. Minimum number of machines needed is two (Server and client).
 NVM persistent memory modules. Alternatively, we can emulate NVM using DRAM.
 
 ## Build Code
 
 First we clone external code in to project git tree by;
-git submodule update --init --recursive
+```git submodule update --init --recursive```
