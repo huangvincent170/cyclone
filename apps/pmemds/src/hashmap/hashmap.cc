@@ -16,7 +16,6 @@ using pmem::obj::transaction;
 using pmem::detail::conditional_add_to_tx;
 
 namespace pmemds {
-namespace hashmap {
 
 HashMapEngine::HashMapEngine(const string& path, const size_t size) {
     if ((access(path.c_str(), F_OK) != 0) && (size > 0)) {
@@ -67,5 +66,4 @@ void HashMapEngine::Recover() {
   my_hashmap = root_data->hashmap_ptr.get();
 }
 
-} // namespace hashmap
 } // namespace pmemds

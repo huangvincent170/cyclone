@@ -39,8 +39,7 @@
 using pmem::obj::pool;
 using pmem::obj::persistent_ptr;
 
-namespace pmemkv {
-namespace btree {
+namespace pmemds {
 
 const string ENGINE = "btree";                             // engine identifier
 const size_t DEGREE = 64;
@@ -52,29 +51,31 @@ class BTreeEngine : public PMEngine {
     BTreeEngine(const string& path, size_t size);          // default constructor
     ~BTreeEngine();                                        // default destructor
 
+    PMStatus exec(uint16_t op_name,std::string& in_key, std::string& in_val, std::string& out_val);
+
     string Engine() final { return ENGINE; }               // engine identifier
 
     int64_t Count() final;                                 // count all keys
     int64_t CountLike(const string& pattern) final;        // count all keys matching pattern
 
-    using KVEngine::Each;                                  // iterate over all keys
+    using PMEngine::Each;                                  // iterate over all keys
     void Each(void* context,                               // iterate over all keys with context
-              KVEachCallback* callback) final;
-    using KVEngine::EachLike;                              // iterate over matching keys
+              PMEachCallback* callback) final;
+    using PMEngine::EachLike;                              // iterate over matching keys
     void EachLike(const string& pattern,                   // iterate over matching keys with context
                   void* context,
-                  KVEachCallback* callback) final;
+                  PMEachCallback* callback) final;
 
-    KVStatus Exists(const string& key) final;              // does key have a value?
+    PMStatus Exists(const string& key) final;              // does key have a value?
 
-    using KVEngine::Get;                                   // pass value to callback
-    void Get(void* context,                                // pass value to callback with context
+    using PMEngine::get;                                   // pass value to callback
+    void get(void* context,                                // pass value to callback with context
              const string& key,
-             KVGetCallback* callback) final;
+             PMGetCallback* callback) final;
 
-    KVStatus Put(const string& key,                        // store key and value
+    PMStatus put(const string& key,                        // store key and value
                  const string& value) final;
-    KVStatus Remove(const string& key) final;              // remove value for key
+    PMStatus remove(const string& key) final;              // remove value for key
   private:
     BTreeEngine(const BTreeEngine&);
     void operator=(const BTreeEngine&);
@@ -88,5 +89,4 @@ class BTreeEngine : public PMEngine {
     btree_type* my_btree;
 };
 
-} // namespace btree
 } // namespace pmemkv

@@ -9,7 +9,6 @@ using pmem::obj::pool;
 using pmem::obj::persistent_ptr;
 
 namespace pmemds {
-namespace  hashmap{
 
 const string ENGINE = "hashmap";                             // engine identifier
 const size_t MAX_KEY_SIZE = 20;
@@ -43,5 +42,4 @@ class HashMapEngine : public PMEngine {
     hashmap_type* my_hashmap;
 };
 
-} 
 }

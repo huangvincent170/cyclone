@@ -46,8 +46,7 @@ using pmem::obj::make_persistent_atomic;
 using pmem::obj::transaction;
 using pmem::detail::conditional_add_to_tx;
 
-namespace pmemkv {
-namespace btree {
+namespace pmemds {
 
 BTreeEngine::BTreeEngine(const string& path, const size_t size) {
     if ((access(path.c_str(), F_OK) != 0) && (size > 0)) {
@@ -72,6 +71,21 @@ int64_t BTreeEngine::Count() {
     for (auto& iterator : *my_btree) result++;
     return result;
 }
+
+
+    PMStatus BTreeEngine::exec(uint16_t op_name, std::string &in_key, std::string &in_val, std::string &out_val) {
+
+        switch (op_name){
+            case GET:
+                return this->get(in_key,out_val);
+            case PUT:
+                return this->put(in_key,in_val);
+            default:
+                LOG_ERROR("unknown operation");
+                return FAILED;
+                /* */
+        }
+    }
 
 int64_t BTreeEngine::CountLike(const string& pattern) {
     LOG("Count like pattern=" << pattern);
@@ -112,7 +126,7 @@ void BTreeEngine::EachLike(const string& pattern, void* context, KVEachCallback*
     }
 }
 
-KVStatus BTreeEngine::Exists(const string& key) {
+PMStatus BTreeEngine::Exists(const string& key) {
     LOG("Exists for key=" << key);
     btree_type::iterator it = my_btree->find(pstring<20>(key));
     if (it == my_btree->end()) {
@@ -132,7 +146,7 @@ void BTreeEngine::Get(void* context, const string& key, KVGetCallback* callback)
     (*callback)(context, (int32_t) it->second.size(), it->second.c_str());
 }
 
-KVStatus BTreeEngine::Put(const string& key, const string& value) {
+PMStatus BTreeEngine::put(const string& key, const string& value) {
     LOG("Put key=" << key << ", value.size=" << to_string(value.size()));
     auto res = my_btree->insert(std::make_pair(pstring<MAX_KEY_SIZE>(key), pstring<MAX_VALUE_SIZE>(value)));
     if (!res.second) { // key already exists, so update
@@ -145,7 +159,7 @@ KVStatus BTreeEngine::Put(const string& key, const string& value) {
     return OK;
 }
 
-KVStatus BTreeEngine::Remove(const string& key) {
+PMStatus BTreeEngine::remove(const string& key) {
     LOG("Remove key=" << key);
     size_t result = my_btree->erase(key);
     if (result == 1) {
@@ -165,5 +179,4 @@ void BTreeEngine::Recover() {
     }
 }
 
-} // namespace btree
 } // namespace pmemkv
