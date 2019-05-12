@@ -68,6 +68,9 @@
 #include <mutex>
 #include <thread>
 #include <type_traits>
+#include <string>
+
+#include "pstring.h"
 
 #if _MSC_VER
 #include <intrin.h>
@@ -87,6 +90,18 @@ struct hash<pmem::obj::p<T>> {
 		return hash<T>()(x.get_ro());
 	}
 };
+
+
+
+template <size_t CAPACITY>
+struct hash<pstring<CAPACITY>>{
+	size_t operator()(const pstring<CAPACITY> &x) const
+	{
+		std::string mystr(x.c_str(),20);
+		return std::hash<string>()(mystr);
+	}
+};
+
 } /* namespace std */
 
 namespace pmem

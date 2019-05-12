@@ -11,11 +11,6 @@
 #ifndef __PMEMDS_H
 #define __PMEMDS_H
 
-typedef enum {                                             // status enumeration
-    FAILED = -1,                                           // operation failed
-    NOT_FOUND = 0,                                         // key not located
-    OK = 1                                                 // successful completion
-} PMStatus;
 
 typedef void(PMEachCallback)(void* context,                // callback function for Each operation
                              int keybytes,
@@ -35,29 +30,12 @@ typedef void(PMGetCallback)(void* context,                 // callback function 
 #include <libpmemobj++/transaction.hpp>
 
 #include "pmemds-common.h"
+#include "pmemds_log.h"
 
 using std::string;
 using std::to_string;
 
 namespace pmemds {
-enum opnames{
-	  	OPEN=0,
-		CLOSE,
-		CREATE,
-		DELETE,
-		GET,
-		PUT
-	};
-
-enum dstypes{
-	SORTED_BTREE = 0,
-	HASH_MAP,
-	PRIORITY_QUEUE,
-	VECTOR
-};
-
-
-
 /* forward declare */
 class PMEngine;
 
@@ -89,6 +67,10 @@ const string LAYOUT = "pmemds";                            // pool layout identi
 
 class PMEngine {                                           // storage engine implementations
   public:
+
+	virtual ~PMEngine();
+
+
 	PMStatus open(const string& engine,            // open storage engine
                           const string& path,              // path to persistent pool
                           size_t size);                    // size used when creating pool

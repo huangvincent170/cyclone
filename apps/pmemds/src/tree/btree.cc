@@ -66,11 +66,7 @@ BTreeEngine::~BTreeEngine() {
     LOG("Closed ok");
 }
 
-int64_t BTreeEngine::Count() {
-    int64_t result = 0;
-    for (auto& iterator : *my_btree) result++;
-    return result;
-}
+
 
 
     PMStatus BTreeEngine::exec(uint16_t op_name, std::string &in_key, std::string &in_val, std::string &out_val) {
@@ -87,44 +83,7 @@ int64_t BTreeEngine::Count() {
         }
     }
 
-int64_t BTreeEngine::CountLike(const string& pattern) {
-    LOG("Count like pattern=" << pattern);
-    try {
-        std::regex p(pattern);
-        int64_t result = 0;
-        for (auto& iterator : *my_btree) {
-            auto key = string(iterator.first.c_str(), (int32_t) iterator.first.size());
-            if (std::regex_match(key, p)) result++;
-        }
-        return result;
-    } catch (std::regex_error) {
-        LOG("Invalid pattern: " << pattern);
-        return 0;
-    }
-}
 
-void BTreeEngine::Each(void* context, KVEachCallback* callback) {
-    LOG("Each");
-    for (auto& iterator : *my_btree) {
-        (*callback)(context, (int32_t) iterator.first.size(), (int32_t) iterator.second.size(),
-                    iterator.first.c_str(), iterator.second.c_str());
-    }
-}
-
-void BTreeEngine::EachLike(const string& pattern, void* context, KVEachCallback* callback) {
-    LOG("Each like pattern=" << pattern);
-    try {
-        std::regex p(pattern);
-        for (auto& iterator : *my_btree) {
-            auto key = string(iterator.first.c_str(), (int32_t) iterator.first.size());
-            if (std::regex_match(key, p))
-                (*callback)(context, (int32_t) iterator.first.size(), (int32_t) iterator.second.size(),
-                            iterator.first.c_str(), iterator.second.c_str());
-        }
-    } catch (std::regex_error) {
-        LOG("Invalid pattern: " << pattern);
-    }
-}
 
 PMStatus BTreeEngine::Exists(const string& key) {
     LOG("Exists for key=" << key);
@@ -136,7 +95,7 @@ PMStatus BTreeEngine::Exists(const string& key) {
     return OK;
 }
 
-void BTreeEngine::Get(void* context, const string& key, KVGetCallback* callback) {
+void BTreeEngine::get(void* context, const string& key, PMGetCallback* callback) {
     LOG("Get using callback for key=" << key);
     btree_type::iterator it = my_btree->find(pstring<20>(key));
     if (it == my_btree->end()) {

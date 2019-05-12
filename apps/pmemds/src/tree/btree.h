@@ -55,16 +55,6 @@ class BTreeEngine : public PMEngine {
 
     string Engine() final { return ENGINE; }               // engine identifier
 
-    int64_t Count() final;                                 // count all keys
-    int64_t CountLike(const string& pattern) final;        // count all keys matching pattern
-
-    using PMEngine::Each;                                  // iterate over all keys
-    void Each(void* context,                               // iterate over all keys with context
-              PMEachCallback* callback) final;
-    using PMEngine::EachLike;                              // iterate over matching keys
-    void EachLike(const string& pattern,                   // iterate over matching keys with context
-                  void* context,
-                  PMEachCallback* callback) final;
 
     PMStatus Exists(const string& key) final;              // does key have a value?
 

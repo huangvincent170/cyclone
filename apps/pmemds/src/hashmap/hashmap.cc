@@ -39,30 +39,31 @@ PMStatus HashMapEngine::Exists(const string& key) {
      return OK;
 }
 
-void HashMapEngine::Get(void* context, const string& key, PMGetCallback* callback) {
+void HashMapEngine::get(void* context, const string& key, PMGetCallback* callback) {
 	  hashmap_type::accessor access;
 		my_hashmap->find(access,pstring<20>(key));
-		access->release();
+		//access->release();
     LOG("Get using callback for key=" << key);
 }
 
-PMStatus HashMapEngine::Put(const string& key, const string& value) {
+PMStatus HashMapEngine::put(const string& key, const string& value) {
     LOG("Put key=" << key << ", value.size=" << to_string(value.size()));
 		hashmap_type::accessor access;
 		my_hashmap->insert(access,pstring<20>(key));
 		access->second = pstring<100>(value);
-		access->release();
+		//access->release();
     return OK;
 }
 
-PMStatus HashMapEngine::Remove(const string& key) {
+PMStatus HashMapEngine::remove(const string& key) {
     LOG("Remove key=" << key);
 		my_hashmap->erase(pstring<20>(key));
+    return OK;
 }
 
 void HashMapEngine::Recover() {
 	auto root_data = pmpool.get_root();
-	make_persistent_atomic<hashmap_type>(pmpool, root_data->btree_ptr);
+	make_persistent_atomic<hashmap_type>(pmpool, root_data->hashmap_ptr);
   my_hashmap = root_data->hashmap_ptr.get();
 }
 

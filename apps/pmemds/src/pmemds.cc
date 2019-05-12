@@ -5,6 +5,8 @@
 
 
 const std::string pmem_home =  "/mnt/pmem1/pmemds";
+const long ds_pool_size = 1024*1024; // pool size for the data-structure. Not a fundamental limitation
+
 
 namespace pmemds{
 
@@ -12,7 +14,7 @@ PMStatus PMLib::open(const string& app_path) {
 
 	engine_map = new std::map<std::string,PMEngine*>();
 	//TODO: create dir path
-
+	return OK;
 }
 
 PMStatus PMLib::close() {
@@ -46,17 +48,17 @@ PMStatus PMLib::exec(uint16_t op_name,uint8_t ds_type, std::string ds_id,std::st
 		}
 	switch(op_name){	
   /* open-close data-structures */	
-		case pmemds::OPEN:
+		case OPEN:
 			open(pmem_home);
 			break;
-		case pmemds::CLOSE:
+		case CLOSE:
 			close();
 			break;
 	/* handle data-structure creation and delettion */
-		case pmemds::CREATE:	
+		case CREATE:
 				create_ds(ds_type,ds_id);
 				break;
-		case pmemds::DELETE:
+		case DELETE:
 				delete_ds(ds_id);
 				break;
 			
@@ -64,23 +66,25 @@ PMStatus PMLib::exec(uint16_t op_name,uint8_t ds_type, std::string ds_id,std::st
 		default:
 			return engine->exec(op_name,ds_type,ds_id,in_key,in_val,out_val);
 	}
+		return FAILED;
 }
 
 
 PMStatus PMLib::create_ds(uint8_t ds_type, std::string ds_id){
 		PMEngine *engine;
-	switch (ds_id){
+	switch (ds_type){
 		case SORTED_BTREE:
-			engine = new BTreeEngine();
+			engine = new BTreeEngine(ds_id,ds_pool_size);
 			break;
 		case HASH_MAP:
-			engine = new HashMapEngine();
+			engine = new HashMapEngine(ds_id,ds_pool_size);
 			break;
 		case VECTOR:
 		default:
 			LOG_ERROR("Invalid DS type");
 	}
-	engine_map->insert(ds_id, engine)
+	engine_map->insert(std::pair<std::string, PMEngine*>(ds_id,engine));
+	return OK;
 }
 
 
