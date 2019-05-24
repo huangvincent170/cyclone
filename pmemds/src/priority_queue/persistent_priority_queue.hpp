@@ -6,7 +6,9 @@
 
 
 
-typedef struct pqelem_st{
+struct pqelem_st{
+    pqelem_st(unsigned long k, unsigned long p):key(k),priority(p){
+    }
     unsigned long key;
     unsigned long priority;
 };
@@ -33,22 +35,22 @@ namespace pmemds {
         std::vector<struct pqelem_st *>::iterator right_child(std::vector<struct pqelem_st *>::iterator  it);
         std::vector<struct pqelem_st *>::iterator left_child(std::vector<struct pqelem_st *>::iterator  it);
         std::vector<struct pqelem_st *>::iterator parent_of(std::vector<struct pqelem_st *>::iterator  it);
-
+        int swap(const std::vector<struct pqelem_st *>::iterator it1,const std::vector<struct pqelem_st *>::iterator it);
         std::vector<struct pqelem_st *> *elems;
         std::unordered_map<unsigned long,unsigned long> *keymap;
     };
 
 
-    std::vector<struct pqelem_st *>::iterator persistent_priority_queue::right_child(std::vector<struct pqelem_st *>::iterator &it) {
+    std::vector<struct pqelem_st *>::iterator persistent_priority_queue::right_child(std::vector<struct pqelem_st *>::iterator it) {
         return elems->begin() +  2*std::distance(it,elems->begin());
     }
 
-    std::vector<struct pqelem_st *>::iterator persistent_priority_queue::left_child(std::vector<struct pqelem_st *>::iterator &it) {
+    std::vector<struct pqelem_st *>::iterator persistent_priority_queue::left_child(std::vector<struct pqelem_st *>::iterator it) {
         return elems->begin() +  (2*std::distance(it,elems->begin()) + 1);
     }
 
     std::vector<struct pqelem_st *>::iterator persistent_priority_queue::parent_of(std::vector<struct pqelem_st *>::iterator  it){
-
+        return elems->begin() +  std::distance(it,elems->begin())/2;
     }
 
 
@@ -88,6 +90,7 @@ namespace pmemds {
     PMStatus persistent_priority_queue::insert(unsigned long key, unsigned long priority) {
             std::vector<struct pqelem_st*>::iterator it;
             struct pqelem_st *pqelem = new struct pqelem_st(key,priority);
+
             elems->push_back(pqelem);
         it = elems->end();
         while(it >= elems->begin() && (*parent_of(it))->priority < (*it)->priority){
@@ -128,7 +131,10 @@ namespace pmemds {
 
     }
 
-
+    int persistent_priority_queue::swap(const std::vector<struct pqelem_st *>::iterator it1,
+                                        const std::vector<struct pqelem_st *>::iterator it) {
+        return 0;
+    }
 }
 
 

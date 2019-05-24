@@ -66,7 +66,8 @@ BTreeEngine::~BTreeEngine() {
     LOG("Closed ok");
 }
 
-    void BTreeEngine::exec(uint16_t op_name, std::string &in_key, std::string &in_val, pm_rpc_t *resp) {
+    void BTreeEngine::exec(uint16_t op_name,
+                           uint8_t ds_type, std::string ds_id,std::string& in_key, std::string& in_val, pm_rpc_t *resp) {
 
         switch (op_name){
             case GET:
@@ -89,7 +90,7 @@ void BTreeEngine::Exists(const string& key,pm_rpc_t *resp) {
     SET_STATUS(resp->meta,OK);
 }
 
-void BTreeEngine::get(void* context, const string& key, pm_rpc_t *resp) {
+void BTreeEngine::get(const string& key, pm_rpc_t *resp) {
     LOG("Get using callback for key=" << key);
     btree_type::iterator it = my_btree->find(pstring<20>(key));
     if (it == my_btree->end()) {
@@ -97,7 +98,7 @@ void BTreeEngine::get(void* context, const string& key, pm_rpc_t *resp) {
         SET_STATUS(resp->meta,NOT_FOUND);
     }
     SET_STATUS(resp->meta,OK);
-    snprintf(resp->value,it->second.size(),it->second.c_str());
+    snprintf(resp->value,it->second.size(),"%s" ,it->second.c_str());
 }
 
 void BTreeEngine::put(const string& key, const string& value,pm_rpc_t *resp) {

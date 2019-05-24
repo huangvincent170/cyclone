@@ -40,8 +40,8 @@ struct GetCallbackContext {
 /*
  * The routing function call
  */
-PMStatus PMLib::exec(uint16_t op_name,uint8_t ds_type, std::string ds_id,std::string in_key,
-		std::string in_val, std::string out_val){
+void PMLib::exec(uint16_t op_name,uint8_t ds_type, std::string ds_id,std::string in_key,
+		std::string in_val, pm_rpc_t *resp){
 	PMEngine *engine = find_ds(ds_id);
 		if(engine == nullptr){
 
@@ -64,9 +64,8 @@ PMStatus PMLib::exec(uint16_t op_name,uint8_t ds_type, std::string ds_id,std::st
 			
 	/* handle data-structure local requests*/
 		default:
-			return engine->exec(op_name,ds_type,ds_id,in_key,in_val,out_val);
+			 engine->exec(op_name,ds_type,ds_id,in_key,in_val,resp);
 	}
-		return FAILED;
 }
 
 

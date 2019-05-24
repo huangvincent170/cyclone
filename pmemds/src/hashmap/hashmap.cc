@@ -35,30 +35,29 @@ HashMapEngine::~HashMapEngine() {
     LOG("Closed ok");
 }
 
-PMStatus HashMapEngine::Exists(const string& key) {
-     return OK;
+void HashMapEngine::Exists(const string& key, pm_rpc_t *resp) {
+
 }
 
-void HashMapEngine::get(void* context, const string& key, PMGetCallback* callback) {
+void HashMapEngine::get(const string& key, pm_rpc_t *resp) {
 	  hashmap_type::accessor access;
 		my_hashmap->find(access,pstring<20>(key));
 		//access->release();
     LOG("Get using callback for key=" << key);
 }
 
-PMStatus HashMapEngine::put(const string& key, const string& value) {
+void HashMapEngine::put(const string& key, const string& value, pm_rpc_t *resp) {
     LOG("Put key=" << key << ", value.size=" << to_string(value.size()));
 		hashmap_type::accessor access;
 		my_hashmap->insert(access,pstring<20>(key));
 		access->second = pstring<100>(value);
 		//access->release();
-    return OK;
+
 }
 
-PMStatus HashMapEngine::remove(const string& key) {
+void HashMapEngine::remove(const string& key, pm_rpc_t *resp) {
     LOG("Remove key=" << key);
 		my_hashmap->erase(pstring<20>(key));
-    return OK;
 }
 
 void HashMapEngine::Recover() {

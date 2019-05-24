@@ -6,7 +6,7 @@ set(CMAKE_CXX_FLAGS "-O3 -fPIC -Wall")
 
 
 include_directories("${source_dir}/include")
-include_directories("../../core")
+include_directories("../core")
 
 set(SERVERLIB_SOURCE_FILES
         src/pmemds.cc

@@ -21,16 +21,13 @@ namespace pmemds {
     ~HashMapEngine();                                        // default destructor
 		const string ENGINE = "hashmap";
 		string Engine() final { return ENGINE; }               // engine identifier
-    PMStatus Exists(const string& key) final;              // does key have a value?
+    void Exists(const string& key,pm_rpc_t *resp) final;              // does key have a value?
 
     using PMEngine::get;                                   // pass value to callback
-    void get(void* context,                                // pass value to callback with context
-             const string& key,
-             PMGetCallback* callback) final;
+    void get(const string& key,pm_rpc_t *resp) final;
 
-    PMStatus put(const string& key,                        // store key and value
-                 const string& value) final;
-    PMStatus remove(const string& key) final;              // remove value for key
+    void put(const string& key, const string& value,pm_rpc_t *resp) final;
+    void remove(const string& key,pm_rpc_t *resp) final;              // remove value for key
   private:
     HashMapEngine(const HashMapEngine&);
     void operator=(const HashMapEngine&);

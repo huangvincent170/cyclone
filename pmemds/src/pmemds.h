@@ -1,16 +1,14 @@
-
-
 /*
  * Common interface to our persistent data-structures. 
  * We may change them/subclass
  *
  *
  */
-
-
 #ifndef __PMEMDS_H
 #define __PMEMDS_H
 
+#include <string>
+#include "pmemds-common.h"
 
 typedef void(PMEachCallback)(void* context,                // callback function for Each operation
                              int keybytes,
@@ -24,7 +22,7 @@ typedef void(PMGetCallback)(void* context,                 // callback function 
 
 struct PMGetCallbackContext {
 	PMStatus result;
-	string* value;
+	std::string* value;
 };
 
 #include <string>
@@ -54,8 +52,8 @@ class PMLib{
 	public:
 		PMStatus open(const string& app);
 		PMStatus close();
-		PMStatus exec(uint16_t op_name,uint8_t ds_type, std::string ds_id,std::string in_key,
-					  std::string in_val, std::string out_val);
+		void exec(uint16_t op_name,uint8_t ds_type, std::string ds_id,std::string in_key,
+					  std::string in_val, pm_rpc_t *resp);
 
 
 	private:
@@ -82,26 +80,19 @@ class PMEngine {                                           // storage engine imp
                           size_t size);                    // size used when creating pool
     PMStatus close();                       // close storage engine
 
-	PMStatus exec(uint16_t op_name,uint8_t ds_type, std::string ds_id,std::string in_key,
-				  std::string in_val, std::string out_val);
+	void exec(uint16_t op_name,uint8_t ds_type, std::string ds_id,std::string& in_key,
+				  std::string& in_val,pm_rpc_t *resp);
 
 
 	virtual string Engine() = 0;                           // engine identifier
     
-    virtual void Exists(const string& key) = 0;        // does key have a value?
+    virtual void Exists(const string& key,pm_rpc_t *resp) = 0;        // does key have a value?
 
-    inline void get(const string& key,                     // pass value to callback
-                    PMGetCallback* callback) {
-        get(nullptr, key, callback);
-    }
-    virtual void get(void* context,                        // pass value to callback with context
-                     const string& key,
-                     PMGetCallback* callback) = 0;
-    PMStatus get(const string& key, string& value);        // append value to string
+    virtual void get(const string& key,pm_rpc_t *resp) = 0;        // append value to string
 
     virtual void put(const string& key,                // store key and value
-                         const string& value) = 0;
-    virtual void remove(const string& key) = 0;        // remove value for key
+                         const string& value,pm_rpc_t *resp) = 0;
+    virtual void remove(const string& key,pm_rpc_t *resp) = 0;        // remove value for key
 };
 }
 #endif

@@ -51,7 +51,8 @@ class BTreeEngine : public PMEngine {
     BTreeEngine(const string& path, size_t size);          // default constructor
     ~BTreeEngine();                                        // default destructor
 
-    void exec(uint16_t op_name,std::string& in_key, std::string& in_val, pm_rpc_t *resp);
+    void exec(uint16_t op_name,
+              uint8_t ds_type, std::string ds_id,std::string& in_key, std::string& in_val, pm_rpc_t *resp);
 
     string Engine() final { return ENGINE; }               // engine identifier
 
@@ -59,9 +60,7 @@ class BTreeEngine : public PMEngine {
     void Exists(const string& key ,pm_rpc_t *resp) final;              // does key have a value?
 
     using PMEngine::get;                                   // pass value to callback
-    void get(void* context,                                // pass value to callback with context
-             const string& key,
-             PMGetCallback* callback,pm_rpc_t *resp) final;
+
     void get(const string& key, pm_rpc_t *resp);
     void put(const string& key,                        // store key and value
                  const string& value,pm_rpc_t *resp) final;

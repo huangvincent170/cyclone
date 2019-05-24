@@ -4,6 +4,7 @@
 
 #define MAX_VAL_LENGTH 8
 
+#include "stdint.h"
 
 //common operations
 enum opnames{
