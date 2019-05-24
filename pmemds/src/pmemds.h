@@ -21,6 +21,12 @@ typedef void(PMEachCallback)(void* context,                // callback function 
 typedef void(PMGetCallback)(void* context,                 // callback function for Get operation
                             int valuebytes,
                             const char* value);
+
+struct PMGetCallbackContext {
+	PMStatus result;
+	string* value;
+};
+
 #include <string>
 #include <map>
 #include <libpmemobj++/make_persistent.hpp>
@@ -82,7 +88,7 @@ class PMEngine {                                           // storage engine imp
 
 	virtual string Engine() = 0;                           // engine identifier
     
-    virtual PMStatus Exists(const string& key) = 0;        // does key have a value?
+    virtual void Exists(const string& key) = 0;        // does key have a value?
 
     inline void get(const string& key,                     // pass value to callback
                     PMGetCallback* callback) {
@@ -93,9 +99,9 @@ class PMEngine {                                           // storage engine imp
                      PMGetCallback* callback) = 0;
     PMStatus get(const string& key, string& value);        // append value to string
 
-    virtual PMStatus put(const string& key,                // store key and value
+    virtual void put(const string& key,                // store key and value
                          const string& value) = 0;
-    virtual PMStatus remove(const string& key) = 0;        // remove value for key
+    virtual void remove(const string& key) = 0;        // remove value for key
 };
 }
 #endif

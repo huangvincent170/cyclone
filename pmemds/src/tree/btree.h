@@ -51,21 +51,21 @@ class BTreeEngine : public PMEngine {
     BTreeEngine(const string& path, size_t size);          // default constructor
     ~BTreeEngine();                                        // default destructor
 
-    PMStatus exec(uint16_t op_name,std::string& in_key, std::string& in_val, std::string& out_val);
+    void exec(uint16_t op_name,std::string& in_key, std::string& in_val, pm_rpc_t *resp);
 
     string Engine() final { return ENGINE; }               // engine identifier
 
 
-    PMStatus Exists(const string& key) final;              // does key have a value?
+    void Exists(const string& key ,pm_rpc_t *resp) final;              // does key have a value?
 
     using PMEngine::get;                                   // pass value to callback
     void get(void* context,                                // pass value to callback with context
              const string& key,
-             PMGetCallback* callback) final;
-
-    PMStatus put(const string& key,                        // store key and value
-                 const string& value) final;
-    PMStatus remove(const string& key) final;              // remove value for key
+             PMGetCallback* callback,pm_rpc_t *resp) final;
+    void get(const string& key, pm_rpc_t *resp);
+    void put(const string& key,                        // store key and value
+                 const string& value,pm_rpc_t *resp) final;
+    void remove(const string& key,pm_rpc_t *resp) final;              // remove value for key
   private:
     BTreeEngine(const BTreeEngine&);
     void operator=(const BTreeEngine&);

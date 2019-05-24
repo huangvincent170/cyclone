@@ -66,46 +66,41 @@ BTreeEngine::~BTreeEngine() {
     LOG("Closed ok");
 }
 
-
-
-
-    PMStatus BTreeEngine::exec(uint16_t op_name, std::string &in_key, std::string &in_val, std::string &out_val) {
+    void BTreeEngine::exec(uint16_t op_name, std::string &in_key, std::string &in_val, pm_rpc_t *resp) {
 
         switch (op_name){
             case GET:
-                return this->get(in_key,out_val);
+                this->get(in_key,resp);
             case PUT:
-                return this->put(in_key,in_val);
+                this->put(in_key,in_val,resp);
             default:
                 LOG_ERROR("unknown operation");
-                return FAILED;
-                /* */
+                SET_STATUS(resp->meta,INVALID_OP);
         }
     }
 
-
-
-PMStatus BTreeEngine::Exists(const string& key) {
+void BTreeEngine::Exists(const string& key,pm_rpc_t *resp) {
     LOG("Exists for key=" << key);
     btree_type::iterator it = my_btree->find(pstring<20>(key));
     if (it == my_btree->end()) {
         LOG("  key not found");
-        return NOT_FOUND;
+        SET_STATUS(resp->meta,NOT_FOUND);
     }
-    return OK;
+    SET_STATUS(resp->meta,OK);
 }
 
-void BTreeEngine::get(void* context, const string& key, PMGetCallback* callback) {
+void BTreeEngine::get(void* context, const string& key, pm_rpc_t *resp) {
     LOG("Get using callback for key=" << key);
     btree_type::iterator it = my_btree->find(pstring<20>(key));
     if (it == my_btree->end()) {
         LOG("  key not found");
-        return;
+        SET_STATUS(resp->meta,NOT_FOUND);
     }
-    (*callback)(context, (int32_t) it->second.size(), it->second.c_str());
+    SET_STATUS(resp->meta,OK);
+    snprintf(resp->value,it->second.size(),it->second.c_str());
 }
 
-PMStatus BTreeEngine::put(const string& key, const string& value) {
+void BTreeEngine::put(const string& key, const string& value,pm_rpc_t *resp) {
     LOG("Put key=" << key << ", value.size=" << to_string(value.size()));
     auto res = my_btree->insert(std::make_pair(pstring<MAX_KEY_SIZE>(key), pstring<MAX_VALUE_SIZE>(value)));
     if (!res.second) { // key already exists, so update
@@ -115,16 +110,16 @@ PMStatus BTreeEngine::put(const string& key, const string& value) {
         entry.second = value;
         transaction::commit();
     }
-    return OK;
+    SET_STATUS(resp->meta,OK);
 }
 
-PMStatus BTreeEngine::remove(const string& key) {
+void BTreeEngine::remove(const string& key,pm_rpc_t *resp) {
     LOG("Remove key=" << key);
     size_t result = my_btree->erase(key);
     if (result == 1) {
-        return OK;
-    } 
-    return NOT_FOUND;
+        SET_STATUS(resp->meta,OK);
+    }
+    SET_STATUS(resp->meta,NOT_FOUND);
 }
 
 void BTreeEngine::Recover() {

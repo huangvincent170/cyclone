@@ -14,7 +14,7 @@ typedef struct pqelem_st{
 
 namespace pmemds {
 
-    class persistent_priority_queue : public PMEngine {
+    class persistent_priority_queue {
     public:
 
         persistent_priority_queue();

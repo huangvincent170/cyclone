@@ -12,7 +12,11 @@ enum opnames{
     CREATE,
     DELETE,
     GET,
-    PUT
+    PUT,
+    /* priority queue specific */
+    INSERT,
+    INCREASE_PRIO,
+    DECREASE_PRIO
 };
 
 //supported data-structures
@@ -25,11 +29,14 @@ enum dstypes{
 
 
 typedef enum {                                             // status enumeration
-    FAILED = -1,                                           // operation failed
+    FAILED = UINT8_MAX,                                           // operation failed
     NOT_FOUND = 0,                                         // key not located
-    OK = 1                                                 // successful completion
+    OK = 1 ,                                                // successful completion
+    INVALID_OP = 2
 } PMStatus;
 
+// metadata composition
+// reserved(8)|STATUS(4)|DS_ID(8)|TYPE_ID(4)|OP_ID(8) -- 4 bytes
 
 //request meta masks
 #define OP_ID(x)      x & 0xff
@@ -43,7 +50,8 @@ typedef enum {                                             // status enumeration
 
 
 //response meta masks
-//#define RET_STATUS
+#define STATUS(x)       (x >> 20) & 0xf
+#define SET_STATUS(x,y) x = x | (y << 20)
 
 
 /* payload structure of pmemds lib */
