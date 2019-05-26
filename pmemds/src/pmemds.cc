@@ -12,14 +12,14 @@ namespace pmemds{
 
 PMStatus PMLib::open(const string& app_path) {
 
-	engine_map = new std::map<std::string,PMEngine*>();
+	engine_map = new std::map<uint16_t ,PMEngine*>();
 	//TODO: create dir path
 	return OK;
 }
 
 PMStatus PMLib::close() {
 	// free runtime state
-	std::map<std::string,PMEngine*>::iterator it;
+	std::map<uint16_t ,PMEngine*>::iterator it;
 	for(it = engine_map->begin(); it != engine_map->end();it++){
 		delete it->second;
 		engine_map->erase(it);
@@ -32,7 +32,7 @@ struct GetCallbackContext {
 		std::string* value;
 };
 
-	PMEngine * PMLib::find_ds(std::string id) {
+	PMEngine * PMLib::find_ds(uint16_t id) {
 		auto engine = engine_map->find(id);
 		return engine->second;
 	}
@@ -40,13 +40,17 @@ struct GetCallbackContext {
 /*
  * The routing function call
  */
-void PMLib::exec(uint16_t op_name,uint8_t ds_type, std::string ds_id,std::string in_key,
-		std::string in_val, pm_rpc_t *resp){
+void PMLib::exec(pm_rpc_t *req,pm_rpc_t *resp){
+		uint8_t ds_type = TYPE_ID(req->meta);
+		uint16_t op_id  = OP_ID(req->meta);
+		uint16_t ds_id  = DS_ID(req->meta);
+
+
 	PMEngine *engine = find_ds(ds_id);
 		if(engine == nullptr){
 
 		}
-	switch(op_name){	
+	switch(op_id){
   /* open-close data-structures */	
 		case OPEN:
 			open(pmem_home);
@@ -64,30 +68,31 @@ void PMLib::exec(uint16_t op_name,uint8_t ds_type, std::string ds_id,std::string
 			
 	/* handle data-structure local requests*/
 		default:
-			 engine->exec(op_name,ds_type,ds_id,in_key,in_val,resp);
+		std::string str = req->value;
+			 engine->exec(op_id,ds_type,std::to_string(ds_id),req->key,str,resp);
 	}
 }
 
 
-PMStatus PMLib::create_ds(uint8_t ds_type, std::string ds_id){
+PMStatus PMLib::create_ds(uint8_t ds_type, uint16_t ds_id){
 		PMEngine *engine;
 	switch (ds_type){
 		case SORTED_BTREE:
-			engine = new BTreeEngine(ds_id,ds_pool_size);
+			engine = new BTreeEngine(std::to_string(ds_id),ds_pool_size);
 			break;
 		case HASH_MAP:
-			engine = new HashMapEngine(ds_id,ds_pool_size);
+			engine = new HashMapEngine(std::to_string(ds_id),ds_pool_size);
 			break;
 		case VECTOR:
 		default:
 			LOG_ERROR("Invalid DS type");
 	}
-	engine_map->insert(std::pair<std::string, PMEngine*>(ds_id,engine));
+	engine_map->insert(std::pair<uint16_t, PMEngine*>(ds_id,engine));
 	return OK;
 }
 
 
-	PMStatus PMLib::delete_ds(std::string ds_id){
+	PMStatus PMLib::delete_ds(uint16_t ds_id){
 		auto engine = engine_map->find(ds_id);
 		if(engine != engine_map->end()){
 			engine_map->erase(ds_id);

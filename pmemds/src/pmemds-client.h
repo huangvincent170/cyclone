@@ -4,20 +4,21 @@
 #include <string>
 #include "pmemds-common.h"
 #include "pmemds_log.h"
+#include "pmemds.h"
+
 
 namespace pmemdsclient {
 
     /* abstraction to hide the real transport */
     class PMClient {
     public:
-        PMClient(void *clnt);
+        PMClient();
         ~PMClient();
         int open(const std::string &appname); // init transport
         int close();
         virtual int sendmsg(pm_rpc_t *msg, pm_rpc_t **response, unsigned long core_mask)=0;
         virtual int sendmsg_async(pm_rpc_t *msg, void (*cb)(void *, int,unsigned long))=0;
     protected:
-        void *dpdk_client;
         std::string appname;
     };
 
@@ -29,13 +30,32 @@ namespace pmemdsclient {
 
         int sendmsg(pm_rpc_t *msg, pm_rpc_t **response, unsigned long core_mask);
         int sendmsg_async(pm_rpc_t *msg, void (*cb)(void *, int,unsigned long));
+
+    private:
+        void *dpdk_client;
     };
 
-    class PMEngine {
+
+    class TestClient:public PMClient{
     public:
-        PMEngine();
-        ~PMEngine();
+        TestClient(pmemds::PMLib *pmLib ,pm_rpc_t *request, pm_rpc_t *response);
+        ~TestClient();
+
+        int sendmsg(pm_rpc_t *msg, pm_rpc_t **response, unsigned long core_mask);
+        int sendmsg_async(pm_rpc_t *msg, void (*cb)(void *, int,unsigned long));
+
+    private:
+        pm_rpc_t *req, *res;
+        pmemds::PMLib *pmLib;
+    };
+
+
+    class PMEngine { // TODO: useless?
+    public:
         uint16_t ds_id;
     };
+
+
+
 }
 #endif

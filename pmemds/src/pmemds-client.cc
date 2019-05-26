@@ -3,7 +3,6 @@
 
 namespace pmemdsclient {
 
-
     int PMClient::open(const std::string &appname) {
         pm_rpc_t *response;
         pm_rpc_t payload = {0,0,"\0"};
@@ -37,9 +36,10 @@ namespace pmemdsclient {
 
 #include "libcyclone.hpp"
 
+
 namespace pmemdsclient{
 
-    DPDKPMClient::DPDKPMClient(void *clnt):PMClient(clnt) {
+    DPDKPMClient::DPDKPMClient(void *clnt){
 
     }
 
@@ -54,4 +54,27 @@ namespace pmemdsclient{
     int DPDKPMClient::sendmsg_async(pm_rpc_t *msg, void (*cb)(void *, int, unsigned long)) {
         return 1;
     }
+
+
+    TestClient::TestClient(pmemds::PMLib *pmLib,pm_rpc_t *request,
+                           pm_rpc_t *response):req(request),res(response),pmLib(pmLib) {
+
+    }
+
+    TestClient::~TestClient() {
+
+    }
+
+    int TestClient::sendmsg(pm_rpc_t *req, pm_rpc_t **response, unsigned long core_mask) {
+        *response = new pm_rpc_t();
+        pmLib->exec(req,*response);
+        return 0; // no send errors
+    }
+
+    int TestClient::sendmsg_async(pm_rpc_t *msg, void (*cb)(void *, int, unsigned long)) {
+        return 1;
+    }
+
+
+
 }

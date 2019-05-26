@@ -4,9 +4,15 @@ project(pmemds)
 set(CMAKE_CXX_STANDARD 11)
 set(CMAKE_CXX_FLAGS "-O3 -fPIC -Wall")
 
+set(CMAKE_VERBOSE_MAKEFILE ON)
 
+include_directories(/home/pradeep/blizzard/libpmemobj-cpp/include)
+include_directories(/home/pradeep/blizzard/pmdk/src/include)
 include_directories("${source_dir}/include")
 include_directories("../core")
+
+#link dirs
+link_directories(/home/pradeep/blizzard/pmdk/src/nondebug)
 
 set(SERVERLIB_SOURCE_FILES
         src/pmemds.cc
@@ -26,11 +32,10 @@ set(CLIENTLIB_SOURCE_FILES
         src/priority_queue/priority_queue-client.cc)
 
 
-add_library(pmemds ${SERVERLIB_SOURCE_FILES})
+add_library(pmemds STATIC ${SERVERLIB_SOURCE_FILES})
 
-add_library(pmemds-client ${CLIENTLIB_SOURCE_FILES})
+add_library(pmemds-client STATIC ${CLIENTLIB_SOURCE_FILES})
 
-#add_executable(pmemds_test tests/)
-
-
-
+# ---[ CTest
+include(CTest)
+add_subdirectory(tests)

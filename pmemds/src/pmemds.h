@@ -52,16 +52,15 @@ class PMLib{
 	public:
 		PMStatus open(const string& app);
 		PMStatus close();
-		void exec(uint16_t op_name,uint8_t ds_type, std::string ds_id,std::string in_key,
-					  std::string in_val, pm_rpc_t *resp);
+		void exec(pm_rpc_t *req, pm_rpc_t *resp);
 
 
 	private:
-		PMEngine* find_ds(std::string id);
-		PMStatus create_ds(uint8_t ds_type,std::string ds_id);
-		PMStatus delete_ds(std::string id);
+		PMEngine* find_ds(uint16_t id);
+		PMStatus create_ds(uint8_t ds_type,uint16_t ds_id);
+		PMStatus delete_ds(uint16_t id);
 
-		std::map<std::string,PMEngine*> *engine_map; //name to data-structure mapping
+		std::map<uint16_t ,PMEngine*> *engine_map; //name to data-structure mapping
 
 };
 
@@ -80,7 +79,7 @@ class PMEngine {                                           // storage engine imp
                           size_t size);                    // size used when creating pool
     PMStatus close();                       // close storage engine
 
-	void exec(uint16_t op_name,uint8_t ds_type, std::string ds_id,std::string& in_key,
+	void exec(uint16_t op_id,uint8_t ds_type, std::string ds_id,unsigned long in_key,
 				  std::string& in_val,pm_rpc_t *resp);
 
 

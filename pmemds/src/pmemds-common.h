@@ -48,6 +48,8 @@ typedef enum {                                             // status enumeration
 #define SET_TYPE_ID(x,y)  x = x | (y << 8)
 #define SET_DS_ID(x,y)    x = x | (y << 12)
 
+/* ds client flags */
+const uint8_t PM_CREAT = 1;
 
 
 //response meta masks
