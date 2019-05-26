@@ -47,8 +47,8 @@ namespace pmemdsclient{
 
 
     int DPDKPMClient::sendmsg(pm_rpc_t* msg , pm_rpc_t** response,unsigned long core_mask) {
-        return make_rpc(this->dpdk_client,msg,sizeof(pm_rpc_t),
-                 reinterpret_cast<void **>(response),core_mask,RPC_FLAG_RO);
+        /*return make_rpc(this->dpdk_client,msg,sizeof(pm_rpc_t),
+                 reinterpret_cast<void **>(response),core_mask,RPC_FLAG_RO);*/
     }
 
     int DPDKPMClient::sendmsg_async(pm_rpc_t *msg, void (*cb)(void *, int, unsigned long)) {

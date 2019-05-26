@@ -12,8 +12,8 @@ namespace pmemdsclient {
     /* abstraction to hide the real transport */
     class PMClient {
     public:
-        PMClient();
-        ~PMClient();
+        PMClient(){};
+        ~PMClient(){};
         int open(const std::string &appname); // init transport
         int close();
         virtual int sendmsg(pm_rpc_t *msg, pm_rpc_t **response, unsigned long core_mask)=0;

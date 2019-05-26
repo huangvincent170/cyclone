@@ -5,7 +5,7 @@ namespace pmemds{
 
 
     void priority_queue::exec(uint16_t op_name,
-                              uint8_t ds_type, std::string ds_id,std::string& in_key, std::string& in_val, pm_rpc_t *resp) {
+                              uint8_t ds_type, std::string ds_id, unsigned long in_key, std::string& in_val, pm_rpc_t *resp) {
 
     }
 

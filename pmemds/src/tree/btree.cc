@@ -67,7 +67,7 @@ BTreeEngine::~BTreeEngine() {
 }
 
     void BTreeEngine::exec(uint16_t op_name,
-                           uint8_t ds_type, std::string ds_id,std::string& in_key, std::string& in_val, pm_rpc_t *resp) {
+                           uint8_t ds_type, std::string ds_id, unsigned long in_key, std::string& in_val, pm_rpc_t *resp) {
 
         switch (op_name){
             case GET:
@@ -80,9 +80,9 @@ BTreeEngine::~BTreeEngine() {
         }
     }
 
-void BTreeEngine::Exists(const string& key,pm_rpc_t *resp) {
+void BTreeEngine::Exists(const unsigned long key,pm_rpc_t *resp) {
     LOG("Exists for key=" << key);
-    btree_type::iterator it = my_btree->find(pstring<20>(key));
+    btree_type::iterator it = my_btree->find(pstring<20>(std::to_string(key)));
     if (it == my_btree->end()) {
         LOG("  key not found");
         SET_STATUS(resp->meta,NOT_FOUND);
@@ -90,9 +90,9 @@ void BTreeEngine::Exists(const string& key,pm_rpc_t *resp) {
     SET_STATUS(resp->meta,OK);
 }
 
-void BTreeEngine::get(const string& key, pm_rpc_t *resp) {
+void BTreeEngine::get(const unsigned long key, pm_rpc_t *resp) {
     LOG("Get using callback for key=" << key);
-    btree_type::iterator it = my_btree->find(pstring<20>(key));
+    btree_type::iterator it = my_btree->find(pstring<20>(std::to_string(key)));
     if (it == my_btree->end()) {
         LOG("  key not found");
         SET_STATUS(resp->meta,NOT_FOUND);
@@ -101,9 +101,9 @@ void BTreeEngine::get(const string& key, pm_rpc_t *resp) {
     snprintf(resp->value,it->second.size(),"%s" ,it->second.c_str());
 }
 
-void BTreeEngine::put(const string& key, const string& value,pm_rpc_t *resp) {
+void BTreeEngine::put(const unsigned long key, const string& value,pm_rpc_t *resp) {
     LOG("Put key=" << key << ", value.size=" << to_string(value.size()));
-    auto res = my_btree->insert(std::make_pair(pstring<MAX_KEY_SIZE>(key), pstring<MAX_VALUE_SIZE>(value)));
+    auto res = my_btree->insert(std::make_pair(pstring<MAX_KEY_SIZE>(std::to_string(key)), pstring<MAX_VALUE_SIZE>(value)));
     if (!res.second) { // key already exists, so update
         typename btree_type::value_type& entry = *res.first;
         transaction::manual tx(pmpool);
@@ -114,9 +114,9 @@ void BTreeEngine::put(const string& key, const string& value,pm_rpc_t *resp) {
     SET_STATUS(resp->meta,OK);
 }
 
-void BTreeEngine::remove(const string& key,pm_rpc_t *resp) {
+void BTreeEngine::remove(const unsigned long key,pm_rpc_t *resp) {
     LOG("Remove key=" << key);
-    size_t result = my_btree->erase(key);
+    size_t result = my_btree->erase(std::to_string(key));
     if (result == 1) {
         SET_STATUS(resp->meta,OK);
     }

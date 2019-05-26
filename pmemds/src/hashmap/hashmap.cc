@@ -17,47 +17,54 @@ using pmem::detail::conditional_add_to_tx;
 
 namespace pmemds {
 
-HashMapEngine::HashMapEngine(const string& path, const size_t size) {
-    if ((access(path.c_str(), F_OK) != 0) && (size > 0)) {
-        LOG("Creating filesystem pool, path=" << path << ", size=" << to_string(size));
-        pmpool = pool<RootData>::create(path.c_str(), LAYOUT, size, S_IRWXU);
-    } else {
-        LOG("Opening pool, path=" << path);
-        pmpool = pool<RootData>::open(path.c_str(), LAYOUT);
+    HashMapEngine::HashMapEngine(const string &path, const size_t size) {
+        if ((access(path.c_str(), F_OK) != 0) && (size > 0)) {
+            LOG("Creating filesystem pool, path=" << path << ", size=" << to_string(size));
+            pmpool = pool<RootData>::create(path.c_str(), LAYOUT, size, S_IRWXU);
+        } else {
+            LOG("Opening pool, path=" << path);
+            pmpool = pool<RootData>::open(path.c_str(), LAYOUT);
+        }
+        Recover();
+        LOG("Opened ok");
     }
-    Recover();
-    LOG("Opened ok");
-}
 
-HashMapEngine::~HashMapEngine() {
-    LOG("Closing");
-    pmpool.close();
-    LOG("Closed ok");
-}
+    HashMapEngine::~HashMapEngine() {
+        LOG("Closing");
+        pmpool.close();
+        LOG("Closed ok");
+    }
 
-void HashMapEngine::Exists(const string& key, pm_rpc_t *resp) {
 
-}
+    void HashMapEngine::exec(uint16_t op_name, uint8_t ds_type, std::string ds_id, unsigned long in_key,
+                             std::string &in_val, pm_rpc_t *resp) {
 
-void HashMapEngine::get(const string& key, pm_rpc_t *resp) {
+    }
+
+    void HashMapEngine::Exists(const unsigned long key, pm_rpc_t *resp) {
+
+    }
+
+
+void HashMapEngine::get(const unsigned long key, pm_rpc_t *resp) {
 	  hashmap_type::accessor access;
-		my_hashmap->find(access,pstring<20>(key));
+		my_hashmap->find(access,pstring<20>(std::to_string(key)));
 		//access->release();
     LOG("Get using callback for key=" << key);
 }
 
-void HashMapEngine::put(const string& key, const string& value, pm_rpc_t *resp) {
+void HashMapEngine::put(const unsigned long key, const string& value, pm_rpc_t *resp) {
     LOG("Put key=" << key << ", value.size=" << to_string(value.size()));
 		hashmap_type::accessor access;
-		my_hashmap->insert(access,pstring<20>(key));
+		my_hashmap->insert(access,pstring<20>(std::to_string(key)));
 		access->second = pstring<100>(value);
 		//access->release();
 
 }
 
-void HashMapEngine::remove(const string& key, pm_rpc_t *resp) {
+void HashMapEngine::remove(const unsigned long key, pm_rpc_t *resp) {
     LOG("Remove key=" << key);
-		my_hashmap->erase(pstring<20>(key));
+		my_hashmap->erase(pstring<20>(std::to_string(key)));
 }
 
 void HashMapEngine::Recover() {
