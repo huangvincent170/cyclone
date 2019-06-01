@@ -37,7 +37,7 @@
 #include <libpmemobj++/transaction.hpp>
 #include <libpmemobj++/make_persistent_atomic.hpp>
 
-#include "btree.h"
+#include "tree/btree.h"
 
 #define DO_LOG 0
 #define LOG(msg) if (DO_LOG) std::cout << "[btree] " << msg << "\n"
@@ -60,7 +60,7 @@ BTreeEngine::BTreeEngine(const string& path, const size_t size) {
     LOG("Opened ok");
 }
 
-BTreeEngine::~BTreeEngine() {
+BTreeEngine::~BTreeEngine() { //TODO: support deleting ds altogether
     LOG("Closing");
     pmpool.close();
     LOG("Closed ok");
@@ -72,8 +72,10 @@ BTreeEngine::~BTreeEngine() {
         switch (op_name){
             case GET:
                 this->get(in_key,resp);
+                break;
             case PUT:
                 this->put(in_key,in_val,resp);
+                break;
             default:
                 LOG_ERROR("unknown operation");
                 SET_STATUS(resp->meta,INVALID_OP);
@@ -92,18 +94,19 @@ void BTreeEngine::Exists(const unsigned long key,pm_rpc_t *resp) {
 
 void BTreeEngine::get(const unsigned long key, pm_rpc_t *resp) {
     LOG("Get using callback for key=" << key);
-    btree_type::iterator it = my_btree->find(pstring<20>(std::to_string(key)));
+    btree_type::iterator it = my_btree->find(pstring<MAX_KEY_SIZE>(std::to_string(key)));
     if (it == my_btree->end()) {
         LOG("  key not found");
         SET_STATUS(resp->meta,NOT_FOUND);
     }
     SET_STATUS(resp->meta,OK);
-    snprintf(resp->value,it->second.size(),"%s" ,it->second.c_str());
+    snprintf(resp->value,MAX_VAL_LENGTH,"%s" ,it->second.c_str());
 }
 
 void BTreeEngine::put(const unsigned long key, const string& value,pm_rpc_t *resp) {
     LOG("Put key=" << key << ", value.size=" << to_string(value.size()));
-    auto res = my_btree->insert(std::make_pair(pstring<MAX_KEY_SIZE>(std::to_string(key)), pstring<MAX_VALUE_SIZE>(value)));
+    auto res = my_btree->insert(std::make_pair(pstring<MAX_KEY_SIZE>(std::to_string(key)),
+                                               pstring<MAX_VALUE_SIZE>(value)));
     if (!res.second) { // key already exists, so update
         typename btree_type::value_type& entry = *res.first;
         transaction::manual tx(pmpool);

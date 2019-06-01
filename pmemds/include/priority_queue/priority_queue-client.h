@@ -10,13 +10,16 @@ namespace pmemdsclient{
 
 
     public:
-        priority_queue(PMClient *handle, const std::string &path, size_t size, unsigned long core_mask);
+        priority_queue(PMClient *handle, const uint16_t ds_id, size_t size, unsigned long core_mask);
         ~priority_queue();
 
         int create(uint8_t flags);
+        int close();
         int remove();
 
         int insert(unsigned long key, unsigned long priority);
+
+        unsigned long get_max();
 
         int erase(unsigned long key);
 
@@ -25,11 +28,7 @@ namespace pmemdsclient{
         int decrease_prio(const unsigned &key, unsigned long &delta_prio);
 
     private:
-        PMClient *client;
         std::string ds_name;
-        std::string path;
-        size_t size;
-        unsigned long core_mask;
     };
 
 

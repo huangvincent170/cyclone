@@ -56,9 +56,14 @@ class PMLib{
 
 
 	private:
-		PMEngine* find_ds(uint16_t id);
-		PMStatus create_ds(uint8_t ds_type,uint16_t ds_id);
-		PMStatus delete_ds(uint16_t id);
+
+        const std::string pmem_path = "/dev/shm/pmemds";
+
+
+        PMEngine* find_ds(uint16_t id);
+		int create_ds(uint8_t ds_type,uint16_t ds_id);
+        int remove_ds(uint8_t ds_type,uint16_t ds_id);
+		int close_ds(uint8_t ds_type,uint16_t ds_id);
 
 		std::map<uint16_t ,PMEngine*> *engine_map; //name to data-structure mapping
 
@@ -69,7 +74,7 @@ class PMLib{
 const string LAYOUT = "pmemds";                            // pool layout identifier
 
 class PMEngine {                                           // storage engine implementations
-  public:
+public:
 
     PMEngine(){};
 	virtual ~PMEngine(){};

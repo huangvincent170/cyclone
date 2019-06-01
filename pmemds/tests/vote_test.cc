@@ -16,7 +16,8 @@ namespace {
 // The fixture for testing class Foo.
     class voteTest : public ::testing::Test {
     protected:
-
+        const uint16_t art_st = 0;
+        const uint16_t votes_st = 1;
         /* Code here will be called immediately after the constructor (right
            before each test). */
         void SetUp() override {
@@ -28,15 +29,21 @@ namespace {
             testClient->open("testApp");
 
             /* create art and vote structures */
-            art = new pmemdsclient::BTreeEngine(testClient,"art",100,0UL);
+            art = new pmemdsclient::BTreeEngine(testClient,art_st,100,0UL);
             art->create(PM_CREAT);
-            votes = new pmemdsclient::priority_queue(testClient,"votes",100,0UL);
+            votes = new pmemdsclient::priority_queue(testClient,votes_st,100,0UL);
             votes->create(PM_CREAT);
             /* put some articles */
 
+            for(int i = 0; i < 20; i++){
+                art->put(i, "artical_" + std::to_string(i));
+            }
+
 
             /* cast some votes */
-
+            for(int i = 0; i < 20; i++){
+                votes->insert(i,i);
+            }
 
         }
 
@@ -63,37 +70,19 @@ namespace {
 
     };
 
-    TEST_F(voteTest, VoteWTest) {
-        pmemdsclient::BTreeEngine *bte = new pmemdsclient::BTreeEngine(testClient,"btree1",100,0UL);
 
-        ASSERT_EQ(bte->create(PM_CREAT),0);
-        //TODO: check state of request and response
-        ASSERT_EQ(bte->put(1234UL,"test_1234"),0);
-        std::string str = "test_1234";
-        //ASSERT_STREQ(bte->get(1234UL),str);
-
-        ASSERT_EQ(bte->remove(),0);
-
-    }
 
     TEST_F(voteTest, VoteRTest) {
-        pmemdsclient::BTreeEngine *bte = new pmemdsclient::BTreeEngine(testClient,"btree1",100,0UL);
-
-        ASSERT_EQ(bte->create(PM_CREAT),0);
-        //TODO: check state of request and response
-        ASSERT_EQ(bte->put(1234UL,"test_1234"),0);
-        std::string str = "test_1234";
-        //ASSERT_STREQ(bte->get(1234UL),str);
-
-        ASSERT_EQ(bte->remove(),0);
-
+        for(int i = 20; i >= 0; i--){
+            ASSERT_EQ(votes->get_max(),i);
+        }
     }
 
     /* retrieve top K post from the vote db */
-    Test_F(voteTest, VoteTopKTest){
+    /*Test_F(voteTest, VoteTopKTest){
 
 
 
-    }
+    }*/
 
 }

@@ -2,18 +2,22 @@
 #define __PMEMDS_COMMON_H
 
 
-#define MAX_VAL_LENGTH 8
+#define MAX_VAL_LENGTH 128
 
 #include "stdint.h"
 
 //common operations
 enum opnames{
+    /*common*/
     OPEN=0,
     CLOSE,
-    CREATE,
-    DELETE,
+    CREATE_DS,
+    CLOSE_DS,
+    REMOVE_DS,
+    /*tree*/
     GET,
     PUT,
+    DELETE,
     /* priority queue specific */
     INSERT,
     INCREASE_PRIO,
@@ -53,8 +57,8 @@ const uint8_t PM_CREAT = 1;
 
 
 //response meta masks
-#define STATUS(x)       (x >> 20) & 0xf
-#define SET_STATUS(x,y) x = x | (y << 20)
+#define STATUS(x)       ((x >> 20) & 0xf)
+#define SET_STATUS(x,y)  x =  (x | (y << 20))
 
 
 /* payload structure of pmemds lib */

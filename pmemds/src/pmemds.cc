@@ -2,10 +2,11 @@
 #include "hashmap/concurrent_hash_map.hpp"
 #include "tree/btree.h"
 #include "hashmap/hashmap.h"
+#include "priority_queue/priority_queue.h"
 
 
-const std::string pmem_home =  "/mnt/pmem1/pmemds";
-const long ds_pool_size = 1024*1024; // pool size for the data-structure. Not a fundamental limitation
+const std::string pmem_home =  "/dev/shm/pmemds";
+const unsigned long ds_pool_size = 1024*1024*8;
 
 
 namespace pmemds{
@@ -46,10 +47,6 @@ void PMLib::exec(pm_rpc_t *req,pm_rpc_t *resp){
 		uint16_t ds_id  = DS_ID(req->meta);
 
 
-	PMEngine *engine = find_ds(ds_id);
-		if(engine == nullptr){
-
-		}
 	switch(op_id){
   /* open-close data-structures */	
 		case OPEN:
@@ -58,48 +55,84 @@ void PMLib::exec(pm_rpc_t *req,pm_rpc_t *resp){
 		case CLOSE:
 			close();
 			break;
-	/* handle data-structure creation and delettion */
-		case CREATE:
-				create_ds(ds_type,ds_id);
+	/* handle data-structure creation and deletion */
+		case CREATE_DS:
+				if(!create_ds(ds_type,ds_id)){
+                    SET_STATUS(resp->meta,OK);
+                }else{
+                    SET_STATUS(resp->meta,FAILED);
+                }
 				break;
-		case DELETE:
-				delete_ds(ds_id);
+        case CLOSE_DS:
+            if(!close_ds(ds_type,ds_id)){
+                SET_STATUS(resp->meta,OK);
+            }else{
+                SET_STATUS(resp->meta, FAILED);
+            }
+            break;
+		case REMOVE_DS:
+                if(!remove_ds(ds_type,ds_id)){
+                    SET_STATUS(resp->meta,OK);
+                }else{
+                    SET_STATUS(resp->meta,FAILED);
+                }
 				break;
 			
 	/* handle data-structure local requests*/
 		default:
-		std::string str = req->value;
-			 engine->exec(op_id,ds_type,std::to_string(ds_id),req->key,str,resp);
+			PMEngine *engine = find_ds(ds_id);
+			if(engine == nullptr){
+				LOG_ERROR("cannot locate data-structure");
+				SET_STATUS(resp->meta,NOT_FOUND);
+				return;
+			}
+			std::string str = req->value;
+			engine->exec(op_id,ds_type,std::to_string(ds_id),req->key,str,resp);
 	}
 }
 
 
-PMStatus PMLib::create_ds(uint8_t ds_type, uint16_t ds_id){
-		PMEngine *engine;
+int PMLib::create_ds(uint8_t ds_type, uint16_t ds_id){
+		PMEngine *engine = nullptr;
+        std::string path = pmem_path + "/" + std::to_string(ds_id);
+        //std::string path = pmem_path;
 	switch (ds_type){
 		case SORTED_BTREE:
-			engine = new BTreeEngine(std::to_string(ds_id),ds_pool_size);
+			engine = new BTreeEngine( path ,ds_pool_size);
 			break;
 		case HASH_MAP:
-			engine = new HashMapEngine(std::to_string(ds_id),ds_pool_size);
+			engine = new HashMapEngine(path,ds_pool_size);
 			break;
 		case VECTOR:
+            break;
+        case PRIORITY_QUEUE:
+            engine = new priority_queue(path,ds_pool_size);
 		default:
 			LOG_ERROR("Invalid DS type");
 	}
-	engine_map->insert(std::pair<uint16_t, PMEngine*>(ds_id,engine));
-	return OK;
+    if(engine != nullptr) {
+        engine_map->insert(std::pair<uint16_t, PMEngine *>(ds_id, engine));
+        return 0;
+    }
+    return -1;
 }
 
 
-	PMStatus PMLib::delete_ds(uint16_t ds_id){
-		auto engine = engine_map->find(ds_id);
-		if(engine != engine_map->end()){
-			engine_map->erase(ds_id);
-			return OK;
-		}
-		LOG_ERROR("data-structure not found");
-		return NOT_FOUND;
+
+    int PMLib::close_ds(uint8_t ds_type, uint16_t ds_id){
+        auto engine = engine_map->find(ds_id);
+        if(engine != engine_map->end()){
+            delete engine->second;
+            engine_map->erase(ds_id); // take out from volatile map
+            return 0;
+        }
+        LOG_ERROR("data-structure not found");
+        return -1;
+    }
+
+	int PMLib::remove_ds(uint8_t ds_type, uint16_t ds_id){
+        std::string path = pmem_path + "/" + std::to_string(ds_id);
+        return std::remove(path.c_str());
 	}
 
 }

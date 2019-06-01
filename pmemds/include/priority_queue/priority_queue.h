@@ -14,7 +14,7 @@ namespace pmemds {
     class priority_queue : public PMEngine {
     public:
 
-        priority_queue();
+        priority_queue(const string& path, size_t size);
 
         ~priority_queue();
 
@@ -24,6 +24,8 @@ namespace pmemds {
 
 
         void insert(unsigned long key, unsigned long priority,pm_rpc_t *resp);
+
+        void get_max(pm_rpc_t *resp);
 
         void erase(unsigned long key,pm_rpc_t *resp);
 

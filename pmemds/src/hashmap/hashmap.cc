@@ -6,7 +6,7 @@
 #include <libpmemobj++/transaction.hpp>
 #include <libpmemobj++/make_persistent_atomic.hpp>
 
-#include "hashmap.h"
+#include "hashmap/hashmap.h"
 
 #define DO_LOG 0
 #define LOG(msg) if (DO_LOG) std::cout << "[hashmap] " << msg << "\n"

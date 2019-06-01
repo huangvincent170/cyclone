@@ -68,7 +68,7 @@ namespace pmemds {
         std::advance(vit,distance);
         // push up the element
 
-
+        return OK;
     }
 
     PMStatus persistent_priority_queue::decrease_prio(const unsigned &key, unsigned long &delta_prio) {
@@ -84,7 +84,7 @@ namespace pmemds {
         std::advance(vit,distance);
         //push element down
         max_heapify(vit);
-
+        return OK;
     }
 
     PMStatus persistent_priority_queue::insert(unsigned long key, unsigned long priority) {
@@ -97,6 +97,7 @@ namespace pmemds {
             swap(it,parent_of(it));
             it = parent_of(it);
         }
+        return OK;
     }
 
     void persistent_priority_queue::max_heapify(const std::vector<struct pqelem_st *>::iterator it) {
