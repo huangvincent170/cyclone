@@ -79,25 +79,11 @@ public:
     PMEngine(){};
 	virtual ~PMEngine(){};
 
-
-	PMStatus open(const string& engine,            // open storage engine
-                          const string& path,              // path to persistent pool
-                          size_t size);                    // size used when creating pool
-    PMStatus close();                       // close storage engine
-
 	virtual void exec(uint16_t op_id,uint8_t ds_type, std::string ds_id,unsigned long in_key,
 				  std::string& in_val,pm_rpc_t *resp)=0;
 
+	virtual string engine() =0;                           // engine identifier
 
-	virtual string Engine() = 0;                           // engine identifier
-    
-    virtual void Exists(const unsigned long key,pm_rpc_t *resp) = 0;        // does key have a value?
-
-    virtual void get(const unsigned long key,pm_rpc_t *resp) = 0;        // append value to string
-
-    virtual void put(const unsigned long key,                // store key and value
-                         const string& value,pm_rpc_t *resp) = 0;
-    virtual void remove(const unsigned long key,pm_rpc_t *resp) = 0;        // remove value for key
 };
 }
 #endif

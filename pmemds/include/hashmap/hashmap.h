@@ -19,18 +19,17 @@ namespace pmemds {
   public:
     HashMapEngine(const string& path, size_t size);          // default constructor
     ~HashMapEngine();                                        // default destructor
-		const string ENGINE = "hashmap";
-		string Engine() final { return ENGINE; }               // engine identifier
+    const string ENGINE = "hashmap";
+    string engine() final { return ENGINE; }               // engine identifier
 
-		void exec(uint16_t op_name,
-				  uint8_t ds_type, std::string ds_id, unsigned long in_key, std::string& in_val, pm_rpc_t *resp);
-		void Exists(const unsigned long key,pm_rpc_t *resp) final;              // does key have a value?
+    void exec(uint16_t op_name,
+              uint8_t ds_type, std::string ds_id, unsigned long in_key, std::string& in_val, pm_rpc_t *resp);
+    void Exists(const unsigned long key,pm_rpc_t *resp);              // does key have a value?
 
-    using PMEngine::get;                                   // pass value to callback
-    void get(const unsigned long key,pm_rpc_t *resp) final;
+    void get(const unsigned long key,pm_rpc_t *resp);
 
-    void put(const unsigned long key, const string& value,pm_rpc_t *resp) final;
-    void remove(const unsigned long key,pm_rpc_t *resp) final;              // remove value for key
+    void put(const unsigned long key, const string& value,pm_rpc_t *resp);
+    void remove(const unsigned long key,pm_rpc_t *resp);              // remove value for key
   private:
     HashMapEngine(const HashMapEngine&);
     void operator=(const HashMapEngine&);

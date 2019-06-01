@@ -1,3 +1,6 @@
+#ifndef __PERSISTENT_PRIORITY_QUEUE_H
+#define __PERSISTENT_PRIORITY_QUEUE_H
+
 #include <iostream>
 #include <vector>
 #include <unordered_map>
@@ -23,19 +26,20 @@ namespace pmemds {
 
         ~persistent_priority_queue();
 
-        PMStatus insert(unsigned long key, unsigned long priority);
+        inline PMStatus insert(unsigned long key, unsigned long priority);
 
-        PMStatus increase_prio(const unsigned &key, unsigned long &delta_prio);
-        PMStatus decrease_prio(const unsigned& key, unsigned long &delta_prio);
+        inline PMStatus increase_prio(const unsigned &key, unsigned long &delta_prio);
+        inline PMStatus decrease_prio(const unsigned& key, unsigned long &delta_prio);
 
-        PMStatus extract_max(unsigned long &key, unsigned long &priority);
+        inline PMStatus extract_max(unsigned long &key, unsigned long &priority);
 
     private:
-        void max_heapify( const std::vector<struct pqelem_st *>::iterator it);
-        std::vector<struct pqelem_st *>::iterator right_child(std::vector<struct pqelem_st *>::iterator  it);
-        std::vector<struct pqelem_st *>::iterator left_child(std::vector<struct pqelem_st *>::iterator  it);
-        std::vector<struct pqelem_st *>::iterator parent_of(std::vector<struct pqelem_st *>::iterator  it);
-        int swap(const std::vector<struct pqelem_st *>::iterator it1,const std::vector<struct pqelem_st *>::iterator it);
+        //TODO: without inline multiple definition? could not figure out why? Should work fine.
+        inline void max_heapify( const std::vector<struct pqelem_st *>::iterator it);
+        inline std::vector<struct pqelem_st *>::iterator right_child(std::vector<struct pqelem_st *>::iterator  it);
+        inline std::vector<struct pqelem_st *>::iterator left_child(std::vector<struct pqelem_st *>::iterator  it);
+        inline std::vector<struct pqelem_st *>::iterator parent_of(std::vector<struct pqelem_st *>::iterator  it);
+        inline int swap(const std::vector<struct pqelem_st *>::iterator it1,const std::vector<struct pqelem_st *>::iterator it);
         std::vector<struct pqelem_st *> *elems;
         std::unordered_map<unsigned long,unsigned long> *keymap;
     };
@@ -138,5 +142,5 @@ namespace pmemds {
     }
 }
 
-
+#endif
 

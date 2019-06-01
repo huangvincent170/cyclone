@@ -41,7 +41,7 @@ using pmem::obj::persistent_ptr;
 
 namespace pmemds {
 
-const string ENGINE = "btree";                             // engine identifier
+                           // engine identifier
 const size_t DEGREE = 64;
 const size_t MAX_KEY_SIZE = 20;
 const size_t MAX_VALUE_SIZE = 200;
@@ -54,17 +54,14 @@ class BTreeEngine : public PMEngine {
     void exec(uint16_t op_name,
               uint8_t ds_type, std::string ds_id,unsigned long in_key, std::string& in_val, pm_rpc_t *resp);
 
-    string Engine() final { return ENGINE; }               // engine identifier
-
-
-    void Exists(const unsigned long key ,pm_rpc_t *resp) final;              // does key have a value?
-
-    using PMEngine::get;                                   // pass value to callback
+    string engine() final { return ENGINE; };
+    const string ENGINE = "btree";
+    void Exists(const unsigned long key ,pm_rpc_t *resp);              // does key have a value?
 
     void get(const unsigned long key, pm_rpc_t *resp);
     void put(const unsigned long key,                        // store key and value
-                 const string& value,pm_rpc_t *resp) final;
-    void remove(const unsigned long key,pm_rpc_t *resp) final;              // remove value for key
+                 const string& value,pm_rpc_t *resp);
+    void remove(const unsigned long key,pm_rpc_t *resp);              // remove value for key
   private:
     BTreeEngine(const BTreeEngine&);
     void operator=(const BTreeEngine&);

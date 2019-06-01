@@ -39,7 +39,7 @@ set(TEST_FILES
 # ---[ TEST SUITE
 add_executable(test_suite ${TEST_FILES})
 
-target_link_libraries(test_suite gtest_main pmemds-client pmemds pmemds-client pmemobj pmem)
+target_link_libraries(test_suite gtest_main pmemds-client pmemds pmemobj pmem)
 add_test(NAME TestSuite COMMAND test_suite)
 
 # --[ Add "make check" target
