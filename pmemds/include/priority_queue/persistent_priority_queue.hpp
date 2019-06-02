@@ -7,15 +7,12 @@
 
 #include "../pmemds.h"
 
-
-
 struct pqelem_st{
     pqelem_st(unsigned long k, unsigned long p):key(k),priority(p){
     }
     unsigned long key;
     unsigned long priority;
 };
-
 
 namespace pmemds {
 
@@ -25,121 +22,162 @@ namespace pmemds {
         persistent_priority_queue();
 
         ~persistent_priority_queue();
+        int insert(unsigned long key, unsigned long priority);
 
-        inline PMStatus insert(unsigned long key, unsigned long priority);
-
-        inline PMStatus increase_prio(const unsigned &key, unsigned long &delta_prio);
-        inline PMStatus decrease_prio(const unsigned& key, unsigned long &delta_prio);
-
-        inline PMStatus extract_max(unsigned long &key, unsigned long &priority);
+        int increase_prio(const unsigned long key, unsigned long delta_prio);
+        int decrease_prio(const unsigned long key, unsigned long delta_prio);
+        int get_max(unsigned long &key, unsigned long &priority);
 
     private:
         //TODO: without inline multiple definition? could not figure out why? Should work fine.
-        inline void max_heapify( const std::vector<struct pqelem_st *>::iterator it);
-        inline std::vector<struct pqelem_st *>::iterator right_child(std::vector<struct pqelem_st *>::iterator  it);
-        inline std::vector<struct pqelem_st *>::iterator left_child(std::vector<struct pqelem_st *>::iterator  it);
-        inline std::vector<struct pqelem_st *>::iterator parent_of(std::vector<struct pqelem_st *>::iterator  it);
-        inline int swap(const std::vector<struct pqelem_st *>::iterator it1,const std::vector<struct pqelem_st *>::iterator it);
+        void max_heapify( const unsigned long idx);
+        unsigned long right_child(unsigned long idx);
+        unsigned long left_child(unsigned long idx);
+        unsigned long parent_of(unsigned long idx);
+        void swap(unsigned long idx1, unsigned long idx2);
+
         std::vector<struct pqelem_st *> *elems;
         std::unordered_map<unsigned long,unsigned long> *keymap;
     };
 
 
-    std::vector<struct pqelem_st *>::iterator persistent_priority_queue::right_child(std::vector<struct pqelem_st *>::iterator it) {
-        return elems->begin() +  2*std::distance(it,elems->begin());
+    inline unsigned long persistent_priority_queue::right_child(unsigned long idx) {
+        return 2*idx + 1;
     }
 
-    std::vector<struct pqelem_st *>::iterator persistent_priority_queue::left_child(std::vector<struct pqelem_st *>::iterator it) {
-        return elems->begin() +  (2*std::distance(it,elems->begin()) + 1);
+    inline unsigned long persistent_priority_queue::left_child(unsigned long idx) {
+        return 2*idx + 2;
     }
 
-    std::vector<struct pqelem_st *>::iterator persistent_priority_queue::parent_of(std::vector<struct pqelem_st *>::iterator  it){
-        return elems->begin() +  std::distance(it,elems->begin())/2;
+    inline unsigned long persistent_priority_queue::parent_of(unsigned long idx){
+        return idx/2;
     }
 
 
 
-    PMStatus persistent_priority_queue::increase_prio(const unsigned &key, unsigned long &delta_prio) {
+    inline int persistent_priority_queue::increase_prio(const unsigned long key, unsigned long delta_prio) {
         std::vector<struct pqelem_st*>::iterator vit;
         // heap itself indexed by the priority, hence first have to lookup the
         std::unordered_map<unsigned long,unsigned long>::iterator  it = keymap->find(key);
         if(it == keymap->end()){
             LOG_ERROR("key not found");
-            return FAILED;
+            return -1;
         }
-        unsigned long distance = it->second;
-        vit = elems->begin();
-        std::advance(vit,distance);
+        unsigned long idx = it->second;
         // push up the element
-
-        return OK;
+        while(idx > 0 && elems->at(idx) < elems->at(parent_of(idx))){
+            swap(idx,parent_of(idx));
+            idx = parent_of(idx);
+        }
+        return 0;
     }
 
-    PMStatus persistent_priority_queue::decrease_prio(const unsigned &key, unsigned long &delta_prio) {
-        std::vector<struct pqelem_st*>::iterator vit;
+    inline int persistent_priority_queue::decrease_prio(const unsigned long key, unsigned long delta_prio) {
         // heap itself indexed by the priority, hence first have to lookup the
         std::unordered_map<unsigned long,unsigned long>::iterator  it = keymap->find(key);
         if(it == keymap->end()){
             LOG_ERROR("key not found");
-            return FAILED;
+            return -1;
         }
-        unsigned long distance = it->second;
-        vit = elems->begin();
-        std::advance(vit,distance);
-        //push element down
-        max_heapify(vit);
-        return OK;
+        unsigned long idx = it->second;
+        max_heapify(idx);
+        return 0;
     }
 
-    PMStatus persistent_priority_queue::insert(unsigned long key, unsigned long priority) {
-            std::vector<struct pqelem_st*>::iterator it;
-            struct pqelem_st *pqelem = new struct pqelem_st(key,priority);
+    inline int persistent_priority_queue::insert(unsigned long key, unsigned long priority) {
+        std::vector<struct pqelem_st*>::iterator it;
+        struct pqelem_st *pqelem = new struct pqelem_st(key,priority);
 
-            elems->push_back(pqelem);
-        it = elems->end();
-        while(it >= elems->begin() && (*parent_of(it))->priority < (*it)->priority){
-            swap(it,parent_of(it));
-            it = parent_of(it);
+        elems->push_back(pqelem);
+        unsigned long idx = elems->size()-1;
+        keymap->insert(std::pair<unsigned long, unsigned long>(key,idx));
+        while(idx > 0 && elems->at(idx) < elems->at(parent_of(idx))){
+            swap(idx,parent_of(idx));
+            idx = parent_of(idx);
         }
-        return OK;
+
+        return 0;
     }
 
-    void persistent_priority_queue::max_heapify(const std::vector<struct pqelem_st *>::iterator it) {
-        std::vector<struct pqelem_st *>::iterator largest;
-        std::vector<struct pqelem_st *>::iterator r_child = right_child(it);
-        std::vector<struct pqelem_st *>::iterator l_child = left_child(it);
+    inline void persistent_priority_queue::max_heapify(const unsigned long idx) {
+        unsigned long largest;
+        unsigned long rchild_idx = right_child(idx);
+        unsigned long lchild_idx = left_child(idx);
 
-        if((*r_child)->priority > (*it)->priority){
-            largest = r_child;
+        if(elems->at(rchild_idx)->priority > elems->at(idx)->priority){
+            largest = rchild_idx;
         }else{
-            largest = it;
+            largest = idx;
         }
-        if((*l_child)->priority > (*largest)->priority){
-            largest = l_child;
+        if(elems->at(lchild_idx)->priority > elems->at(largest)->priority){
+            largest = lchild_idx;
         }
-        if(largest != it){
-            swap(largest,it);
+        if(largest != idx){
+            swap(largest,idx);
             max_heapify(largest);
         }
     }
 
-    PMStatus persistent_priority_queue::extract_max(unsigned long &key, unsigned long &priority) {
-        struct pqelem_st *max = *elems->begin();
-        *(elems->begin()) = *(elems->end());
-        elems->erase(elems->end());
-        max_heapify(elems->begin());
-
+    inline int persistent_priority_queue::get_max(unsigned long &key, unsigned long &priority) {
+        struct pqelem_st *max = elems->at(0);
         key = max->key;
         priority = max->priority;
 
-        return OK;
+        pqelem_st *last = elems->at(elems->size() -1);
+        elems->at(0) = last;
 
-    }
+        keymap->erase(max->key);
+        elems->erase(elems->end());
 
-    int persistent_priority_queue::swap(const std::vector<struct pqelem_st *>::iterator it1,
-                                        const std::vector<struct pqelem_st *>::iterator it) {
+        auto first = keymap->find(last->key);
+        if(first == keymap->end()){
+            LOG_ERROR("key  not found");
+            return -1;
+        }
+        first->second = 0;
+
+        max_heapify(0); // begin index
+
         return 0;
+
     }
+
+    inline void persistent_priority_queue::swap(const unsigned long idx1,const unsigned long idx2) {
+        std::vector<unsigned long>::iterator it1,it2;
+
+        pqelem_st *elem1 = elems->at(idx1);
+        pqelem_st *elem2 = elems->at(idx2);
+
+        auto one = keymap->find(elem1->key);
+        if(one == keymap->end()){
+            LOG_ERROR("key one not found");
+            return;
+        }
+        auto two = keymap->find(elem2->key);
+        if(two == keymap->end()){
+            LOG_ERROR("key two not found");
+            return;
+        }
+        one->second = idx2;
+        two->second = idx1;
+
+        std::swap(elems->at(idx1),elems->at(idx2));
+    }
+
+    inline persistent_priority_queue::persistent_priority_queue(){
+        this->elems = new std::vector<struct pqelem_st *>();
+        this->keymap = new std::unordered_map<unsigned long, unsigned long>();
+    }
+
+    inline persistent_priority_queue::~persistent_priority_queue() {
+        std::vector<pqelem_st *>::iterator it;
+        for(it = elems->begin(); it != elems->begin(); it++){
+            delete(*it);
+        }
+        delete(elems);
+        delete(keymap);
+    }
+
 }
 
 #endif

@@ -33,8 +33,10 @@ include_directories(${CMAKE_SOURCE_DIR}/src/include
         ${CMAKE_BINARY_DIR}/bin)
 
 set(TEST_FILES
+       # vote_test.cc
+        priority_queue/pq_test.cc
         pmemds_test.cc
-        vote_test.cc)
+        test_main.cc)
 
 # ---[ TEST SUITE
 add_executable(test_suite ${TEST_FILES})

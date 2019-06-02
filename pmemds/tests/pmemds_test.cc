@@ -2,7 +2,6 @@
 #include <string>
 
 #include "../include/pmemds-client.h"
-#include "../include/pmemds-common.h"
 #include "../include/tree/btree-client.h"
 #include "../include/priority_queue/priority_queue-client.h"
 #include "gtest/gtest.h"
@@ -94,10 +93,4 @@ namespace {
 
     }
 
-}
-
-int main(int argc, char* argv[]) {
-    ::testing::InitGoogleTest(&argc, argv);
-    //GTEST_FLAG(catch_exceptions);
-    return RUN_ALL_TESTS();
 }
