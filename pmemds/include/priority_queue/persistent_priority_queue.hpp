@@ -27,6 +27,7 @@ namespace pmemds {
         int increase_prio(const unsigned long key, unsigned long delta_prio);
         int decrease_prio(const unsigned long key, unsigned long delta_prio);
         int get_max(unsigned long &key, unsigned long &priority);
+        void printq();
 
     private:
         //TODO: without inline multiple definition? could not figure out why? Should work fine.
@@ -35,6 +36,7 @@ namespace pmemds {
         unsigned long left_child(unsigned long idx);
         unsigned long parent_of(unsigned long idx);
         void swap(unsigned long idx1, unsigned long idx2);
+
 
         std::vector<struct pqelem_st *> *elems;
         std::unordered_map<unsigned long,unsigned long> *keymap;
@@ -64,8 +66,9 @@ namespace pmemds {
             return -1;
         }
         unsigned long idx = it->second;
+        elems->at(idx)->priority += delta_prio;
         // push up the element
-        while(idx > 0 && elems->at(idx) < elems->at(parent_of(idx))){
+        while(idx > 0 && elems->at(idx)->priority > elems->at(parent_of(idx))->priority){
             swap(idx,parent_of(idx));
             idx = parent_of(idx);
         }
@@ -80,6 +83,7 @@ namespace pmemds {
             return -1;
         }
         unsigned long idx = it->second;
+        elems->at(idx)->priority -= delta_prio;
         max_heapify(idx);
         return 0;
     }
@@ -91,7 +95,7 @@ namespace pmemds {
         elems->push_back(pqelem);
         unsigned long idx = elems->size()-1;
         keymap->insert(std::pair<unsigned long, unsigned long>(key,idx));
-        while(idx > 0 && elems->at(idx) < elems->at(parent_of(idx))){
+        while(idx > 0 && elems->at(idx)->priority > elems->at(parent_of(idx))->priority){
             swap(idx,parent_of(idx));
             idx = parent_of(idx);
         }
@@ -104,12 +108,12 @@ namespace pmemds {
         unsigned long rchild_idx = right_child(idx);
         unsigned long lchild_idx = left_child(idx);
 
-        if(elems->at(rchild_idx)->priority > elems->at(idx)->priority){
+        if(rchild_idx < elems->size() && elems->at(rchild_idx)->priority > elems->at(idx)->priority){
             largest = rchild_idx;
         }else{
             largest = idx;
         }
-        if(elems->at(lchild_idx)->priority > elems->at(largest)->priority){
+        if(lchild_idx < elems->size() &&  elems->at(lchild_idx)->priority > elems->at(largest)->priority){
             largest = lchild_idx;
         }
         if(largest != idx){
@@ -122,12 +126,12 @@ namespace pmemds {
         struct pqelem_st *max = elems->at(0);
         key = max->key;
         priority = max->priority;
-
-        pqelem_st *last = elems->at(elems->size() -1);
-        elems->at(0) = last;
-
         keymap->erase(max->key);
-        elems->erase(elems->end());
+        delete(max);
+
+        pqelem_st *last = elems->back();
+        elems->at(0) = last;
+        elems->pop_back();
 
         auto first = keymap->find(last->key);
         if(first == keymap->end()){
@@ -171,11 +175,18 @@ namespace pmemds {
 
     inline persistent_priority_queue::~persistent_priority_queue() {
         std::vector<pqelem_st *>::iterator it;
-        for(it = elems->begin(); it != elems->begin(); it++){
+        for(it = elems->begin(); it != elems->end(); it++){
             delete(*it);
         }
         delete(elems);
         delete(keymap);
+    }
+
+    inline void persistent_priority_queue::printq() {
+        std::vector<pqelem_st *>::iterator it;
+        for(it = elems->begin(); it != elems->end(); it++){
+            std::cout << (*it)->key << " : " << (*it)->priority << std::endl;
+        }
     }
 
 }
