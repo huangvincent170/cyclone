@@ -31,7 +31,7 @@ We only describe important directories. Some of the directories are not used any
 * test - Workloads/data-structures implmentations that work with operation replication.
 * pmdk - An external dependency for Intel's PMDK code base. We use pmem transactional objects as a dependency.
 
-## Dependencies
+## Dependencies.
 
 ### Software
 
