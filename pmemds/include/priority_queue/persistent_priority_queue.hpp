@@ -132,16 +132,17 @@ namespace pmemds {
         pqelem_st *last = elems->back();
         elems->at(0) = last;
         elems->pop_back();
+        if(elems->size() > 1) {
+            auto first = keymap->find(last->key);
+            if (first == keymap->end()) {
+                LOG_ERROR("key  not found");
+                return -1;
+            }
+            first->second = 0;
 
-        auto first = keymap->find(last->key);
-        if(first == keymap->end()){
-            LOG_ERROR("key  not found");
-            return -1;
+            max_heapify(0); // begin index
         }
-        first->second = 0;
-
-        max_heapify(0); // begin index
-
+        //printq();
         return 0;
 
     }

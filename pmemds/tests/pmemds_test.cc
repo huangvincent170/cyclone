@@ -86,10 +86,11 @@ namespace {
 
         ASSERT_EQ(pq->insert(1UL,1UL),OK);
         ASSERT_EQ(pq->insert(2UL,3UL),OK);
-        ASSERT_EQ(pq->insert(3UL,2UL),0);
-
-        ASSERT_EQ(pq->get_max(),2UL);
-        ASSERT_EQ(pq->remove(),OK);
+        ASSERT_EQ(pq->insert(3UL,2UL),OK);
+        unsigned long max;
+        ASSERT_EQ(pq->get_max(max),OK);
+        ASSERT_EQ(max,2UL);
+        ASSERT_EQ(pq->remove(),FAILED); // currently a volatile data-structure present
 
     }
 

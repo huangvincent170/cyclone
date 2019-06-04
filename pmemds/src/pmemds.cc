@@ -86,8 +86,7 @@ void PMLib::exec(pm_rpc_t *req,pm_rpc_t *resp){
 				SET_STATUS(resp->meta,NOT_FOUND);
 				return;
 			}
-			std::string str = req->value;
-			engine->exec(op_id,ds_type,std::to_string(ds_id),req->key,str,resp);
+			engine->exec(op_id,ds_type,std::to_string(ds_id),req->key,req,resp);
 	}
 }
 

@@ -19,7 +19,7 @@ namespace pmemdsclient{
 
         int insert(unsigned long key, unsigned long priority);
 
-        unsigned long get_max();
+        int get_max(unsigned long &max);
 
         int erase(unsigned long key);
 

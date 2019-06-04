@@ -33,7 +33,7 @@ include_directories(${CMAKE_SOURCE_DIR}/src/include
         ${CMAKE_BINARY_DIR}/bin)
 
 set(TEST_FILES
-       # vote_test.cc
+        vote_test.cc
         priority_queue/pq_test.cc
         pmemds_test.cc
         test_main.cc)

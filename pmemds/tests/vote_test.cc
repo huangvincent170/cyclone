@@ -36,7 +36,7 @@ namespace {
             /* put some articles */
 
             for(int i = 0; i < 20; i++){
-                art->put(i, "artical_" + std::to_string(i));
+                art->put(i, "article_" + std::to_string(i));
             }
 
 
@@ -73,8 +73,9 @@ namespace {
 
 
     TEST_F(voteTest, VoteRTest) {
-        for(int i = 20; i >= 0; i--){
-            ASSERT_EQ(votes->get_max(),i);
+        unsigned long max;
+        for(int i = 20; i > 0; i--){
+            ASSERT_EQ(votes->get_max(max),OK);
         }
     }
 

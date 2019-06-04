@@ -23,7 +23,7 @@ namespace pmemds {
     string engine() final { return ENGINE; }               // engine identifier
 
     void exec(uint16_t op_name,
-              uint8_t ds_type, std::string ds_id, unsigned long in_key, std::string& in_val, pm_rpc_t *resp);
+              uint8_t ds_type, std::string ds_id, unsigned long in_key, pm_rpc_t *req, pm_rpc_t *resp);
     void Exists(const unsigned long key,pm_rpc_t *resp);              // does key have a value?
 
     void get(const unsigned long key,pm_rpc_t *resp);

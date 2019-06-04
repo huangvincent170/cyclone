@@ -80,7 +80,7 @@ public:
 	virtual ~PMEngine(){};
 
 	virtual void exec(uint16_t op_id,uint8_t ds_type, std::string ds_id,unsigned long in_key,
-				  std::string& in_val,pm_rpc_t *resp)=0;
+				  pm_rpc_t *req, pm_rpc_t *resp)=0;
 
 	virtual string engine() =0;                           // engine identifier
 

@@ -16,7 +16,7 @@ namespace pmemds {
         string engine() final { return ENGINE; };
 
         void exec(uint16_t op_id,uint8_t ds_type, std::string ds_id,unsigned long in_key,
-                  std::string& in_val,pm_rpc_t *resp);
+                  pm_rpc_t *req,pm_rpc_t *resp);
 
         void insert(unsigned long key, unsigned long priority,pm_rpc_t *resp);
 
@@ -30,7 +30,9 @@ namespace pmemds {
 
 
     private:
-        persistent_priority_queue *pq_ptr;
+        unsigned long parse_priority(char *data);
+
+        persistent_priority_queue *my_pq;
     };
 
 }

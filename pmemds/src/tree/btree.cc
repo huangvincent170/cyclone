@@ -67,13 +67,14 @@ BTreeEngine::~BTreeEngine() { //TODO: support deleting ds altogether
 }
 
     void BTreeEngine::exec(uint16_t op_name,
-                           uint8_t ds_type, std::string ds_id, unsigned long in_key, std::string& in_val, pm_rpc_t *resp) {
-
+                           uint8_t ds_type, std::string ds_id, unsigned long in_key, pm_rpc_t *req, pm_rpc_t *resp) {
+        std::string in_val;
         switch (op_name){
             case GET:
                 this->get(in_key,resp);
                 break;
             case PUT:
+                in_val = std::string(req->value);
                 this->put(in_key,in_val,resp);
                 break;
             default:
@@ -88,6 +89,7 @@ void BTreeEngine::Exists(const unsigned long key,pm_rpc_t *resp) {
     if (it == my_btree->end()) {
         LOG("  key not found");
         SET_STATUS(resp->meta,NOT_FOUND);
+        return;
     }
     SET_STATUS(resp->meta,OK);
 }
@@ -98,6 +100,7 @@ void BTreeEngine::get(const unsigned long key, pm_rpc_t *resp) {
     if (it == my_btree->end()) {
         LOG("  key not found");
         SET_STATUS(resp->meta,NOT_FOUND);
+        return;
     }
     SET_STATUS(resp->meta,OK);
     snprintf(resp->value,MAX_VAL_LENGTH,"%s" ,it->second.c_str());

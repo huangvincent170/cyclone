@@ -21,7 +21,8 @@ enum opnames{
     /* priority queue specific */
     INSERT,
     INCREASE_PRIO,
-    DECREASE_PRIO
+    DECREASE_PRIO,
+    GET_MAX
 };
 
 //supported data-structures

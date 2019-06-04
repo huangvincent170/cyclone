@@ -56,11 +56,16 @@ namespace {
 
     TEST_F(pqTest, decrTest){
         unsigned long key, value;
-        ASSERT_EQ(pq->decrease_prio(4,5),0);
-        pq->printq();
+        ASSERT_EQ(pq->decrease_prio(9,5),0);
         ASSERT_EQ(pq->get_max(key,value),0);
-        ASSERT_EQ(key,4);
-        ASSERT_EQ(value,5);
+        ASSERT_NE(key,9);
+        ASSERT_NE(value,5);
     }
+
+    /*TEST_F(pqTest,maxTest){
+        for(int i = 11; i < 20; i++){
+            votes->insert(i,i);
+        }
+    }*/
 
 }
