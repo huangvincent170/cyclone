@@ -3,6 +3,7 @@ def launch_cmds_startup():
 
 
 def launch_cmds_server_gen(f, q, r, m, quorums, replicas, clients, ports):
+    passwd = 'dummy'
     if os.environ.has_key('CYCLONE_PASS'):
         passwd=os.environ.get('CYCLONE_PASS')
     cmd='echo ' + passwd + ' | sudo -S '
@@ -24,6 +25,7 @@ def launch_cmds_preload_gen(f, m, c, quorums, replicas, clients, machines, ports
 
 
 def launch_cmds_client_gen(f, m, c, quorums, replicas, clients, machines, ports,bufsize):
+    passwd = 'dummy'
     if m >= replicas:
         client_machines=machines-replicas
         if client_machines > clients:
@@ -58,6 +60,7 @@ def launch_cmds_client_gen(f, m, c, quorums, replicas, clients, machines, ports,
             f.write(cmd)
         
 def killall_cmds_gen(f):
+    passwd = 'dummy'
     if os.environ.has_key('CYCLONE_PASS'):
         passwd=os.environ.get('CYCLONE_PASS')
     f.write('echo ' + passwd + ' | sudo -S pkill pmemkv_server\n')
