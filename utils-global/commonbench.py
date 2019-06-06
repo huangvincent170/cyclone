@@ -96,11 +96,16 @@ class Common:
 
     def bench(self):
         raise NotImplementedError("Please Implement this method")
+ 
+    def get_bench_dir(self):
+        raise NotImplementedError("Please Implement this method")
+
+    def get_server_cxx(self,wload):
+        raise NotImplementedError("Please Implement this method")
 
     def clean(args):
         print 'cleaning deployed servers/clients'
-
-
+       
     def generate(self,args):
         w = args.workload
         m = args.memtype
@@ -123,7 +128,7 @@ class Common:
 
 
     #build the cyclone binaries and copy them over to participating machines
-    def deploy_server_bin(args):
+    def deploy_server_bin(self,args):
         w = args.workload
         m = args.memtype
         print 'building cyclone binaries'
@@ -137,7 +142,7 @@ class Common:
         sh(cmd)
         cd(home)
 
-        cd('../test')
+        cd('../' + self.get_bench_dir())
         cmd = 'make clean'
         sh(cmd)
 
@@ -146,24 +151,22 @@ class Common:
             cmd += ' RTE_SSDK=' + rte_sdk
         elif m == nvram:
             cmd += ' RTE_SSDK=' + rte_nvmsdk
-
-        if w == volatile_pmemkv or w == volatile_pmemkv_ncc:
-            cmd += ' CPPFLAGS=' + '\"-DDRAM\"'
-        if w == volatile_pmemkv_ncc or w == pmemkv_ncc:
-            cmd += ' PMEM_SLIB=' + ncc_pmem
+        cmd +=  ' ' + self.get_server_cxx(w)
+        
         sh(cmd)
         cd(home)
 
         #now copy the binaries over
         cmd ='./copy_binaries.sh '
-        cmd += gen_dir + ' ' + deploy_dir + ' ' + wl2binary(w)
+        cmd += gen_dir + ' ' + deploy_dir + ' ' + self.bench() + ' ' + self.wl2binary(w)
         msg(cmd)
         sh(cmd)
         cd(home)
 
     # our client machines are different from servers. we are
     # shipping source
-    def deploy_client_bin(args):
+    def deploy_client_bin(self,args):
+        w = args.workload
         tmpdir = 'tmpdir'
         #compress core and test directories
         try:
@@ -175,34 +178,35 @@ class Common:
 
         cd('..')
         cmd = 'zip -rq '+ home + '/tmpdir/client_src.zip '
-        cmd = cmd + 'core ' + 'test'
+        cmd = cmd + 'core ' + 'benchmarks/' + self.bench() + '/' + self.wl2binary(w)
         sh(cmd)
         cd(home)
 
         #ship compressed files
         cmd ='./copy_client_src.sh '
-        cmd += gen_dir + ' ' + deploy_dir
+        cmd += gen_dir + ' ' + self.bench() + ' ' + self.wl2binary(w) + ' ' + deploy_dir
         sh(cmd)
         cd(home)
 
-    def deploy_bin(args):
-        deploy_server_bin(args)
-        deploy_client_bin(args)
+    def deploy_bin(self,args):
+        self.deploy_server_bin(args)
+        self.deploy_client_bin(args)
 
     # this should include both config copy and binary copy
-    def deploy_configs(args):
+    def deploy_configs(self,args):
+        w = args.workload
         cmd = './deploy_configs.sh '
-        cmd += gen_dir + ' ' + deploy_dir
+        cmd += gen_dir + ' ' + deploy_dir + ' ' + self.bench() + ' ' + self.wl2binary(w)
         msg(cmd)
         sh(cmd)
 
-    def stop_cyclone(args):
+    def stop_cyclone(self,args):
         print 'stop experiment'
         cmd = './deploy_shutdown.sh '
         cmd += gen_dir + ' ' + deploy_dir
         sh(cmd)
 
-    def start_cyclone(args):
+    def start_cyclone(self,args):
         #server deploy
         cmd = './deploy_services.sh '
         cmd += gen_dir + ' ' + deploy_dir

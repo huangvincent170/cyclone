@@ -12,7 +12,7 @@ def launch_cmds_server_gen(f, q, r, m, quorums, replicas, clients, ports):
     cmd=cmd + ' echo ' + passwd + ' | sudo -S '
     cmd=cmd + ' PMEM_IS_PMEM_FORCE=1 '
     cmd=cmd + ' LD_LIBRARY_PATH=/usr/lib:/usr/local/lib '
-    cmd=cmd + '/home/pfernando/cyclone/cyclone.git/test/echo_server '
+    cmd=cmd + '/home/pfernando/cyclone/cyclone.git/benchmarks/kvbench/echo/echo_server '
     cmd=cmd + str(r) + ' '
     cmd=cmd + str(m) + ' '
     cmd=cmd + str(clients) + ' '
@@ -48,7 +48,7 @@ def launch_cmds_client_gen(f, m, c, quorums, replicas, clients, machines, ports,
                 passwd=os.environ.get('CYCLONE_PASS')
             cmd=cmd + 'echo '+ passwd +' | sudo -S '
             cmd=cmd + ' LD_LIBRARY_PATH=/usr/lib:/usr/local/lib '
-            cmd=cmd + '/home/pfernando/cyclone/cyclone.git/test/echo_async_client '
+            cmd=cmd + '/home/pfernando/cyclone/cyclone.git/benchmarks/kvbench/echo/echo_async_client '
  #           cmd=cmd + '/home/pfernando/cyclone/cyclone.git/test/echo_client '
             cmd=cmd + str(c_start) + ' '
             cmd=cmd + str(c_stop) + ' '

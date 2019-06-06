@@ -39,9 +39,9 @@
 #include <assert.h>
 #include <boost/property_tree/ini_parser.hpp>
 #include <boost/property_tree/ptree.hpp>
-#include "../core/clock.hpp"
-#include "../core/logging.hpp"
-#include "../core/libcyclone.hpp"
+#include "../../../core/clock.hpp"
+#include "../../../core/logging.hpp"
+#include "../../../core/libcyclone.hpp"
 #include <rte_launch.h>
 
 int driver(void *arg);

@@ -41,9 +41,9 @@
 #include <boost/property_tree/ini_parser.hpp>
 #include <boost/property_tree/ptree.hpp>
 #include <boost/bind.hpp>
-#include "../core/clock.hpp"
-#include "../core/logging.hpp"
-#include "../core/libcyclone.hpp"
+#include "../../../core/clock.hpp"
+#include "../../../core/logging.hpp"
+#include "../../../core/libcyclone.hpp"
 #include <rte_launch.h>
 
 #define NUM_QUEUES 2 // 2 qpairs for sync and async client modes

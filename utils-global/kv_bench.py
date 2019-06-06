@@ -60,6 +60,16 @@ class KVBench(Common):
     def bench(self):
         return 'kvbench';
 
+    def get_bench_dir(self):
+        return 'benchmarks/kvbench/echo'
+
+    def get_server_cxx(self,wload):
+        if wload == volatile_pmemkv or wload == volatile_pmemkv_ncc:
+            return 'CPPFLAGS=' + '\"-DDRAM\"'
+        if wload == volatile_pmemkv_ncc or wload == pmemkv_ncc:
+            return 'PMEM_SLIB=' + ncc_pmem
+        return '' #else
+
 if __name__ == '__main__':
 
     c = args.clean

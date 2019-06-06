@@ -5,9 +5,10 @@ client: echo_async_client
 CXXFLAGS = -O3 -DBOOST_LOG_DYN_LINK -DBOOST_THREAD_DYN_LINK
 CXXFLAGS += $(CPPFLAGS)
 #CXXFLAGS = -O1 -g -fno-omit-frame-pointer -DBOOST_LOG_DYN_LINK
+PMEM_SLIB?=/home/pfernando/pmdk/src/nondebug
+PMEM_CLIB?=../../../pmdk/src/nondebug
 
-
-LIBS = -lc ../core/libcyclone.a ../raft/libcraft.a -lboost_system -lboost_date_time -laio
+LIBS = -lc ../../../core/libcyclone.a ../../../raft/libcraft.a -lboost_system -lboost_date_time -laio
 
 #DPDK extras
 RTE_CSDK?=/home/pfernando/dpdk
@@ -29,7 +30,6 @@ CLIENT_LIBS += ${LIBS2}
 
 SERVER_LIBS += ${PMEM_SLIB}/libpmemobj.a ${PMEM_SLIB}/libpmem.a -lndctl -ldaxctl -lpthread
 CLIENT_LIBS += ${PMEM_CLIB}/libpmemobj.a ${PMEM_CLIB}/libpmem.a -lndctl -ldaxctl -lpthread
-
 
 #BOOST_THREAD_LIB=-lboost_thread-mt
 BOOST_THREAD_LIB=-lboost_thread

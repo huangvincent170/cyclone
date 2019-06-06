@@ -1,10 +1,12 @@
 #!/bin/bash
-if [ $# -ne 2 ]
-    then echo "Usage $0 config_dir deploy_dir"
+if [ $# -ne 4 ]
+    then echo "Usage $0 config_dir deploy_dir bench_name bench_subname"
     exit
 fi
 output_dir=$1
 deploy_dir=$2
+bench_name=$3
+bench_subname=$4
 echo "config dir = $output_dir"
 echo "deploy dir = $deploy_dir"
 
@@ -19,7 +21,7 @@ do
 	echo "deploying configs to node $node"
 	echo '#!/bin/bash' > exec_servers.sh
 	echo "#export LD_LIBRARY_PATH=/usr/lib:/usr/local/lib" >> exec_servers.sh
-	echo "#export PATH=$PATH:~/cyclone/cyclone.git/test" >> exec_servers.sh
+	echo "#export PATH=$PATH:~/cyclone/cyclone.git/benchmarks/${bench_name}/${bench_subname}" >> exec_servers.sh
 	#echo "export PATH=$PATH:$deploy_dir/cyclone.git/test" >> exec_servers.sh
 	echo "ulimit -c unlimited" >> exec_servers.sh
 	echo "cd $deploy_dir/$node" >> exec_servers.sh
@@ -47,7 +49,7 @@ do
 		echo 'unzip -q client_src.zip' >> build_client.sh
 		echo 'cd core;make clean;make' >> build_client.sh
 		echo 'cd ..' >> build_client.sh
-		echo 'cd test;make clean;make client' >> build_client.sh
+		echo 'cd benchmarks/'${bench_name}'/'${bench_subname}';make clean;make client' >> build_client.sh
 		echo 'popd' >> build_client.sh
 		chmod u+x build_client.sh
 	    scp build_client.sh ${ip}:${deploy_dir}/${node}
