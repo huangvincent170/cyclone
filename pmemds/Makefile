@@ -1,17 +1,13 @@
-CXX = g++
-CXXFLAGS = -O3 -fPIC -Wall
-CPPFLAGS = -I../../include/pmemds
-
-libpmemds.a: src/pmemds.o 
-	ar rcs $@ $^
-
-pmemds.o: pmemds.cc
-	$(CXX) $(CXXFLAGS) $(INCLUDES) $(CPPFLAGS) -c $< -o $@  $(LDFLAGS)
-
-
-
-
-.PHONY: clean install
+all: clean configure staticlib
 
 clean:
-	rm -f libpmemds.a
+	rm -rf ./bin
+
+configure:
+	mkdir -p ./bin
+	cd ./bin && cmake .. -DCMAKE_BUILD_TYPE=Release
+
+staticlib:
+	cd ./bin && make pmemds pmemds-client
+
+test: configure reset

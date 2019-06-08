@@ -2,20 +2,17 @@
 #BLIZZARD
 BLIZZARD_HOME?=/home/pfernando/cyclone
 
-#PMDK
-PMEM_SLIB?=/home/pfernando/pmdk/src/nondebug
-PMEM_CLIB?=../pmdk/src/nondebug
-
-#DPDK
-RTE_CSDK?=/home/pfernando/dpdk
-RTE_SSDK?=/home/pfernando/dpdk
-
 CXXFLAGS = -O3 -DBOOST_LOG_DYN_LINK -DBOOST_THREAD_DYN_LINK
 CXXFLAGS += $(CPPFLAGS)
 #CXXFLAGS = -O1 -g -fno-omit-frame-pointer -DBOOST_LOG_DYN_LINK
+PMEM_SLIB?=/home/pfernando/pmdk/src/nondebug
+PMEM_CLIB?=../../../pmdk/src/nondebug
 
-LIBS = -lc ${BLIZZARD_HOME}/core/libcyclone.a ${BLIZZARD_HOME}/raft/libcraft.a -lboost_system -lboost_date_time -laio
+LIBS = -lc ../../../core/libcyclone.a ../../../raft/libcraft.a -lboost_system -lboost_date_time -laio
 
+#DPDK extras
+RTE_CSDK?=/home/pfernando/dpdk
+RTE_SSDK?=/home/pfernando/dpdk
 
 CXXFLAGS += -DDPDK_STACK
 CXXFLAGS += -march=native -DRTE_MACHINE_CPUFLAG_SSE -DRTE_MACHINE_CPUFLAG_SSE2 -DRTE_MACHINE_CPUFLAG_SSE3 -DRTE_MACHINE_CPUFLAG_SSSE3 -DRTE_MACHINE_CPUFLAG_SSE4_1 -DRTE_MACHINE_CPUFLAG_SSE4_2 -DRTE_MACHINE_CPUFLAG_AES -DRTE_MACHINE_CPUFLAG_PCLMULQDQ -DRTE_MACHINE_CPUFLAG_AVX
@@ -33,6 +30,10 @@ CLIENT_LIBS += ${LIBS2}
 
 SERVER_LIBS += ${PMEM_SLIB}/libpmemobj.a ${PMEM_SLIB}/libpmem.a -lndctl -ldaxctl -lpthread
 CLIENT_LIBS += ${PMEM_CLIB}/libpmemobj.a ${PMEM_CLIB}/libpmem.a -lndctl -ldaxctl -lpthread
+
+#BOOST_THREAD_LIB=-lboost_thread-mt
+BOOST_THREAD_LIB=-lboost_thread
+
 
 
 

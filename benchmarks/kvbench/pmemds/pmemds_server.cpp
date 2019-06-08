@@ -6,26 +6,26 @@
 #include <time.h>
 #include<unistd.h>
 
-#include "../core/libcyclone.hpp"
-#include "../core/logging.hpp"
-#include "../core/clock.hpp"
-#include "../../../pmemds/include/tree/btree-client.h"
+#include "../../../core/libcyclone.hpp"
+#include "../../../core/logging.hpp"
+#include "../../../core/clock.hpp"
+#include "pmemds.h"
 
-static void *logs[executor_threads];
-pmemds::PMLib *lib;
+pmemds::PMLIB *pmlib;
+pmemds::pm_rpc_t response;
 
 
 
 void callback(const unsigned char *data,
               const int len,
-              rpc_cookie_t *cookie) {
+              rpc_cookie_t *cookie)
+{
+    cookie->ret_value = &response; //TODO: works only for one execution thread
+    cookie->ret_size = sizeof(pmemds::pm_rpc_t);
 
-    pm_rpc_t *req = (pm_rpc_t *) data;
+    pmemds::pm_rpc_t *request = (pmemds::pm_rpc_t *) data;
+    pmlib->exec(request,&response);
 
-    cookie->ret_size = sizeof(pm_rpc_t); // TODO: rocksdb code uses len
-    cookie->ret_value = malloc(sizeof(pm_rpc_t));
-    pm_rpc_t *res = (pm_rpc_t *) cookie->ret_value;
-    lib->exec(req, res);
 }
 
 int wal_callback(const unsigned char *data,
@@ -49,7 +49,6 @@ rpc_callbacks_t rpc_callbacks =
         };
 
 
-
 int main(int argc, char *argv[])
 {
     if (argc != 7)
@@ -64,8 +63,13 @@ int main(int argc, char *argv[])
                          atoi(argv[2]),
                          atoi(argv[6]) + num_queues * num_quorums + executor_threads);
 
-
-    lib = new pmemds::PMLib(); //create PMLib instance
+    assert(pmlib == NULL);
+    pmlib = new pmemds::PMLIB();
+    if (pmlib == nullptr)
+    {
+        BOOST_LOG_TRIVIAL(fatal) << "cannot open pmemds";
+        exit(-1);
+    }
 
     dispatcher_start(argv[4],
                      argv[5],

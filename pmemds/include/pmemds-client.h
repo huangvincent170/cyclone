@@ -7,6 +7,9 @@
 #include "pmemds.h"
 
 
+void async_callback(void *args, int code, unsigned long msg_latency);
+
+
 namespace pmemdsclient {
 
     /* abstraction to hide the real transport */
@@ -33,6 +36,7 @@ namespace pmemdsclient {
 
     private:
         void *dpdk_client;
+        unsigned long request_id;
     };
 
 

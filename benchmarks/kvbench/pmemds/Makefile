@@ -1,29 +1,30 @@
+prefix=/usr/local
 
+all: clean test
 
-include ../../Makefile.inc
+reset:
+	rm -rf /dev/shm/pmemkv /tmp/pmemkv
 
-server: pmemkv_server
-client: pmemkv_async_client
+clean: reset
+	rm -rf 3rdparty libpmemkv.so pmemkv_bench pmemkv_example pmemkv_stress pmemkv_test
+	rm -rf ./bin googletest-*.zip
 
-#pmemkv
-PMEMKV_HOME?=${BLIZZARD_HOME}../pmemkv
-PMEMKV_CXXFLAGS=-std=c++11 -I${PMEMKV_HOME}/src
-PMEMKV_LIBS=${PMEMKV_HOME}/bin/libpmemkv.a
+configure:
+	mkdir -p ./bin
+	cd ./bin && cmake .. -DCMAKE_BUILD_TYPE=Release
 
+sharedlib:
+	cd ./bin && make pmemkv
 
+install:
+	cp ./bin/libpmemkv.so $(prefix)/lib
+	cp ./src/pmemkv.h $(prefix)/include/libpmemkv.h
 
-pmemkv_server:pmemkv_server.cpp
-	$(CXX) $(CXXFLAGS) $(PMEMKV_CXXFLAGS) pmemkv_server.cpp $(BOOST_THREAD_LIB) $(PMEMKV_LIBS) $(SERVER_LIBS) -o $@
+uninstall:
+	rm -rf $(prefix)/lib/libpmemkv.so
+	rm -rf $(prefix)/include/libpmemkv.h
 
-pmemkv_client:pmemkv_client.cpp
-	$(CXX) $(CLIENT_CXXFLAGS) pmemkv_client.cpp $(BOOST_THREAD_LIB) $(CLIENT_LIBS) -o $@
-
-pmemkv_async_client:pmemkv_async_client.cpp
-	$(CXX) $(CLIENT_CXXFLAGS) pmemkv_async_client.cpp $(BOOST_THREAD_LIB) $(CLIENT_LIBS) -o $@
-
-
-.PHONY:clean
-
-clean:
-	rm -f \
-pmemkv_client pmemkv_async_client pmemkv_server
+test: configure reset
+	cd ./bin && make pmemkv_test
+	PMEM_IS_PMEM_FORCE=1 ./bin/pmemkv_test
+	rm -rf /dev/shm/pmemkv /tmp/pmemkv
