@@ -20,7 +20,7 @@ namespace pmemdsclient {
         int open(const std::string &appname); // init transport
         int close();
         virtual int sendmsg(pm_rpc_t *msg, pm_rpc_t **response, unsigned long core_mask)=0;
-        virtual int sendmsg_async(pm_rpc_t *msg, unsigned long core_mask, void (*cb)(void *, int,unsigned long))=0;
+        virtual int sendmsg_async(pm_rpc_t *msg, unsigned long core_mask, void (*cb)(void *))=0;
     protected:
         std::string appname;
     };
@@ -32,7 +32,7 @@ namespace pmemdsclient {
         ~DPDKPMClient();
 
         int sendmsg(pm_rpc_t *msg, pm_rpc_t **response, unsigned long core_mask);
-        int sendmsg_async(pm_rpc_t *msg, unsigned long core_mask, void (*cb)(void *, int,unsigned long));
+        int sendmsg_async(pm_rpc_t *msg, unsigned long core_mask, void (*cb)(void *));
 
     private:
         void *dpdk_client;
@@ -46,7 +46,7 @@ namespace pmemdsclient {
         ~TestClient(){};
 
         int sendmsg(pm_rpc_t *msg, pm_rpc_t **response, unsigned long core_mask);
-        int sendmsg_async(pm_rpc_t *msg, unsigned long core_mask,void (*cb)(void *, int,unsigned long));
+        int sendmsg_async(pm_rpc_t *msg, unsigned long core_mask,void (*cb)(void *));
 
     private:
         pm_rpc_t *req, *res;
@@ -66,6 +66,10 @@ namespace pmemdsclient {
         virtual int create(uint8_t flags) = 0;
         virtual int close() = 0;
         virtual int remove()= 0;
+
+        virtual int create(uint8_t flags,void (*cb)(void *)){};
+        virtual int close(void (*cb)(void *)){};
+        virtual int remove(void (*cb)(void *)){};
     };
 
 

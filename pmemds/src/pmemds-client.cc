@@ -55,6 +55,7 @@ typedef struct cb_st
 {
     uint8_t request_type;
     unsigned long request_id;
+    void (*callback)(void *);
     pm_rpc_t *response;
 } cb_t;
 
@@ -112,11 +113,12 @@ namespace pmemdsclient{
                  reinterpret_cast<void **>(response),core_mask,0);
     }
 
-    int DPDKPMClient::sendmsg_async(pm_rpc_t *msg, unsigned long core_mask, void (*cb)(void *, int, unsigned long)) {
+    int DPDKPMClient::sendmsg_async(pm_rpc_t *msg, unsigned long core_mask, void (*cb)(void *)) {
 
         struct cb_st *cb_ctxt = (struct cb_st *)rte_malloc("callback_ctxt", sizeof(struct cb_st), 0);
         //cb_ctxt->request_type = rpc_flags;
         cb_ctxt->request_id = request_id++;
+        cb_ctxt->callback = cb;
 
         int ret;
         do{

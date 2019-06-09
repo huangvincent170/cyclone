@@ -17,15 +17,20 @@ namespace pmemdsclient{
         int close();
         int remove();
 
+        int create(uint8_t flags,void (*cb)(void *));
+        int close(void (*cb)(void *));
+        int remove(void (*cb)(void *));
+
+
         //sync member functions
         std::string get(const unsigned long key);
         int put(const unsigned long key, const std::string& value);
         int remove(const unsigned long key);
 
         //async member functions
-        std::string get(const unsigned long key);
-        int put(const unsigned long key, const std::string& value);
-        int remove(const unsigned long key);
+        int get(const unsigned long key,void (*cb)(void *));
+        int put(const unsigned long key, const std::string& value,void (*cb)(void *));
+        int remove(const unsigned long key,void (*cb)(void *));
     private:
         std::string ds_name;
     };
