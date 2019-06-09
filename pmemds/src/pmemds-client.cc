@@ -1,3 +1,8 @@
+
+#include <iostream>
+#include <rte_malloc.h>
+
+#include "clock.hpp"
 #include "pmemds-client.h"
 
 
@@ -60,11 +65,10 @@ void async_callback(void *args, int code, unsigned long msg_latency)
     struct cb_st *cb_ctxt = (struct cb_st *)args;
     if(code == REP_SUCCESS){
         //BOOST_LOG_TRIVIAL(info) << "received message " << cb_ctxt->request_id;
-        cb_ctxt->request_type == OP_PUT ? tx_wr_block_cnt++ : tx_ro_block_cnt++;
+        cb_ctxt->request_type == UPDATE_OPERATION ? tx_wr_block_cnt++ : tx_ro_block_cnt++;
         rte_free(cb_ctxt);
-    }else if (timedout_msgs < TIMEOUT_VECTOR_THRESHOLD){
-        __sync_synchronize();
-        BOOST_LOG_TRIVIAL(info) << "timed-out message " << cb_ctxt->request_id;
+    }else{
+		std::cout << "timed-out message " << cb_ctxt->request_id << std::endl;
         exit(-1);
 
     }
@@ -73,14 +77,15 @@ void async_callback(void *args, int code, unsigned long msg_latency)
     if ((tx_wr_block_cnt + tx_ro_block_cnt) >= 5000)
     {
         unsigned long total_elapsed_time = (rtc_clock::current_time() - tx_begin_time);
-        BOOST_LOG_TRIVIAL(info) << "LOAD = "
+		std::cout << "LOAD = "
                                 << ((double)1000000 * (tx_wr_block_cnt + tx_ro_block_cnt)) / total_elapsed_time
                                 << " tx/sec "
                                 << "LATENCY = "
                                 << ((double)total_latency) / (tx_wr_block_cnt + tx_ro_block_cnt)
                                 << " us "
                                 << "wr/rd = "
-                                <<((double)tx_wr_block_cnt/tx_ro_block_cnt);
+                                <<((double)tx_wr_block_cnt/tx_ro_block_cnt)
+								<< std::endl;
         tx_wr_block_cnt   = 0;
         tx_ro_block_cnt   = 0;
         tx_failed_cnt  = 0;
@@ -104,13 +109,13 @@ namespace pmemdsclient{
 
     int DPDKPMClient::sendmsg(pm_rpc_t* msg , pm_rpc_t** response,unsigned long core_mask) {
         return make_rpc(this->dpdk_client,msg,sizeof(pm_rpc_t),
-                 reinterpret_cast<void **>(response),this->core_mask,0);
+                 reinterpret_cast<void **>(response),core_mask,0);
     }
 
-    int DPDKPMClient::sendmsg_async(pm_rpc_t *msg, void (*cb)(void *, int, unsigned long)) {
+    int DPDKPMClient::sendmsg_async(pm_rpc_t *msg, unsigned long core_mask, void (*cb)(void *, int, unsigned long)) {
 
-        cb_ctxt = (struct cb_st *)rte_malloc("callback_ctxt", sizeof(struct cb_st), 0);
-        cb_ctxt->request_type = rpc_flags;
+        struct cb_st *cb_ctxt = (struct cb_st *)rte_malloc("callback_ctxt", sizeof(struct cb_st), 0);
+        //cb_ctxt->request_type = rpc_flags;
         cb_ctxt->request_id = request_id++;
 
         int ret;
@@ -120,7 +125,7 @@ namespace pmemdsclient{
                                  sizeof(pm_rpc_t),
                                  async_callback,
                                  (void *)cb_ctxt,
-                                 this->core_mask,
+                                 core_mask,
                                  0);
             if(ret == EMAX_INFLIGHT){
                 //sleep a bit
@@ -146,7 +151,7 @@ namespace pmemdsclient{
         return 0; // no send errors
     }
 
-    int TestClient::sendmsg_async(pm_rpc_t *msg, void (*cb)(void *, int, unsigned long)) {
+    int TestClient::sendmsg_async(pm_rpc_t *msg, unsigned long core_mask ,void (*cb)(void *, int, unsigned long)) {
         return 1;
     }
 

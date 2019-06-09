@@ -6,6 +6,13 @@
 
 #include "stdint.h"
 
+// update, read operation flags
+const uint8_t UPDATE_OPERATION = 0;
+const uint8_t READ_OPERATION   = 1;
+
+
+
+
 //common operations
 enum opnames{
     /*common*/
