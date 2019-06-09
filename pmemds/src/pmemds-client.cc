@@ -153,7 +153,7 @@ namespace pmemdsclient{
         return 0; // no send errors
     }
 
-    int TestClient::sendmsg_async(pm_rpc_t *msg, unsigned long core_mask ,void (*cb)(void *, int, unsigned long)) {
+    int TestClient::sendmsg_async(pm_rpc_t *msg, unsigned long core_mask ,void (*cb)(void *)) {
         return 1;
     }
 

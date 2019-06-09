@@ -9,10 +9,11 @@
 #include "../../../core/libcyclone.hpp"
 #include "../../../core/logging.hpp"
 #include "../../../core/clock.hpp"
+
 #include "pmemds.h"
 
-pmemds::PMLIB *pmlib;
-pmemds::pm_rpc_t response;
+pmemds::PMLib *pmlib;
+pm_rpc_t response;
 
 
 
@@ -21,9 +22,9 @@ void callback(const unsigned char *data,
               rpc_cookie_t *cookie)
 {
     cookie->ret_value = &response; //TODO: works only for one execution thread
-    cookie->ret_size = sizeof(pmemds::pm_rpc_t);
+    cookie->ret_size = sizeof(pm_rpc_t);
 
-    pmemds::pm_rpc_t *request = (pmemds::pm_rpc_t *) data;
+    pm_rpc_t *request = (pm_rpc_t *) data;
     pmlib->exec(request,&response);
 
 }
@@ -64,7 +65,7 @@ int main(int argc, char *argv[])
                          atoi(argv[6]) + num_queues * num_quorums + executor_threads);
 
     assert(pmlib == NULL);
-    pmlib = new pmemds::PMLIB();
+    pmlib = new pmemds::PMLib();
     if (pmlib == nullptr)
     {
         BOOST_LOG_TRIVIAL(fatal) << "cannot open pmemds";

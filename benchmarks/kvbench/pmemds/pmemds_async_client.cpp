@@ -1,4 +1,3 @@
-
 #include <stdio.h>
 #include <sys/stat.h>
 #include <stdlib.h>
@@ -16,15 +15,17 @@
 #include "../../../core/logging.hpp"
 #include "../../../core/clock.hpp"
 #include "../../../core/libcyclone.hpp"
+
 #include "pmemds-client.h"
+#include "tree/btree-client.h"
 
 
-
+unsigned long pmemds_keys = 100000000;
 
 /* pmem structure names */
 const uint16_t btreemap_st = 0;
 
-pmemdsclient::DPDKClient *dpdkClient;
+pmemdsclient::DPDKPMClient *dpdkClient;
 pmemdsclient::BTreeEngine *btreeMap;
 
 int driver(void *arg);
@@ -62,7 +63,23 @@ int driver(void *arg)
     int my_core;
 
     unsigned  long key;
-    char* value_buffer[64];
+    char value_buffer[64];
+
+    double frac_read = 0.5;
+	const char *frac_read_env = getenv("KV_FRAC_READ");
+	if (frac_read_env != NULL)
+	{
+		frac_read = atof(frac_read_env);
+	}
+	BOOST_LOG_TRIVIAL(info) << "FRAC_READ = " << frac_read;
+
+	unsigned long keys = pmemds_keys;
+	const char *keys_env = getenv("KV_KEYS");
+	if (keys_env != NULL)
+	{
+		keys = atol(keys_env);
+	}
+	BOOST_LOG_TRIVIAL(info) << "KEYS = " << keys;
 
     pm_rpc_t *rpc_buf = (pm_rpc_t *)buffer;
 
@@ -72,9 +89,10 @@ int driver(void *arg)
     dpdkClient->open("kvApp");
     for( ; ; ){
         double coin = ((double)rand()) / RAND_MAX;
+		unsigned long key = rand() % keys;
         if (coin > frac_read){
-            snprintf(value_buffer,64,"%ul",key);
-            btreeMap->put(key,value, nullptr);
+            snprintf(value_buffer,64,"%lu",key);
+            btreeMap->put(key,value_buffer, nullptr);
         }
         else{
             btreeMap->get(key, nullptr);
@@ -131,7 +149,7 @@ int main(int argc, const char *argv[])
                                                     CLIENT_ASYNC,
                                                     atoi(argv[10]));
 
-            dpdkClient = new pememdsclient::DPDKClient(dargs->handles[i]);
+            dpdkClient = new pmemdsclient::DPDKPMClient(dargs->handles[i]);
             btreeMap = new pmemdsclient::BTreeEngine(dpdkClient,btreemap_st,100,0UL);
         }
     }

@@ -46,4 +46,4 @@ add_library(pmemds-client STATIC ${CLIENTLIB_SOURCE_FILES})
 
 # ---[ CTest
 include(CTest)
-add_subdirectory(tests)
+#add_subdirectory(tests)
