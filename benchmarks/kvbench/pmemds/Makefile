@@ -1,6 +1,8 @@
 
 include ../../Makefile.inc
 
+all: server client
+
 server: pmemds_server
 client: pmemds_async_client
 
@@ -19,7 +21,7 @@ pmemds_client:pmemds_client.cpp
 	$(CXX) $(CLIENT_CXXFLAGS) pmemds_client.cpp $(BOOST_THREAD_LIB) $(CLIENT_LIBS) -o $@
 
 pmemds_async_client:pmemds_async_client.cpp
-	$(CXX) $(CLIENT_CXXFLAGS) $(PMEMDS_CXXFLAGS) pmemds_async_client.cpp $(BOOST_THREAD_LIB) $(PMEMDSCLIENT_LIBS) $(PMEMDS_LIBS) $(CLIENT_LIBS) -o $@
+	$(CXX) $(CLIENT_CXXFLAGS) $(PMEMDS_CXXFLAGS) pmemds_async_client.cpp $(BOOST_THREAD_LIB) $(PMEMDSCLIENT_LIBS) $(CLIENT_LIBS) -o $@
 
 
 .PHONY:clean

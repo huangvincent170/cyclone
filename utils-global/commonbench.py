@@ -103,7 +103,7 @@ class Common:
     def get_server_cxx(self,wload):
         raise NotImplementedError("Please Implement this method")
 
-    def clean(args):
+    def clean(self,args):
         print 'cleaning deployed servers/clients'
        
     def generate(self,args):
@@ -141,8 +141,9 @@ class Common:
             cmd += ' CPPFLAGS=' + '\"-DPMEM_HUGE\"'
         sh(cmd)
         cd(home)
-
-        cd('../' + self.get_bench_dir())
+        
+        bench_dir = '../benchmarks/' + self.bench() + '/' + self.wl2binary(w) 
+        cd(bench_dir)
         cmd = 'make clean'
         sh(cmd)
 

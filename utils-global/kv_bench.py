@@ -13,6 +13,7 @@ pmemkv_ncc = 'pmemkv_ncc'
 volatile_pmemkv = 'volatile_pmemkv'
 volatile_pmemkv_ncc = 'volatile_pmemkv_ncc'
 rocksdb = 'rocksdb'
+pmemds = 'pmemds'
 
 
 wl=[]
@@ -23,6 +24,7 @@ wl.append(pmemkv_ncc)
 wl.append(volatile_pmemkv)
 wl.append(volatile_pmemkv_ncc)
 wl.append(rocksdb)
+wl.append(pmemds)
 
 wl.append(empty)
 
@@ -61,13 +63,15 @@ class KVBench(Common):
         return 'kvbench';
 
     def get_bench_dir(self):
-        return 'benchmarks/kvbench/echo'
+        return 'ERROR'
 
     def get_server_cxx(self,wload):
         if wload == volatile_pmemkv or wload == volatile_pmemkv_ncc:
             return 'CPPFLAGS=' + '\"-DDRAM\"'
         if wload == volatile_pmemkv_ncc or wload == pmemkv_ncc:
             return 'PMEM_SLIB=' + ncc_pmem
+        if wload == pmemds:
+            return ''
         return '' #else
 
 if __name__ == '__main__':
