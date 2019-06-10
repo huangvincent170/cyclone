@@ -140,23 +140,4 @@ namespace pmemdsclient{
 
 
 
-
-    TestClient::TestClient(pmemds::PMLib *pmLib,pm_rpc_t *request,
-                           pm_rpc_t *response):req(request),res(response),pmLib(pmLib) {
-
-    }
-
-
-    int TestClient::sendmsg(pm_rpc_t *req, pm_rpc_t **response, unsigned long core_mask) {
-        *response = new pm_rpc_t();
-        pmLib->exec(req,*response);
-        return 0; // no send errors
-    }
-
-    int TestClient::sendmsg_async(pm_rpc_t *msg, unsigned long core_mask ,void (*cb)(void *)) {
-        return 1;
-    }
-
-
-
 }

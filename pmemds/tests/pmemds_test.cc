@@ -2,6 +2,7 @@
 #include <string>
 
 #include "../include/pmemds-client.h"
+#include "test_client.h"
 #include "../include/tree/btree-client.h"
 #include "../include/priority_queue/priority_queue-client.h"
 #include "gtest/gtest.h"

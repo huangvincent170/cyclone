@@ -4,7 +4,6 @@
 #include <string>
 #include "pmemds-common.h"
 #include "pmemds_log.h"
-#include "pmemds.h"
 
 
 void async_callback(void *args, int code, unsigned long msg_latency);
@@ -38,21 +37,6 @@ namespace pmemdsclient {
         void *dpdk_client;
         unsigned long request_id;
     };
-
-
-    class TestClient:public PMClient{
-    public:
-        TestClient(pmemds::PMLib *pmLib ,pm_rpc_t *request, pm_rpc_t *response);
-        ~TestClient(){};
-
-        int sendmsg(pm_rpc_t *msg, pm_rpc_t **response, unsigned long core_mask);
-        int sendmsg_async(pm_rpc_t *msg, unsigned long core_mask,void (*cb)(void *));
-
-    private:
-        pm_rpc_t *req, *res;
-        pmemds::PMLib *pmLib;
-    };
-
 
     class PMEngine {
     protected:
