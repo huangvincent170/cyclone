@@ -23,6 +23,17 @@ namespace pmemdsclient {
         return FAILED;
     }
 
+    int PMClient::open(const std::string &appname,void (*cb)(void *)) {
+        pm_rpc_t *response;
+        pm_rpc_t payload = {0,0,"\0"};
+        SET_OP_ID(payload.meta,OPEN);
+        snprintf(payload.value,MAX_VAL_LENGTH,"%s",appname.c_str());
+        if (client->sendmsg_async(&payload,1UL, cb) != 0) {
+            LOG_ERROR("pmclient open");
+        }
+        return OK;
+    }
+
     int PMClient::close() {
         pm_rpc_t *response;
         pm_rpc_t payload = {0,0,"\0"};
@@ -36,6 +47,17 @@ namespace pmemdsclient {
         }
         LOG_ERROR("application close");
         return FAILED;
+    }
+
+    int PMClient::close(void (*cb)(void *)) {
+        pm_rpc_t *response;
+        pm_rpc_t payload = {0,0,"\0"};
+        SET_OP_ID(payload.meta,CLOSE);
+        snprintf(payload.value,MAX_VAL_LENGTH,"%s",this->appname.c_str());
+        if (client->sendmsg_async(&payload, 1UL, cb) != 0) {
+            LOG_ERROR("pmclient close");
+        }
+        return OK;
     }
 }
 
@@ -119,7 +141,7 @@ namespace pmemdsclient{
         //cb_ctxt->request_type = rpc_flags;
         cb_ctxt->request_id = request_id++;
         cb_ctxt->callback = cb;
-
+        int rpc_flags = 0;
         int ret;
         do{
             ret = make_rpc_async(this->dpdk_client,
@@ -128,7 +150,7 @@ namespace pmemdsclient{
                                  async_callback,
                                  (void *)cb_ctxt,
                                  core_mask,
-                                 0);
+                                 rpc_flags);
             if(ret == EMAX_INFLIGHT){
                 //sleep a bit
                 continue;

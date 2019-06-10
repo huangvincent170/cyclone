@@ -16,8 +16,14 @@ namespace pmemdsclient {
     public:
         PMClient(){};
         virtual ~PMClient(){};
+
         int open(const std::string &appname); // init transport
         int close();
+
+        int open(const std::string &appname,  void (*cb)(void *));
+        int close(void (*cb)(void *));
+
+
         virtual int sendmsg(pm_rpc_t *msg, pm_rpc_t **response, unsigned long core_mask)=0;
         virtual int sendmsg_async(pm_rpc_t *msg, unsigned long core_mask, void (*cb)(void *))=0;
     protected:

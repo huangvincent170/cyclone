@@ -72,6 +72,7 @@ typedef struct driver_args_st {
   int replicas;
   int clients;
   int partitions;
+  int buf_cap;
   void **handles;
   void operator() ()
   {
@@ -202,6 +203,7 @@ int main(int argc, const char *argv[]) {
     dargs->replicas = atoi(argv[4]);
     dargs->clients  = atoi(argv[5]);
     dargs->partitions = atoi(argv[6]);
+    dargs->buf_cap = atoi(argv[10]);
     dargs->handles = new void *[dargs->partitions];
     char fname_server[50];
     char fname_client[50];
@@ -215,7 +217,7 @@ int main(int argc, const char *argv[]) {
 					      atoi(argv[9]),
 					      fname_client,
 						  CLIENT_ASYNC,
-						  atoi(argv[10]));
+                          dargs->buf_cap);
     }
   }
   for(int me = client_id_start; me < client_id_stop; me++) {
