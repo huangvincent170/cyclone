@@ -28,7 +28,7 @@ namespace pmemdsclient {
         pm_rpc_t payload = {0,0,"\0"};
         SET_OP_ID(payload.meta,OPEN);
         snprintf(payload.value,MAX_VAL_LENGTH,"%s",appname.c_str());
-        if (client->sendmsg_async(&payload,1UL, cb) != 0) {
+        if (sendmsg_async(&payload,1UL, cb) != 0) {
             LOG_ERROR("pmclient open");
         }
         return OK;
@@ -54,7 +54,7 @@ namespace pmemdsclient {
         pm_rpc_t payload = {0,0,"\0"};
         SET_OP_ID(payload.meta,CLOSE);
         snprintf(payload.value,MAX_VAL_LENGTH,"%s",this->appname.c_str());
-        if (client->sendmsg_async(&payload, 1UL, cb) != 0) {
+        if (sendmsg_async(&payload, 1UL, cb) != 0) {
             LOG_ERROR("pmclient close");
         }
         return OK;
@@ -124,6 +124,7 @@ void async_callback(void *args, int code, unsigned long msg_latency)
 namespace pmemdsclient{
 
     DPDKPMClient::DPDKPMClient(void *clnt){
+		this->dpdk_client = clnt;
         this->request_id = 0UL;
     }
 
