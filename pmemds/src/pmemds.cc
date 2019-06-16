@@ -1,24 +1,22 @@
 #include "pmemds.h"
+#include "pmemds_log.h"
 #include "hashmap/concurrent_hash_map.hpp"
 #include "tree/btree.h"
 #include "hashmap/hashmap.h"
 #include "priority_queue/priority_queue.h"
 
-
-const std::string pmem_home =  "/dev/shm/pmemds";
-const unsigned long ds_pool_size = 1024*1024*8;
-
+const unsigned long ds_pool_size = 1024*1024*1024*1;
 
 namespace pmemds{
 
-PMStatus PMLib::open(const string& app_path) {
+int PMLib::open(const string& app_path) {
 
 	engine_map = new std::map<uint16_t ,PMEngine*>();
 	//TODO: create dir path
 	return OK;
 }
 
-PMStatus PMLib::close() {
+int PMLib::close() {
 	// free runtime state
 	std::map<uint16_t ,PMEngine*>::iterator it;
 	for(it = engine_map->begin(); it != engine_map->end();it++){
@@ -46,14 +44,22 @@ void PMLib::exec(pm_rpc_t *req,pm_rpc_t *resp){
 		uint16_t op_id  = OP_ID(req->meta);
 		uint16_t ds_id  = DS_ID(req->meta);
 
-
+	//LOG_DEBUG("data-structure type : " + std::to_string(ds_type) + " operation id : " + std::to_string(op_id) + " data-structure id : " + std::to_string(ds_id));
 	switch(op_id){
   /* open-close data-structures */	
 		case OPEN:
-			open(pmem_home);
+			if(!open(pmem_path)){
+                    SET_STATUS(resp->meta,OK);
+                }else{
+                    SET_STATUS(resp->meta,FAILED);
+                }
 			break;
 		case CLOSE:
-			close();
+			if(!close()){
+                    SET_STATUS(resp->meta,OK);
+                }else{
+                    SET_STATUS(resp->meta,FAILED);
+                }
 			break;
 	/* handle data-structure creation and deletion */
 		case CREATE_DS:
@@ -81,6 +87,7 @@ void PMLib::exec(pm_rpc_t *req,pm_rpc_t *resp){
 	/* handle data-structure local requests*/
 		default:
 			PMEngine *engine = find_ds(ds_id);
+			LOG_DEBUG("data-structure type : " + engine->engine());
 			if(engine == nullptr){
 				LOG_ERROR("cannot locate data-structure");
 				SET_STATUS(resp->meta,NOT_FOUND);
