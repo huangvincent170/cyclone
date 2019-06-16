@@ -87,11 +87,11 @@ void async_callback(void *args, int code, unsigned long msg_latency)
 {
     struct cb_st *cb_ctxt = (struct cb_st *)args;
     if(code == REP_SUCCESS){
-        //BOOST_LOG_TRIVIAL(info) << "received message " << cb_ctxt->request_id;
+        BOOST_LOG_TRIVIAL(info) << "received message " << cb_ctxt->request_id;
         cb_ctxt->request_type == UPDATE_OPERATION ? tx_wr_block_cnt++ : tx_ro_block_cnt++;
         rte_free(cb_ctxt);
     }else{
-		std::cout << "timed-out message " << cb_ctxt->request_id << std::endl;
+	std::cout << "timed-out message " << cb_ctxt->request_id << std::endl;
         exit(-1);
 
     }
@@ -137,7 +137,11 @@ namespace pmemdsclient{
     }
 
     int DPDKPMClient::sendmsg_async(pm_rpc_t *msg, unsigned long core_mask, void (*cb)(void *)) {
-
+	uint8_t ds_type = TYPE_ID(msg->meta);
+	uint16_t op_id  = OP_ID(msg->meta);
+	uint16_t ds_id  = DS_ID(msg->meta);
+	LOG_DEBUG("data-structure type : " + std::to_string(ds_type) + " operation id : " + std::to_string(op_id) + " data-structure id : " + std::to_string(ds_id));	
+	
         struct cb_st *cb_ctxt = (struct cb_st *)rte_malloc("callback_ctxt", sizeof(struct cb_st), 0);
         //cb_ctxt->request_type = rpc_flags;
         cb_ctxt->request_id = request_id++;

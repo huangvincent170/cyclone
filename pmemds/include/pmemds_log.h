@@ -1,6 +1,11 @@
 #ifndef PMEMDS_PMEMDS_LOG_H
 #define PMEMDS_PMEMDS_LOG_H
 
+#include <stdio.h>
+#include <iostream>
+#include <cstring>
+
+
 #define DEBUG 1
 
 #ifdef DEBUG
