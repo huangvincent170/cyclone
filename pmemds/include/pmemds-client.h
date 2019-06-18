@@ -24,6 +24,7 @@ namespace pmemdsclient {
         int close(void (*cb)(void *));
 
 
+
         virtual int sendmsg(pm_rpc_t *msg, pm_rpc_t **response, unsigned long core_mask)=0;
         virtual int sendmsg_async(pm_rpc_t *msg, unsigned long core_mask, void (*cb)(void *))=0;
     protected:
@@ -60,6 +61,12 @@ namespace pmemdsclient {
         virtual int create(uint8_t flags,void (*cb)(void *)){return -1;};
         virtual int close(void (*cb)(void *)){return -1;};
         virtual int remove(void (*cb)(void *)){return -1;};
+
+        /* vote benchmark specific operations */
+        int put_art(const unsigned long, std::string value,void (*cb)(void *));
+        int get_art(const unsigned long, void (*cb)(void *));
+        int vote_up(const unsigned long, void (*cb)(void *));
+        int vote_down(const unsigned long, void (*cb)(void *));
     };
 
 

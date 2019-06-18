@@ -30,6 +30,12 @@ enum opnames{
     INCREASE_PRIO,
     DECREASE_PRIO,
     GET_MAX
+
+    /* vote benchmark specific */
+    PUT_ART,
+    GET_ART,
+    VOTE_UP_ART,
+    VOTE_DOWN_ART
 };
 
 //supported data-structures

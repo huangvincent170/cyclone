@@ -66,6 +66,14 @@ class PMLib{
         int remove_ds(uint8_t ds_type,uint16_t ds_id);
 		int close_ds(uint8_t ds_type,uint16_t ds_id);
 
+		/* vote benchmark specific operations */
+		void put_art(pm_rpc_t *req, pm_rpc_t *resp);
+		void get_art(pm_rpc_t *req, pm_rpc_t *resp);
+		void vote_up(pm_rpc_t *req, pm_rpc_t *resp);
+		void vote_down(pm_rpc_t *req, pm_rpc_t *resp);
+
+
+
 		std::map<uint16_t ,PMEngine*> *engine_map; //name to data-structure mapping
 
 };

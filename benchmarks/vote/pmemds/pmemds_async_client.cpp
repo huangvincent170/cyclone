@@ -1,4 +1,3 @@
-
 #include <stdio.h>
 #include <sys/stat.h>
 #include <stdlib.h>
@@ -16,18 +15,33 @@
 #include "../../../core/logging.hpp"
 #include "../../../core/clock.hpp"
 #include "../../../core/libcyclone.hpp"
+
 #include "pmemds-client.h"
+#include "tree/btree-client.h"
+#include "../genzipf.h"
 
 
+unsigned long pmemds_keys = 1000;
+static const unsigned int write_every = 20; /* 95% reads */
+unsigned int w_every_cnt = 0;
 
 
 /* pmem structure names */
-const uint16_t btreemap_st = 0;
+static const uint16_t ART_MAP = 0;
+static const uint16_t VOTE_MAP = 1;
 
-pmemdsclient::DPDKClient *dpdkClient;
-pmemdsclient::BTreeEngine *btreeMap;
 
 int driver(void *arg);
+
+
+bool is_update(){
+    if(w_every_cnt == (write_every-1)){
+        ++w_every_cnt%write_every;
+        return true;
+    }
+    w_every_cnt++;
+    return false;
+}
 
 typedef struct driver_args_st
 {
@@ -37,6 +51,10 @@ typedef struct driver_args_st
     int replicas;
     int clients;
     int partitions;
+    int buf_cap;
+    pmemdsclient::DPDKPMClient *dpdkClient;
+    pmemdsclient::HashmapEngine *art_map;
+    pmemdsclient::HashmapEngine *vote_map;
     void **handles;
     void operator() ()
     {
@@ -54,33 +72,61 @@ int driver(void *arg)
     int clients = dargs->clients;
     int partitions = dargs->partitions;
     void **handles = dargs->handles;
-    char *buffer = new char[DISP_MAX_MSGSIZE];
+
+    pmemdsclient::DPDKPMClient *pmlib = dargs->dpdkClient;
+    pmemdsclient::HashmapEngine *art_map = dargs->art_map;
+    pmemdsclient::HashmapEngine *vote_map = dargs->art_map;
+
     //struct proposal *prop = (struct proposal *)buffer;
     srand(time(NULL));
     int ret;
     int rpc_flags;
     int my_core;
 
+
+
     unsigned  long key;
-    char* value_buffer[64];
+    char value_buffer[64];
 
-    pm_rpc_t *rpc_buf = (pm_rpc_t *)buffer;
 
-    srand(rtc_clock::current_time());
-    struct cb_st *cb_ctxt;
+    BOOST_LOG_TRIVIAL(info) << "FRAC_READ = " << ((write_every-1) * 100.00)/write_every;
 
-    dpdkClient->open("kvApp");
-    for( ; ; ){
-            double coin = ((double)rand()) / RAND_MAX;
-            if (coin > frac_read){
-                snprintf(value_buffer,64,"%ul",key);
-                btreeMap->put(key,value, nullptr);
-            }
-            else{
-                btreeMap->get(key, nullptr);
-            }
+    unsigned long keys = pmemds_keys;
+    const char *keys_env = getenv("KV_KEYS");
+    if (keys_env != NULL)
+    {
+        keys = atol(keys_env);
     }
-    dpdkClient->close();
+    BOOST_LOG_TRIVIAL(info) << "KEYS = " << keys;
+    srand(rtc_clock::current_time());
+
+    pmlib->open("voteApp",nullptr);
+    uint8_t creation_flag = 0;
+    /* create two holding structures for the app */
+    art_map->create(creation_flag,nullptr);
+    vote_map->create(creation_flag,nullptr);
+
+    /* populate article data */
+
+    for(unsigned long i; i < pmemds_keys; i++){
+        snprintf(value_buffer,64,"article_%lu, http://",key);
+        art_map->put_art(i,value_buffer, nullptr);
+    }
+
+    for( ; ; ){
+        unsigned long art_id = zipf(1.08,pmemds_keys);
+        if (is_update()){
+            snprintf(value_buffer,64,"%lu",key);
+            BOOST_LOG_TRIVIAL(info) << "vote article :" << key;
+            pmlib->vote_up(art_id,nullptr);
+        }
+        else{
+            BOOST_LOG_TRIVIAL(info) << "get article :" << key;
+            btree->get_art(art_id, nullptr);
+        }
+    }
+    btree->close(nullptr);
+    pmlib->close(nullptr);
     return 0;
 }
 
@@ -99,6 +145,7 @@ int main(int argc, const char *argv[])
     cyclone_network_init(argv[7], 1, atoi(argv[3]), 2 + client_id_stop - client_id_start);
     driver_args_t ** dargs_array =
             (driver_args_t **)malloc((client_id_stop - client_id_start) * sizeof(driver_args_t *));
+    //BOOST_LOG_TRIVIAL(info) << "no. clients: " << (client_id_stop - client_id_start);
     for (int me = client_id_start; me < client_id_stop; me++)
     {
         dargs = (driver_args_t *) malloc(sizeof(driver_args_t));
@@ -116,7 +163,9 @@ int main(int argc, const char *argv[])
         dargs->replicas = atoi(argv[4]);
         dargs->clients  = atoi(argv[5]);
         dargs->partitions = atoi(argv[6]);
+        dargs->buf_cap = atoi(argv[10]);
         dargs->handles = new void *[dargs->partitions];
+        BOOST_LOG_TRIVIAL(info) << "no. of partitions: " << dargs->partitions;
         char fname_server[50];
         char fname_client[50];
         for (int i = 0; i < dargs->partitions; i++){
@@ -129,10 +178,11 @@ int main(int argc, const char *argv[])
                                                     atoi(argv[9]),
                                                     fname_client,
                                                     CLIENT_ASYNC,
-                                                    atoi(argv[10]));
-
-           dpdkClient = new pememdsclient::DPDKClient(dargs->handles[i]);
-           btreeMap = new pmemdsclient::BTreeEngine(dpdkClient,btreemap_st,100,0UL);
+                                                    dargs->buf_cap);
+            BOOST_LOG_TRIVIAL(info) << "init dpdkclient and btree";
+            dargs->dpdkClient = new pmemdsclient::DPDKPMClient(dargs->handles[i]);
+            dargs->art_map = new pmemdsclient::HashMapEngine(dargs->dpdkClient,ART_MAP,100,1UL);
+            dargs->vote_map = new pmemdsclient::HashMapEngine(dargs->dpdkClient,VOTE_MAP,100,1UL);
         }
     }
     for (int me = client_id_start; me < client_id_stop; me++){

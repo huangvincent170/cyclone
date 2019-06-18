@@ -59,6 +59,48 @@ namespace pmemdsclient {
         }
         return OK;
     }
+
+
+
+    int PMClient::put_art(const unsigned long key, std::string value,void (*cb)(void *)){
+        pm_rpc_t payload = {0,0,"\0"};
+        SET_OP_ID(payload.meta,PUT_ART);
+        payload.key = key;
+        snprintf(payload.value,MAX_VAL_LENGTH,"%s",value.c_str());
+        if (sendmsg_async(&payload,1UL, cb) != 0) {
+            LOG_ERROR("pmclient open");
+        }
+        return OK;
+    }
+    int PMClient::get_art(const unsigned long key, void (*cb)(void *)){
+        pm_rpc_t payload = {0,0,"\0"};
+        SET_OP_ID(payload.meta,PUT_ART);
+        payload.key = key;
+        if (sendmsg_async(&payload,1UL, cb) != 0) {
+            LOG_ERROR("pmclient get article");
+        }
+        return OK;
+    }
+    int PMClient::vote_up(const unsigned long key, void (*cb)(void *)){
+        pm_rpc_t payload = {0,0,"\0"};
+        SET_OP_ID(payload.meta,VOTE_UP_ART);
+        payload.key = key;
+        if (sendmsg_async(&payload,1UL, cb) != 0) {
+            LOG_ERROR("pmclient vote up");
+        }
+        return OK;
+    }
+    int PMClient::vote_down(const unsigned long key, void (*cb)(void *)){
+        pm_rpc_t payload = {0,0,"\0"};
+        SET_OP_ID(payload.meta,VOTE_DOWN_ART);
+        payload.key = key;
+        if (sendmsg_async(&payload,1UL, cb) != 0) {
+            LOG_ERROR("pmclient vote down");
+        }
+        return OK;
+    }
+
+
 }
 
 #include "libcyclone.hpp"
