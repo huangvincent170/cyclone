@@ -125,8 +125,10 @@ int exec_rpc_internal(rpc_t *rpc,
 	}
 	LT_THROUGHPUT_END(trcekey_pipe1,1);
 	const unsigned char * user_data = (const unsigned char *)(rpc + 1);
-	int checkpoint_idx = app_callbacks.flashlog_callback
-		((const unsigned char *)rpc, len + sizeof(rpc_t), cookie);
+	//int checkpoint_idx = app_callbacks.flashlog_callback
+	//	((const unsigned char *)rpc, len + sizeof(rpc_t), cookie);
+	/* we don't use ssd based checkpoints. Hence short circuiting the callback */
+	int checkpoint_idx = cookie->log_idx;
 	if(is_multicore_rpc(rpc)) {
 		user_data += num_quorums*sizeof(unsigned int) + sizeof(ic_rdv_t);
 		len        -= (num_quorums*sizeof(unsigned int) + sizeof(ic_rdv_t));
@@ -278,8 +280,90 @@ typedef struct executor_st {
 		}
 	}
 
+#ifdef _COMMUTE
+	void issue(){
+		cookie.core_id   = tid;
+		if(client_buffer->code == RPC_REQ_KICKER) {
+			while(wal->rep == REP_UNKNOWN);
+			if(wal->rep == REP_SUCCESS &&
+					cstatus->exec_term < wal->term) {
+				cstatus->exec_term = wal->term;
+			}
+			return;
+		}
+		else if(client_buffer->code == RPC_REQ_STABLE) {
+			resp_buffer->code = RPC_REP_OK;
+			cookie.ret_value  = client_buffer + 1;
+			cookie.ret_size   = num_quorums*sizeof(unsigned int);
+			client_reply(client_buffer,
+					resp_buffer,
+					cookie.ret_value,
+					cookie.ret_size,
+					global_dpdk_context->ports + num_queues*num_quorums + tid);
+		}
+		else if(client_buffer->flags & RPC_FLAG_RO) {
+			int e = exec_rpc_internal_ro(client_buffer, wal, sz, &cookie);
+			int response_core = __builtin_ffsl(client_buffer->core_mask) - 1;
+			if(response_core == tid &&
+					wal->leader &&
+					!e &&
+					(quorums[quorum]->snapshot&1)) {
+				resp_buffer->code = RPC_REP_OK;
+				client_reply(client_buffer,
+						resp_buffer,
+						cookie.ret_value,
+						cookie.ret_size,
+						global_dpdk_context->ports +num_queues*num_quorums + tid);
+			}
+			if(!e) {
+				app_callbacks.gc_callback(&cookie);
+			}
+		}
+		else if(client_buffer->code == RPC_REQ_NODEDEL ||
+				client_buffer->code == RPC_REQ_NODEADD) {
+			while(wal->rep == REP_UNKNOWN);
+			if(wal->rep == REP_SUCCESS &&
+					cstatus->exec_term < wal->term) {
+				cstatus->exec_term = wal->term;
+			}
+			if(wal->leader &&
+					wal->rep == REP_SUCCESS &&
+					(quorums[quorum]->snapshot&1)) {
+				resp_buffer->code = RPC_REP_OK;
+				client_reply(client_buffer,
+						resp_buffer,
+						NULL,
+						0,
+						global_dpdk_context->ports +num_queues*num_quorums + tid);
+			}
+		}
+		else {
+			int e = exec_rpc_internal(client_buffer, wal, sz, &cookie, cstatus);
+			int response_core = __builtin_ffsl(client_buffer->core_mask) - 1;
+			if(response_core == tid &&
+					wal->leader &&
+					!e &&
+					(quorums[quorum]->snapshot&1)) {
+				await_quorum(client_buffer, wal->idx);
+				resp_buffer->code = RPC_REP_OK;
+				client_reply(client_buffer,
+						resp_buffer,
+						cookie.ret_value,
+						cookie.ret_size,
+						global_dpdk_context->ports +num_queues*num_quorums + tid);
+			}
+			if(!e) {
+				app_callbacks.gc_callback(&cookie);
+			}
+		}
+
+
+	}
+#endif
+
 	void operator() ()
 	{
+#ifndef _COMMUTE
 		resp_buffer = (rpc_t *)malloc(MSG_MAXSIZE);
 		unsigned long counter = 0;
 		while(true) {
@@ -306,6 +390,28 @@ typedef struct executor_st {
 				rte_pktmbuf_free(m);
 			}
 		}
+#elif
+	int 
+	assert(executor_threads > 1 && "minimum executor thread # should be 2");
+	if(!tid){ /* single issue thread */
+		while(true){
+			int e = rte_ring_sc_dequeue(to_cores[tid], (void **)&quorum);
+			if(e == 0) {
+                 while(rte_ring_sc_dequeue(to_cores[tid], (void **)&m) != 0);
+                 while(rte_ring_sc_dequeue(to_cores[tid], (void **)&client_buffer) != 0);
+                 sz = client_buffer->payload_sz;
+                 cstatus = &core_status[tid];
+                 //client_buffer->timestamp = rte_get_tsc_cycles();
+                 wal = pktadj2wal(m);
+				 issue();	
+		}
+
+	}else{ /* multiple workers */
+
+
+	}	
+
+#endif
 	}
 } executor_t;
 

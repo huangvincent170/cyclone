@@ -75,21 +75,17 @@ void (*rpc_callback_t)(const unsigned char *data,
 		       const int len,
 		       rpc_cookie_t * rpc_cookie);
 
-// Add a flashlog entry
-// Returns currently checkpointed log idx
-typedef
-int (*flashlog_callback_t)(const unsigned char *data,
-			   const int len,
-			   rpc_cookie_t *rpc_cookie);
-
 //Garbage collect return value
 typedef void (*rpc_gc_callback_t)(rpc_cookie_t *cookie);
+
+//Checking operations commutativity
+typedef void (*op_commute_callback_t)(void *incoming, void *issued);
 
 // Callbacks structure
 typedef struct rpc_callbacks_st {
   rpc_callback_t rpc_callback;
   rpc_gc_callback_t gc_callback;
-  flashlog_callback_t flashlog_callback;
+  op_commute_callback_t op_callback;
 } rpc_callbacks_t;
 
 // Init network stack
