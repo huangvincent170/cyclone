@@ -51,7 +51,8 @@ static const unsigned int MAX_ASYNC_CLIENTS = 32;
 
 static const unsigned int EMAX_INFLIGHT = 1;
 
-
+// Commute operation related constants
+static const unsigned int MAX_POOLED = 10
 
 static int core_to_quorum(int core_id)
 {
