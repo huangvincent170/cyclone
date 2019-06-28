@@ -25,8 +25,15 @@ static const int RAFT_LOG_TARGET  = 1000;
 // Client side timeouts
 static const int timeout_msec  = 1200; // Client - failure detect
 
+#ifndef __COMMUTE
 // Execution resources
 static const int executor_threads = 1;
+#else
+// Commute operation related constants
+static const unsigned int MAX_POOLED = 10;
+static const int executor_threads = 1; // should be one at all times
+static const unsigned int worker_threads = 1;
+#endif
 
 // ZMQ specific tuning
 static const int zmq_threads = 4;
@@ -51,8 +58,6 @@ static const unsigned int MAX_ASYNC_CLIENTS = 32;
 
 static const unsigned int EMAX_INFLIGHT = 1;
 
-// Commute operation related constants
-static const unsigned int MAX_POOLED = 10
 
 static int core_to_quorum(int core_id)
 {

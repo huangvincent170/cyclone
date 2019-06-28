@@ -17,6 +17,11 @@ struct rte_ring ** to_quorums;
 struct rte_ring *from_cores;
 extern core_status_t *core_status;
 
+#ifdef __COMMUTE
+struct scheduler_set_st *scheduler;
+
+#endif
+
 /** Raft callback for sending request vote message */
 static int __send_requestvote(raft_server_t* raft,
 			      void *user_data,
@@ -397,10 +402,16 @@ static int __raft_logentry_offer_batch(raft_server_t* raft,
 	    triple[0] = (void *)(unsigned long)cyclone_handle->me_quorum;
 	    triple[1] = saved_head;
 	    triple[2] = rpc;
+#ifndef
 	    if(rte_ring_mp_enqueue_bulk(to_cores[core], triple, 3) == -ENOBUFS) {
 	      BOOST_LOG_TRIVIAL(fatal) << "raft->core comm ring is full (req rw)";
 	      exit(-1);
 	    }
+#else
+		if(schedule(triple) != 0){
+			BOOST_LOG_TRIVIAL(fatal) << "operations scheduling failed";
+		}	
+#endif
 	  }
 	}
 	point = point + sizeof(rpc_t);

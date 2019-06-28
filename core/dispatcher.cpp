@@ -99,7 +99,7 @@ static int do_multicore_redezvous(rpc_cookie_t *cookie,
 	}
 	return 1;
 }
-#ifndef __COMMUTE
+
 int exec_rpc_internal(rpc_t *rpc,
 		wal_entry_t *wal,
 		int len,
@@ -167,45 +167,6 @@ int exec_rpc_internal_ro(rpc_t *rpc,
 	//LT_END(app_wr, rpc);
 	return 0;
 }
-
-#else
-
-int issue_rpc_internal(rpc_t *rpc,
-		wal_entry_t *wal,
-		int len,
-		rpc_cookie_t *cookie,
-		core_status_t *cstatus)
-{
-	init_rpc_cookie_info(cookie, rpc, wal);
-	while(wal->rep == REP_UNKNOWN);
-	if(wal->rep != REP_SUCCESS) {
-		return -1;
-	}
-	if(cstatus->exec_term < wal->term) {
-		cstatus->exec_term = wal->term;
-	}
-	//const unsigned char * user_data = (const unsigned char *)(rpc + 1);
-	int checkpoint_idx = cookie->log_idx; // short circuit app-callback.
-	/* add operation to pool */
-	
-	//cstatus->checkpoint_idx = checkpoint_idx;
-	//__sync_synchronize(); // publish core status
-	return 0;
-}
-
-int issue_rpc_internal_ro(rpc_t *rpc,
-		wal_entry_t *wal,
-		int len,
-		rpc_cookie_t *cookie)
-{
-	init_rpc_cookie_info(cookie, rpc, wal);
-	//const unsigned char * user_data = (const unsigned char *)(rpc + 1);
-	/* add operation to pool */
-	
-	return 0;
-}
-
-#endif
 
 
 
@@ -321,75 +282,12 @@ typedef struct executor_st {
 		}
 	}
 
-#ifdef _COMMUTE
-	/* wait till operations pool is empty */
-void await_empty(){
-
-}
-
-
-
-	void issue(){
-		/* here we only have one executing thread, which is thread 0. Others are just worker threads without
-		 * their own identity/context
-		 */
-
-		// the control requests are not commuting by default
-		cookie.core_id   = tid;
-		if(client_buffer->code == RPC_REQ_KICKER) {
-			while(wal->rep == REP_UNKNOWN);
-			if(wal->rep == REP_SUCCESS &&
-					cstatus->exec_term < wal->term) {
-				cstatus->exec_term = wal->term;
-			}
-			return;
-		}
-		else if(client_buffer->code == RPC_REQ_STABLE) {
-			resp_buffer->code = RPC_REP_OK;
-			cookie.ret_value  = client_buffer + 1;
-			cookie.ret_size   = num_quorums*sizeof(unsigned int);
-			client_reply(client_buffer,
-					resp_buffer,
-					cookie.ret_value,
-					cookie.ret_size,
-					global_dpdk_context->ports + num_queues*num_quorums + tid);
-		}
-		else if(client_buffer->flags & RPC_FLAG_RO) {
-			int e = issue_rpc_internal_ro(client_buffer, wal, sz, &cookie);
-			}
-		else if(client_buffer->code == RPC_REQ_NODEDEL ||
-				client_buffer->code == RPC_REQ_NODEADD) {
-			while(wal->rep == REP_UNKNOWN);
-			if(wal->rep == REP_SUCCESS &&
-					cstatus->exec_term < wal->term) {
-				cstatus->exec_term = wal->term;
-			}
-			if(wal->leader &&
-					wal->rep == REP_SUCCESS &&
-					(quorums[quorum]->snapshot&1)) {
-				resp_buffer->code = RPC_REP_OK;
-				client_reply(client_buffer,
-						resp_buffer,
-						NULL,
-						0,
-						global_dpdk_context->ports +num_queues*num_quorums + tid);
-			}
-		}
-		else {
-			int e = issue_rpc_internal(client_buffer, wal, sz, &cookie, cstatus);
-		}
-
-
-	}
-#endif
-
 	void operator() ()
 	{
-#ifndef _COMMUTE
 		resp_buffer = (rpc_t *)malloc(MSG_MAXSIZE);
 		unsigned long counter = 0;
 		while(true) {
-			int e = rte_ring_sc_dequeue(to_cores[tid], (void **)&quorum);
+			int e = rte_ring_sc_dequeue(to_cores[tid], (void **)&quorum); // quorum id (long value)
 			if(e == 0) {
 				while(rte_ring_sc_dequeue(to_cores[tid], (void **)&m) != 0);
 				while(rte_ring_sc_dequeue(to_cores[tid], (void **)&client_buffer) != 0);
@@ -409,50 +307,14 @@ void await_empty(){
 				else if(tid == (__builtin_ffsl(client_buffer->core_mask) - 1)){
 					quorums[0]->remove_inflight(client_buffer->client_id);
 				}
+#ifndef __COMMUTE
 				rte_pktmbuf_free(m);
+#else
+				wal->marked = READY_FOR_GC;
+				__sync_synchronize(); // publish
+#endif
 			}
 		}
-#elif
-	int 
-	assert(executor_threads > 1 && "minimum executor thread # should be 2");
-	if(!tid){ /* single issue thread */
-		while(true){
-			int e = rte_ring_sc_dequeue(to_cores[tid], (void **)&quorum);
-			if(e == 0) {
-                 while(rte_ring_sc_dequeue(to_cores[tid], (void **)&m) != 0);
-                 while(rte_ring_sc_dequeue(to_cores[tid], (void **)&client_buffer) != 0);
-                 sz = client_buffer->payload_sz;
-                 cstatus = &core_status[tid];
-                 //client_buffer->timestamp = rte_get_tsc_cycles();
-                 wal = pktadj2wal(m);
-				 issue();	
-		}
-
-	}else{ /* multiple workers */
-		while(true){
-		int ret = pick_op(op_set,(void **)&m);
-		if(ret == 0){
-		 app_callbacks.rpc_callback(userdata,len,cookie);			
-		 /* mark operation as retired */
-		 retire_op(op_set, );
-		
-		 if(response_core == tid &&
-					wal->leader &&
-					!e &&
-					(quorums[quorum]->snapshot&1)) {
-				resp_buffer->code = RPC_REP_OK;
-				client_reply(client_buffer,
-						resp_buffer,
-						cookie.ret_value,
-						cookie.ret_size,
-						global_dpdk_context->ports +num_queues*num_quorums + tid);
-			}	 
-		 app_callbacks.gc_callback(&cookie);
-		 rte_pktmbuf_free(m); 
-		}
-	}	
-
-#endif
 	}
 } executor_t;
 
@@ -618,7 +480,10 @@ void dispatcher_start(const char* config_cluster_path,
 		core_status[i].barrier[1] = 0;
 	}
 
-
+#ifdef __COMMUTE
+	scheduler = (struct scheduler_t *)malloc(sizeof(scheduler_t));
+	init_scheduler(scheduler);
+#endif
 	for(int i=0;i<num_quorums;i++) {
 		quorum_switch *router = new quorum_switch(&pt_cluster, &pt_quorum);
 		cyclone_setup(config_quorum_path,
@@ -632,7 +497,6 @@ void dispatcher_start(const char* config_cluster_path,
 
 	double tsc_mhz = (rte_get_tsc_hz()/1000000.0);
 	unsigned long QUORUM_TO = RAFT_QUORUM_TO*tsc_mhz;
-
 	for(int i=0;i < executor_threads;i++) {
 		executor_t *ex = new executor_t();
 		ex->tid = i;

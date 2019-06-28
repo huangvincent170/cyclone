@@ -514,10 +514,16 @@ struct cyclone_monitor {
 					triple[1] = m;
 					triple[2] = rpc;
 					cyclone_handle->add_inflight(rpc->client_id);
+#ifndef __COMMUTE
 					if(rte_ring_mp_enqueue_bulk(to_cores[core], triple, 3) == -ENOBUFS) {
 						BOOST_LOG_TRIVIAL(fatal) << "raft->core comm ring is full (req stable)";
 						exit(-1);
 					}
+#else
+					if(schedule(triple) != 0){
+						BOOST_LOG_TRIVIAL(fatal) << "operations scheduling failed";
+					}
+#endif
 				}
 				else {
 					rte_pktmbuf_free(m);
@@ -553,10 +559,16 @@ struct cyclone_monitor {
 					triple[1] = m;
 					triple[2] = rpc;
 					cyclone_handle->add_inflight(rpc->client_id);
+#ifndef __COMMUTE
 					if(rte_ring_mp_enqueue_bulk(to_cores[core], triple, 3) == -ENOBUFS) {
 						BOOST_LOG_TRIVIAL(fatal) << "raft->core comm ring is full (req ro)";
 						exit(-1);
 					}
+#else
+					if(schedule(triple) != 0){
+						BOOST_LOG_TRIVIAL(fatal) << "operations scheduling failed";
+					}
+#endif
 				}
 				else {
 					rte_pktmbuf_free(m);
