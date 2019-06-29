@@ -2,6 +2,9 @@
 #include "cyclone.hpp"
 #include "cyclone_context.hpp"
 #include "latency_tracer.hpp"
+#ifdef __COMMUTE 
+#include "scheduler.hpp"
+#endif
 
 #include <rte_ring.h>
 #include <rte_mbuf.h>
@@ -18,8 +21,7 @@ struct rte_ring *from_cores;
 extern core_status_t *core_status;
 
 #ifdef __COMMUTE
-struct scheduler_set_st *scheduler;
-
+extern scheduler_t *scheduler;
 #endif
 
 /** Raft callback for sending request vote message */
@@ -398,17 +400,18 @@ static int __raft_logentry_offer_batch(raft_server_t* raft,
 	    else if(core == (__builtin_ffsl(rpc->core_mask) - 1)) {
 	      quorums[0]->add_inflight(rpc->client_id);
 	    }
+#ifndef __COMMUTE
 	    void *triple[3];
 	    triple[0] = (void *)(unsigned long)cyclone_handle->me_quorum;
 	    triple[1] = saved_head;
 	    triple[2] = rpc;
-#ifndef
 	    if(rte_ring_mp_enqueue_bulk(to_cores[core], triple, 3) == -ENOBUFS) {
 	      BOOST_LOG_TRIVIAL(fatal) << "raft->core comm ring is full (req rw)";
 	      exit(-1);
 	    }
 #else
-		if(schedule(triple) != 0){
+		wal->marked = GC_IN_USE;
+		if(scheduler->add(cyclone_handle->me_quorum, saved_head, rpc, wal) != 0){
 			BOOST_LOG_TRIVIAL(fatal) << "operations scheduling failed";
 		}	
 #endif

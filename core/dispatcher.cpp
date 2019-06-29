@@ -18,14 +18,21 @@
 #include<libpmemobj.h>
 #include "cyclone_context.hpp"
 #include "latency_tracer.hpp"
-
+#ifdef __COMMUTE
+#include "scheduler.hpp"
+#endif
 
 dpdk_context_t * global_dpdk_context = NULL;
 extern struct rte_ring ** to_cores;
 extern struct rte_ring *from_cores;
 cyclone_t **quorums;
 core_status_t *core_status;
-static rpc_callbacks_t app_callbacks;
+//static rpc_callbacks_t app_callbacks;
+rpc_callbacks_t app_callbacks;
+#ifdef __COMMUTE
+scheduler_t *scheduler;
+#endif
+
 static void client_reply(rpc_t *req,
 		rpc_t *rep,
 		void *payload,
@@ -310,7 +317,7 @@ typedef struct executor_st {
 #ifndef __COMMUTE
 				rte_pktmbuf_free(m);
 #else
-				wal->marked = READY_FOR_GC;
+				wal->marked =GC_READY;
 				__sync_synchronize(); // publish
 #endif
 			}
@@ -481,8 +488,8 @@ void dispatcher_start(const char* config_cluster_path,
 	}
 
 #ifdef __COMMUTE
-	scheduler = (struct scheduler_t *)malloc(sizeof(scheduler_t));
-	init_scheduler(scheduler);
+	scheduler =  new scheduler_t();
+	scheduler->init();
 #endif
 	for(int i=0;i<num_quorums;i++) {
 		quorum_switch *router = new quorum_switch(&pt_cluster, &pt_quorum);

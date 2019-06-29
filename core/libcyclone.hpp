@@ -25,14 +25,16 @@ static const int RAFT_LOG_TARGET  = 1000;
 // Client side timeouts
 static const int timeout_msec  = 1200; // Client - failure detect
 
-#ifndef __COMMUTE
 // Execution resources
 static const int executor_threads = 1;
-#else
+
+#ifdef __COMMUTE
+
+static const int GC_IN_USE	= 0;
+static const int GC_READY	= 1;
+
 // Commute operation related constants
-static const unsigned int MAX_POOLED = 10;
-static const int executor_threads = 1; // should be one at all times
-static const unsigned int worker_threads = 1;
+static const unsigned int max_sched_buffer_length = 10;
 #endif
 
 // ZMQ specific tuning
@@ -85,7 +87,7 @@ void (*rpc_callback_t)(const unsigned char *data,
 typedef void (*rpc_gc_callback_t)(rpc_cookie_t *cookie);
 
 //Checking operations commutativity
-typedef void (*op_commute_callback_t)(void *incoming, void *issued);
+typedef int (*op_commute_callback_t)(void *incoming, void *issued);
 
 // Callbacks structure
 typedef struct rpc_callbacks_st {

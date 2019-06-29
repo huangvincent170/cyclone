@@ -18,6 +18,13 @@ extern "C" {
 #include "latency_tracer.hpp"
 #include <rte_cycles.h>
 
+#ifdef __COMMUTE
+#include "scheduler.hpp"
+extern rpc_callbacks_t app_callbacks;
+#endif
+
+
+
 /* Message format */
 
 typedef struct msg_st
@@ -144,6 +151,9 @@ extern struct rte_ring ** to_cores;
 extern struct rte_ring ** to_quorums;
 extern struct rte_ring *from_cores;
 extern dpdk_context_t *global_dpdk_context;
+#ifdef __COMMUTE
+extern scheduler_t  *scheduler;
+#endif
 
 struct cyclone_monitor;
 struct cyclone_st;
@@ -509,18 +519,20 @@ struct cyclone_monitor {
 				if(take_snapshot(snapshot)) {
 					rte_pktmbuf_append(m, num_quorums*sizeof(unsigned int));
 					memcpy(rpc + 1, snapshot, num_quorums*sizeof(unsigned int));
+					cyclone_handle->add_inflight(rpc->client_id);
+#ifndef __COMMUTE
 					void *triple[3];
 					triple[0] = (void *)(unsigned long)cyclone_handle->me_quorum;
 					triple[1] = m;
 					triple[2] = rpc;
-					cyclone_handle->add_inflight(rpc->client_id);
-#ifndef __COMMUTE
 					if(rte_ring_mp_enqueue_bulk(to_cores[core], triple, 3) == -ENOBUFS) {
 						BOOST_LOG_TRIVIAL(fatal) << "raft->core comm ring is full (req stable)";
 						exit(-1);
 					}
 #else
-					if(schedule(triple) != 0){
+					wal_entry_t *wal = pktadj2wal(m);
+					wal->marked = GC_IN_USE;
+					if(scheduler->add(cyclone_handle->me_quorum, m, rpc, wal) != 0){
 						BOOST_LOG_TRIVIAL(fatal) << "operations scheduling failed";
 					}
 #endif
@@ -554,18 +566,21 @@ struct cyclone_monitor {
 			}
 			if(rpc->flags & RPC_FLAG_RO) {
 				if(cyclone_handle->snapshot & 1) { // is leader
+				cyclone_handle->add_inflight(rpc->client_id);
+#ifndef __COMMUTE
 					void *triple[3];
 					triple[0] = (void *)(unsigned long)cyclone_handle->me_quorum;
 					triple[1] = m;
 					triple[2] = rpc;
-					cyclone_handle->add_inflight(rpc->client_id);
-#ifndef __COMMUTE
+
 					if(rte_ring_mp_enqueue_bulk(to_cores[core], triple, 3) == -ENOBUFS) {
 						BOOST_LOG_TRIVIAL(fatal) << "raft->core comm ring is full (req ro)";
 						exit(-1);
 					}
 #else
-					if(schedule(triple) != 0){
+					wal_entry_t *wal = pktadj2wal(m);
+					wal->marked = GC_IN_USE;
+					if(scheduler->add(cyclone_handle->me_quorum, m, rpc, wal) != 0){
 						BOOST_LOG_TRIVIAL(fatal) << "operations scheduling failed";
 					}
 #endif
@@ -753,6 +768,12 @@ struct cyclone_monitor {
 			if(available) {
 				accept(available, 0);
 			}
+#ifdef __COMMUTE
+		   scheduler->schedule(app_callbacks.op_callback);
+		   scheduler->gc();
+#endif
+
+
 			// Check for transactions
 			available = 0;
 			while(available < PKT_BURST) {
