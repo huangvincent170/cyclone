@@ -67,11 +67,9 @@ void callback(const unsigned char *data,
   */
 }
 
-int wal_callback(const unsigned char *data,
-		  const int len,
-		  rpc_cookie_t *cookie)
+int commute_callback(void *op1,void *op2)
 {
-  return cookie->log_idx;
+  return 0;
 }
 
 void gc(rpc_cookie_t *cookie)
@@ -82,7 +80,7 @@ void gc(rpc_cookie_t *cookie)
 rpc_callbacks_t rpc_callbacks =  {
   callback,
   gc,
-  wal_callback
+  commute_callback
 };
 
 int main(int argc, char *argv[])
