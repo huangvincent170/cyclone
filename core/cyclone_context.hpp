@@ -448,6 +448,7 @@ struct cyclone_monitor {
 
 	void accept(int available, int multicore)
 	{
+		//BOOST_LOG_TRIVIAL(info) << "available messages : " << available;  
 		int accepted = 0;
 		rte_mbuf *m;
 		rpc_t *rpc;
@@ -532,7 +533,7 @@ struct cyclone_monitor {
 #else
 					wal_entry_t *wal = pktadj2wal(m);
 					wal->marked = GC_IN_USE;
-					if(scheduler->add(cyclone_handle->me_quorum, m, rpc, wal) != 0){
+					if(scheduler->add(core, cyclone_handle->me_quorum, m, rpc, wal) != 0){
 						BOOST_LOG_TRIVIAL(fatal) << "operations scheduling failed";
 					}
 #endif
@@ -580,7 +581,7 @@ struct cyclone_monitor {
 #else
 					wal_entry_t *wal = pktadj2wal(m);
 					wal->marked = GC_IN_USE;
-					if(scheduler->add(cyclone_handle->me_quorum, m, rpc, wal) != 0){
+					if(scheduler->add(core, cyclone_handle->me_quorum, m, rpc, wal) != 0){
 						BOOST_LOG_TRIVIAL(fatal) << "operations scheduling failed";
 					}
 #endif

@@ -317,7 +317,7 @@ typedef struct executor_st {
 #ifndef __COMMUTE
 				rte_pktmbuf_free(m);
 #else
-				wal->marked =GC_READY;
+				wal->marked = GC_READY;
 				__sync_synchronize(); // publish
 #endif
 			}

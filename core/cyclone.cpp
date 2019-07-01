@@ -411,7 +411,7 @@ static int __raft_logentry_offer_batch(raft_server_t* raft,
 	    }
 #else
 		wal->marked = GC_IN_USE;
-		if(scheduler->add(cyclone_handle->me_quorum, saved_head, rpc, wal) != 0){
+		if(scheduler->add(core, cyclone_handle->me_quorum, saved_head, rpc, wal) != 0){
 			BOOST_LOG_TRIVIAL(fatal) << "operations scheduling failed";
 		}	
 #endif

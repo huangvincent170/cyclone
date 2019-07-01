@@ -10,6 +10,7 @@
 
 #include "libcyclone.hpp"
 #include "cyclone.hpp"
+#include "logging.hpp"
 
 static const int SCHED_BUFFER_FULL  = 1;
 static const int NON_COMMUTE = 2;
@@ -18,6 +19,7 @@ extern struct rte_ring ** to_cores;
 
 typedef struct node_st{
 	uint32_t id;
+	int to_core;
 	unsigned long me_quorum;
 	rte_mbuf *m;  // rpc and wal pointers are offset of m pointer. for each acccess
 	rpc_t *rpc;
@@ -40,7 +42,12 @@ typedef struct scheduler_st{
 
 
 int init(){
+	BOOST_LOG_TRIVIAL(info) << "shcduler starting....";
 	head = (node_t *)rte_malloc("scheduler elem",sizeof(node_t),0);
+	if(head == NULL){
+		BOOST_LOG_TRIVIAL(error) << "bad memory alloc";
+		exit(-1);
+	}
 	head->m = NULL;
 	head->rpc = NULL;
 	head->wal = NULL;
@@ -48,16 +55,20 @@ int init(){
 	head->prev = NULL;
 
 	tail = (node_t *)rte_malloc("scheduler elem",sizeof(node_t),0);
+	if(tail == NULL){
+		BOOST_LOG_TRIVIAL(error) << "bad memory alloc";
+		exit(-1);
+	}
 	tail->m = NULL;
 	tail->rpc = NULL;
 	tail->wal = NULL;
 	tail->next = NULL;
 	tail->prev = NULL;
 
-	next_schedule = NULL;
-
 	head->next = tail;
 	tail->prev = head;
+	
+	next_schedule = head;
 
 	id = 0;
 	size = 0;
@@ -85,24 +96,34 @@ int cleanup(){
 /*
  * add data operation in to our scheduling pool.
  */
-int add(unsigned long me_quorum, rte_mbuf *m, rpc_t *rpc, wal_entry_t *wal){
+int add(int to_core, unsigned long me_quorum, rte_mbuf *m, rpc_t *rpc, wal_entry_t *wal){
 	if(size == max_sched_buffer_length){
+		BOOST_LOG_TRIVIAL(error) << "schedule buffer overflow";
 		return SCHED_BUFFER_FULL;
 	}
-	node_t *head = head;
-
 	node_t *newest = (node_t *)rte_malloc("sched_node",sizeof(node_t),0);
+	if(newest == NULL){
+		BOOST_LOG_TRIVIAL(error) << "bad memory alloc";
+		exit(-1);
+	}
+
+	newest->to_core = to_core;
 	newest->me_quorum = me_quorum;	
 	newest->m = m;
 	newest->rpc = rpc;	
+	newest->wal = wal;
 	
-	node_t *recent = head->next;
-	newest->next = recent;
+	node_t *top_node = head->next;
+	newest->next = top_node;
 	newest->prev = head;
 
 	head->next = newest;
-	recent->prev = newest;
-
+	top_node->prev = newest;
+	if(next_schedule == head){
+		next_schedule = newest;  // no operations to schedule
+	}
+	//BOOST_LOG_TRIVIAL(info) << "scheduler add,  list size "<< size <<" quorum : " << me_quorum << " m :" << m << " rpc : " << rpc;
+	
 	size++;
 	return 0;
 }
@@ -113,10 +134,12 @@ int add(unsigned long me_quorum, rte_mbuf *m, rpc_t *rpc, wal_entry_t *wal){
  *  in to exeuction threads 
  */
 int schedule(op_commute_callback_t is_commute){
-	node_t *list_node = next_schedule;
-	while(list_node->prev != NULL){
-		while(list_node->next != NULL){
+	//BOOST_LOG_TRIVIAL(info) << "schdule attempt...";
+	node_t *list_node = next_schedule->next;
+	while(next_schedule != head){
+		while(list_node->next != NULL){ // tail node
 			if(!list_node->wal->marked && !is_commute(next_schedule,list_node)){
+				BOOST_LOG_TRIVIAL(info) << "scheduler return, non-commute";
 				return NON_COMMUTE;
 			}
 			list_node = list_node->next;
@@ -126,14 +149,18 @@ int schedule(op_commute_callback_t is_commute){
 		triple[0] = (void *)(unsigned long)next_schedule->me_quorum;
 		triple[1] = next_schedule->m;
 		triple[2] = next_schedule->rpc;
-		if(rte_ring_mp_enqueue_bulk(to_cores[rb_counter++%executor_threads], triple, 3) == -ENOBUFS) {
+		//if(rte_ring_mp_enqueue_bulk(to_cores[rb_counter++%executor_threads], triple, 3) == -ENOBUFS) {
+		//BOOST_LOG_TRIVIAL(info) << "scheduler enqueue , list size: " << size << " quorum : " << next_schedule->me_quorum << " m :" << next_schedule->m << " rpc : " << next_schedule->rpc;
+		if(rte_ring_mp_enqueue_bulk(to_cores[next_schedule->to_core], triple, 3) == -ENOBUFS) {
 			BOOST_LOG_TRIVIAL(fatal) << "raft->core comm ring is full (req stable)";
 			exit(-1);
 		}
 
 		next_schedule = next_schedule->prev;
-		list_node = next_schedule;
+		list_node = next_schedule->next;
 	}
+	//BOOST_LOG_TRIVIAL(info) << "schduler return.";
+	return 0;
 }
 
 /*
@@ -141,6 +168,7 @@ int schedule(op_commute_callback_t is_commute){
  *
  */
 int gc(){
+	//BOOST_LOG_TRIVIAL(info) << "gc start , list size: " << size ;
 	node_t *list_node = next_schedule->next; // most recent operation scheduled
 	while(list_node->next != NULL){
 		if(list_node->wal->marked){
@@ -154,8 +182,12 @@ int gc(){
 			rte_pktmbuf_free(del_node->m);
 			rte_free(del_node);
 			size--;
+			//BOOST_LOG_TRIVIAL(info) << "gc done , list size: " << size ;
+		}else{
+			list_node = list_node->next;
 		}
 	}
+	//BOOST_LOG_TRIVIAL(info) << "gc done , list size: " << size ;
 	return 0;
 }
 
