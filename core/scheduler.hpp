@@ -72,6 +72,7 @@ int init(){
 
 	id = 0;
 	size = 0;
+	rb_counter=0;
 	return 0;
 
 }
@@ -149,9 +150,9 @@ int schedule(op_commute_callback_t is_commute){
 		triple[0] = (void *)(unsigned long)next_schedule->me_quorum;
 		triple[1] = next_schedule->m;
 		triple[2] = next_schedule->rpc;
-		//if(rte_ring_mp_enqueue_bulk(to_cores[rb_counter++%executor_threads], triple, 3) == -ENOBUFS) {
+		if(rte_ring_mp_enqueue_bulk(to_cores[rb_counter++%executor_threads], triple, 3) == -ENOBUFS) {
 		//BOOST_LOG_TRIVIAL(info) << "scheduler enqueue , list size: " << size << " quorum : " << next_schedule->me_quorum << " m :" << next_schedule->m << " rpc : " << next_schedule->rpc;
-		if(rte_ring_mp_enqueue_bulk(to_cores[next_schedule->to_core], triple, 3) == -ENOBUFS) {
+		//if(rte_ring_mp_enqueue_bulk(to_cores[next_schedule->to_core], triple, 3) == -ENOBUFS) {
 			BOOST_LOG_TRIVIAL(fatal) << "raft->core comm ring is full (req stable)";
 			exit(-1);
 		}
