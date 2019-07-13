@@ -143,7 +143,7 @@ int exec_rpc_internal(rpc_t *rpc,
 	LT_START(trcekey_app_wr, rpc);
 	app_callbacks.rpc_callback(user_data,
 			len,
-			cookie);
+			cookie, &wal->pmdk_state);
 	LT_END(trcekey_app_wr, rpc);
 	LT_START(trcekey_other, rpc);
 	cstatus->checkpoint_idx = checkpoint_idx;
@@ -170,7 +170,7 @@ int exec_rpc_internal_ro(rpc_t *rpc,
 	//LT_START(app_wr, rpc);
 	app_callbacks.rpc_callback(user_data,
 			len,
-			cookie);
+			cookie, &wal->pmdk_state);
 	//LT_END(app_wr, rpc);
 	return 0;
 }

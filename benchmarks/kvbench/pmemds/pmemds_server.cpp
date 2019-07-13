@@ -10,6 +10,8 @@
 #include "../../../core/libcyclone.hpp"
 #include "../../../core/logging.hpp"
 #include "../../../core/clock.hpp"
+#include "libpmemobj.h"
+
 
 #include "pmemds.h"
 
@@ -17,7 +19,7 @@ pmemds::PMLib *pmlib;
 
 void callback(const unsigned char *data,
               const int len,
-              rpc_cookie_t *cookie)
+              rpc_cookie_t *cookie, unsigned long *pmdk_state)
 {
 	pm_rpc_t *request, *response;
 
@@ -27,6 +29,8 @@ void callback(const unsigned char *data,
     cookie->ret_size = sizeof(pm_rpc_t);
     response = (pm_rpc_t *)cookie->ret_value;
 
+	/* set mbuf/wal commit state as a thread local */
+	TX_SET_BLIZZARD_MBUF_COMMIT_ADDR(pmdk_state);
     request = (pm_rpc_t *) data;
     pmlib->exec(request,response);
 

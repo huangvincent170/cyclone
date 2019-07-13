@@ -49,7 +49,7 @@ static unsigned long *completions;
 
 void callback(const unsigned char *data,
 	      const int len,
-	      rpc_cookie_t *cookie)
+	      rpc_cookie_t *cookie, unsigned long *pmdk_state)
 {
   cookie->ret_value  = NULL;
   cookie->ret_size   = 0;

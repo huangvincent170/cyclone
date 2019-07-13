@@ -43,12 +43,22 @@ typedef struct cfg_change_st {
 // Comm between app core and raft core
 typedef struct wal_entry_st {
   volatile int rep;
-#ifdef __COMMUTE
-  volatile int marked; // marked for gc
-#endif
   int term;
   int idx;
   int leader;
+#ifdef __COMMUTE
+  /* garbage collection marker. The mbuf should not be gc-ed before, the completion of undo-log cleanup/commit
+   * At which point we have already makred the state_ptr in layout to structure to null.
+   */ 
+  volatile int marked;
+  /* This cacheline is likely to bounce between,
+   * 1. monitor thread and raft thread during replicaiton
+   * 2. monitor thread and executor thread during application invoke,
+   * Hence we place the external commit flag in the next cacheline
+   */ 
+  char padding[64 - 5*sizeof(int)];
+#endif
+	unsigned long  pmdk_state; //external commit state (64 bit) used by pmdk undo log commits
 } __attribute__((packed)) wal_entry_t;
 
 //////// RPC interface

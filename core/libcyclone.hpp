@@ -81,7 +81,7 @@ typedef struct rpc_cookie_st {
 typedef 
 void (*rpc_callback_t)(const unsigned char *data,
 		       const int len,
-		       rpc_cookie_t * rpc_cookie);
+		       rpc_cookie_t * rpc_cookie, unsigned long *pmdk_state);
 
 //Garbage collect return value
 typedef void (*rpc_gc_callback_t)(rpc_cookie_t *cookie);
