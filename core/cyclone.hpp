@@ -56,7 +56,7 @@ typedef struct wal_entry_st {
    * 2. monitor thread and executor thread during application invoke,
    * Hence we place the external commit flag in the next cacheline
    */ 
-  char padding[64 - 5*sizeof(int)];
+ // char padding[64 - 5*sizeof(int)];
 #endif
 	unsigned long  pmdk_state; //external commit state (64 bit) used by pmdk undo log commits
 } __attribute__((packed)) wal_entry_t;
