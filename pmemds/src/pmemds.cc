@@ -87,7 +87,7 @@ void PMLib::exec(pm_rpc_t *req,pm_rpc_t *resp){
 	/* handle data-structure local requests*/
 		default:
 			PMEngine *engine = find_ds(ds_id);
-			LOG_DEBUG("data-structure type : " + engine->engine());
+			//LOG_DEBUG("data-structure type : " + engine->engine());
 			if(engine == nullptr){
 				LOG_ERROR("cannot locate data-structure");
 				SET_STATUS(resp->meta,NOT_FOUND);
@@ -113,8 +113,10 @@ int PMLib::create_ds(uint8_t ds_type, uint16_t ds_id){
             break;
         case PRIORITY_QUEUE:
             engine = new priority_queue(path,ds_pool_size);
+            break;
 		default:
 			LOG_ERROR("Invalid DS type");
+			exit(-1);
 	}
     if(engine != nullptr) {
         engine_map->insert(std::pair<uint16_t, PMEngine *>(ds_id, engine));

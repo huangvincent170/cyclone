@@ -37,14 +37,15 @@ enum dstypes{
     SORTED_BTREE = 0,
     HASHMAP,
     PRIORITY_QUEUE,
-    VECTOR
+    VECTOR,
 };
 
 
 typedef enum {                                             // status enumeration
     FAILED = UINT8_MAX,                                           // operation failed
-    NOT_FOUND = 0,                                         // key not located
-    OK = 1 ,                                                // successful completion
+
+    OK = 0 ,                     // successful completion
+    NOT_FOUND = 1,
     INVALID_OP = 2
 } PMStatus;
 

@@ -56,7 +56,8 @@ namespace {
 
 
             art->remove();
-            votes->remove();
+            // our prio-queue is volatile still.
+            //votes->remove();
 
             testClient->close();
             delete(testClient);
