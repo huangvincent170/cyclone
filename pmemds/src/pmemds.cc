@@ -106,7 +106,7 @@ int PMLib::create_ds(uint8_t ds_type, uint16_t ds_id){
 		case SORTED_BTREE:
 			engine = new BTreeEngine( path ,ds_pool_size);
 			break;
-		case HASH_MAP:
+		case HASHMAP:
 			engine = new HashMapEngine(path,ds_pool_size);
 			break;
 		case VECTOR:

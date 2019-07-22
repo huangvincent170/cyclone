@@ -31,19 +31,6 @@ namespace pmemdsclient {
     };
 
 
-    class DPDKPMClient:public PMClient{
-    public:
-        DPDKPMClient(void *clnt);
-        ~DPDKPMClient();
-
-        int sendmsg(pm_rpc_t *msg, pm_rpc_t **response, unsigned long core_mask);
-        int sendmsg_async(pm_rpc_t *msg, unsigned long core_mask, void (*cb)(void *));
-
-    private:
-        void *dpdk_client;
-        unsigned long request_id;
-    };
-
     class PMEngine {
     protected:
         PMClient *client;
@@ -54,15 +41,17 @@ namespace pmemdsclient {
     public:
 
         virtual int create(uint8_t flags) = 0;
+
         virtual int close() = 0;
+
         virtual int remove()= 0;
 
-        virtual int create(uint8_t flags,void (*cb)(void *)){return -1;};
-        virtual int close(void (*cb)(void *)){return -1;};
-        virtual int remove(void (*cb)(void *)){return -1;};
+        virtual int create(uint8_t flags, void (*cb)(void *)) { return -1; };
+
+        virtual int close(void (*cb)(void *)) { return -1; };
+
+        virtual int remove(void (*cb)(void *)) { return -1; };
     };
-
-
 
 }
 #endif

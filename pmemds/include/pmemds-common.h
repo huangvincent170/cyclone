@@ -35,7 +35,7 @@ enum opnames{
 //supported data-structures
 enum dstypes{
     SORTED_BTREE = 0,
-    HASH_MAP,
+    HASHMAP,
     PRIORITY_QUEUE,
     VECTOR
 };

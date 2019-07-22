@@ -3,12 +3,14 @@
  */
 
 #include <string>
+#include <pmemds.h>
 
 #include "../include/pmemds-client.h"
 #include "../include/pmemds-common.h"
 #include "../include/tree/btree-client.h"
 #include "../include/priority_queue/priority_queue-client.h"
 #include "gtest/gtest.h"
+#include "test_client.h"
 
 
 namespace {
@@ -22,8 +24,9 @@ namespace {
            before each test). */
         void SetUp() override {
 
+            const std::string pmem_path = "/dev/shm/pmemds";
             /* server side data-structure creation */
-            pmemds::PMLib *pmLib = new pmemds::PMLib();
+            pmemds::PMLib *pmLib = new pmemds::PMLib(pmem_path);
 
             testClient = new pmemdsclient::TestClient(pmLib,&request,&response);
             testClient->open("testApp");
