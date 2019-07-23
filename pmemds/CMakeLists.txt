@@ -20,7 +20,7 @@ include_directories("../core")
 
 #link dirs
 #link_directories(/home/pradeep/blizzard/pmdk/src/nondebug)
-link_directories(../../pmdk/src/debug)
+link_directories(../pmdk/src/nondebug)
 
 
 set(SERVERLIB_SOURCE_FILES
