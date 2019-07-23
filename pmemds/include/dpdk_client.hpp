@@ -1,8 +1,8 @@
 #ifndef PMEMDS_DPDK_CLIENT_HPP
 #define PMEMDS_DPDK_CLIENT_HPP
+#include "pmemds-client.h"
 
-
-namespace pmdsclient {
+namespace pmemdsclient {
 
     class DPDKPMClient : public PMClient {
     public:

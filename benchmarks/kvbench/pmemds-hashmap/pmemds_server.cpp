@@ -15,6 +15,7 @@
 
 #include "pmemds.h"
 
+static const std::string pmem_path = "/mnt/pmem1/pmemds";
 pmemds::PMLib *pmlib;
 
 void callback(const unsigned char *data,
@@ -30,17 +31,15 @@ void callback(const unsigned char *data,
     response = (pm_rpc_t *)cookie->ret_value;
 
 	/* set mbuf/wal commit state as a thread local */
-	TX_SET_BLIZZARD_MBUF_COMMIT_ADDR(pmdk_state);
+	//TX_SET_BLIZZARD_MBUF_COMMIT_ADDR(pmdk_state);
     request = (pm_rpc_t *) data;
     pmlib->exec(request,response);
 
 }
 
-int commute_callback(const unsigned char *data,
-                 const int len,
-                 rpc_cookie_t *cookie)
+int commute_callback(void *op1, void *op2)
 {
-    return cookie->log_idx;
+    return 0;
 }
 
 
@@ -53,12 +52,13 @@ rpc_callbacks_t rpc_callbacks =
         {
                 callback,
                 gc,
-                wal_callback
+                commute_callback
         };
 
 
 int main(int argc, char *argv[])
 {
+
     if (argc != 7)
     {
         printf("Usage1: %s replica_id replica_mc clients cluster_config quorum_config ports\n", argv[0]);
@@ -71,7 +71,7 @@ int main(int argc, char *argv[])
                          atoi(argv[6]) + num_queues * num_quorums + executor_threads);
 
     assert(pmlib == NULL);
-    pmlib = new pmemds::PMLib();
+    pmlib = new pmemds::PMLib(pmem_path);
     if (pmlib == nullptr)
     {
         BOOST_LOG_TRIVIAL(fatal) << "cannot open pmemds";

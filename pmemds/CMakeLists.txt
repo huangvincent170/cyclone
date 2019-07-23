@@ -12,7 +12,7 @@ set(CMAKE_VERBOSE_MAKEFILE ON)
 set(RTE_CSDK /home/pfernando/dpdk)
 
 
-#include_directories(../libpmemobj-cpp/include)
+include_directories(../libpmemobj-cpp/include)
 include_directories(../pmdk/src/include)
 include_directories(${RTE_CSDK}/x86_64-native-linuxapp-gcc/include)
 include_directories(include)
@@ -31,6 +31,7 @@ set(SERVERLIB_SOURCE_FILES
 
 set(CLIENTLIB_SOURCE_FILES
         src/pmemds-client.cc
+        src/dpdk_client.cc
         src/tree/btree-client.cc
         src/hashmap/hashmap-client.cc
         src/priority_queue/priority_queue-client.cc)
@@ -43,9 +44,9 @@ set(CLIENTLIB_TEST_SOURCE_FILES
 
 add_library(pmemds STATIC ${SERVERLIB_SOURCE_FILES})
 
-#add_library(pmemds-client STATIC ${CLIENTLIB_SOURCE_FILES})
+add_library(pmemds-client STATIC ${CLIENTLIB_SOURCE_FILES})
 
-add_library(pmemds-client STATIC ${CLIENTLIB_TEST_SOURCE_FILES})
+#add_library(pmemds-test STATIC ${CLIENTLIB_TEST_SOURCE_FILES})
 
 # ---[ CTest
 include(CTest)
