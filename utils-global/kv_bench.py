@@ -2,10 +2,6 @@
 import argparse
 from commonbench import *
 
-
-
-
-
 #workloads
 echo = 'echo'
 pmemkv = 'pmemkv'
@@ -14,6 +10,7 @@ volatile_pmemkv = 'volatile_pmemkv'
 volatile_pmemkv_ncc = 'volatile_pmemkv_ncc'
 rocksdb = 'rocksdb'
 pmemds = 'pmemds'
+hashmap = 'hashmap'
 
 
 wl=[]
@@ -25,6 +22,7 @@ wl.append(volatile_pmemkv)
 wl.append(volatile_pmemkv_ncc)
 wl.append(rocksdb)
 wl.append(pmemds)
+wl.append(hashmap)
 
 wl.append(empty)
 
