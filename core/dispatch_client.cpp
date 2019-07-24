@@ -449,9 +449,9 @@ int exec(){
 			 * when the seq get wrapped around at the ulong_max. But, there is no correctness issue and we are 
 			 * unlikely hit it as a performance issue during benchmark runs */
 			for(it = clnt->pendresponse_map->begin(); it != clnt->pendresponse_map->end(); it++){	
-				if(rtc_clock::current_time() - it->second->timestamp >= timeout_msec){
+				if(rtc_clock::current_time() - it->second->timestamp >= async_timeout_msec){
 						//BOOST_LOG_TRIVIAL(info) << "Message removed : " << it->first;
-						it->second->cb(it->second->cb_args, REP_TIMEDOUT,timeout_msec); 
+						it->second->cb(it->second->cb_args, REP_TIMEDOUT,async_timeout_msec); 
 						rte_free(it->second);
 						clnt->pendresponse_map->erase(it);
 						clnt->sub_inflight();
