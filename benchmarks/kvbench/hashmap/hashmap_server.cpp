@@ -23,7 +23,7 @@ void callback(const unsigned char *data,
               rpc_cookie_t *cookie, unsigned long *pmdk_state)
 {
 	pm_rpc_t *request, *response;
-
+	BOOST_LOG_TRIVIAL(info) << "app callback start";
     //cookie->ret_value = &response; //TODO: works only for one execution thread
     assert((sizeof(pm_rpc_t) == len) && "wrong payload length");
     cookie->ret_value = malloc(sizeof(pm_rpc_t));
@@ -34,12 +34,28 @@ void callback(const unsigned char *data,
 	//TX_SET_BLIZZARD_MBUF_COMMIT_ADDR(pmdk_state);
     request = (pm_rpc_t *) data;
     pmlib->exec(request,response);
+	BOOST_LOG_TRIVIAL(info) << "app callback end";
 
 }
 
-int commute_callback(void *op1, void *op2)
+int commute_callback(unsigned long cmask1, void *arg1, unsigned long cmask2, void *arg2)
 {
-    return 0;
+	pm_rpc_t *op1 = (pm_rpc_t *) arg1;
+	pm_rpc_t *op2 = (pm_rpc_t *) arg2;
+
+    /* this is the signle partition data-structure. So we ignore partitions */
+	unsigned int op1_id = OP_ID(op1->meta);
+	unsigned int op2_id = OP_ID(op2->meta);
+	/* the key inserts and reads can operate in parallel as long as they do
+	 * not operate on the same key.
+	 */ 
+	if( (op1_id == PUT || op1_id == GET) &&
+			(op2_id == PUT || op2_id == GET) ){
+		if(op1->key != op2->key){
+			return 1;
+		}
+	}
+	return 0;
 }
 
 

@@ -26,7 +26,7 @@ static const int RAFT_LOG_TARGET  = 1000;
 static const int timeout_msec  = 1200; // Client - failure detect
 
 // Execution resources
-static const int executor_threads = 1;
+static const int executor_threads = 2;
 
 #ifdef __COMMUTE
 
@@ -87,7 +87,7 @@ void (*rpc_callback_t)(const unsigned char *data,
 typedef void (*rpc_gc_callback_t)(rpc_cookie_t *cookie);
 
 //Checking operations commutativity
-typedef int (*op_commute_callback_t)(void *incoming, void *issued);
+typedef int (*op_commute_callback_t)(unsigned long cmask1, void *incoming, unsigned long cmask2, void *issued);
 
 // Callbacks structure
 typedef struct rpc_callbacks_st {

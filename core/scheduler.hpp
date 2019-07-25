@@ -21,7 +21,7 @@ typedef struct node_st{
 	uint32_t id;
 	int to_core;
 	unsigned long me_quorum;
-	rte_mbuf *m;  // rpc and wal pointers are offset of m pointer. for each acccess
+	rte_mbuf *m;  // rpc and wal pointers are offset of m pointer
 	rpc_t *rpc;
 	wal_entry_t *wal;
 	struct node_st *next;
@@ -139,7 +139,10 @@ int schedule(op_commute_callback_t is_commute){
 	node_t *list_node = next_schedule->next;
 	while(next_schedule != head){
 		while(list_node->next != NULL){ // tail node
-			if(!list_node->wal->marked && !is_commute(next_schedule,list_node)){
+			void *next_op = (void *)(next_schedule->rpc+1);
+			void *list_op = (void *)(list_node->rpc+1);
+			if(!list_node->wal->marked && !is_commute(next_schedule->rpc->core_mask, next_op, 
+						list_node->rpc->core_mask, list_op)){
 				BOOST_LOG_TRIVIAL(info) << "scheduler return, non-commute";
 				return NON_COMMUTE;
 			}
