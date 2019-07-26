@@ -24,11 +24,11 @@ static const int RAFT_LOG_TARGET  = 1000;
 
 // Client side timeouts
 static const int timeout_msec  = 1200; // Client - failure detect
-
+#ifndef __COMMUTE
 // Execution resources
+static const int executor_threads = 1;
+#else
 static const int executor_threads = 2;
-
-#ifdef __COMMUTE
 
 static const int GC_IN_USE	= 0;
 static const int GC_READY	= 1;
