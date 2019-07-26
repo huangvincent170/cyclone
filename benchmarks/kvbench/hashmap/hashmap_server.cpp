@@ -23,8 +23,6 @@ void callback(const unsigned char *data,
               rpc_cookie_t *cookie, unsigned long *pmdk_state)
 {
 	pm_rpc_t *request, *response;
-	BOOST_LOG_TRIVIAL(info) << "app callback start";
-    //cookie->ret_value = &response; //TODO: works only for one execution thread
     assert((sizeof(pm_rpc_t) == len) && "wrong payload length");
     cookie->ret_value = malloc(sizeof(pm_rpc_t));
     cookie->ret_size = sizeof(pm_rpc_t);
@@ -34,8 +32,6 @@ void callback(const unsigned char *data,
 	//TX_SET_BLIZZARD_MBUF_COMMIT_ADDR(pmdk_state);
     request = (pm_rpc_t *) data;
     pmlib->exec(request,response);
-	BOOST_LOG_TRIVIAL(info) << "app callback end";
-
 }
 
 int commute_callback(unsigned long cmask1, void *arg1, unsigned long cmask2, void *arg2)
@@ -64,17 +60,14 @@ void gc(rpc_cookie_t *cookie)
     free(cookie->ret_value);
 }
 
-rpc_callbacks_t rpc_callbacks =
-        {
-                callback,
-                gc,
-                commute_callback
-        };
+rpc_callbacks_t rpc_callbacks = { callback,
+								  gc,
+								  commute_callback
+								};
 
 
 int main(int argc, char *argv[])
 {
-
     if (argc != 7)
     {
         printf("Usage1: %s replica_id replica_mc clients cluster_config quorum_config ports\n", argv[0]);
@@ -100,6 +93,5 @@ int main(int argc, char *argv[])
                      server_id,
                      atoi(argv[2]),
                      atoi(argv[3]));
-
 }
 
