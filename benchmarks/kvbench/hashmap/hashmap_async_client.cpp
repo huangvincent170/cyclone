@@ -97,11 +97,11 @@ int driver(void *arg)
 		unsigned long key = rand() % keys;
 		if (coin > frac_read){
 			snprintf(value_buffer,64,"%lu",key);
-			BOOST_LOG_TRIVIAL(info) << "put op :" << key;
+			//BOOST_LOG_TRIVIAL(info) << "put op :" << key;
 			hashMap->put(key,value_buffer, nullptr);
 		}
 		else{
-			BOOST_LOG_TRIVIAL(info) << "get op :" << key;
+			//BOOST_LOG_TRIVIAL(info) << "get op :" << key;
 			hashMap->get(key, nullptr);
 		}
 	}
