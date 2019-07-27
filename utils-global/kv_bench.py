@@ -39,6 +39,7 @@ parser.add_argument('-w', dest='workload', default=empty , help='workload name, 
 parser.add_argument('-m', dest='memtype', default=empty , help='memory type', choices=ml)
 parser.add_argument('-b', dest='bufsize', default=empty , help='inflight buffer size')
 parser.add_argument('-rep', dest='replicas', default=empty , help='number of replicas', choices=rl)
+parser.add_argument('-commute', dest='is_commute', action='store_true', default=False , help='number of replicas')
 
 try:
     args = parser.parse_args()
