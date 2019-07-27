@@ -143,7 +143,7 @@ int schedule(op_commute_callback_t is_commute){
 			void *list_op = (void *)(list_node->rpc+1);
 			if(!list_node->wal->marked && !is_commute(next_schedule->rpc->core_mask, next_op, 
 						list_node->rpc->core_mask, list_op)){
-				BOOST_LOG_TRIVIAL(info) << "scheduler return, non-commute";
+				//BOOST_LOG_TRIVIAL(info) << "scheduler return, non-commute";
 				return NON_COMMUTE;
 			}
 			list_node = list_node->next;
