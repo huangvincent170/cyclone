@@ -3,6 +3,7 @@
 
 #include "../pmemds.h"
 #include "pstring.h"
+#define LIBPMEMOBJ_CPP_USE_TBB_RW_MUTEX 1
 #include "concurrent_hash_map.hpp"
 
 

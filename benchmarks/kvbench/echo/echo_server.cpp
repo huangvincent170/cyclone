@@ -56,20 +56,11 @@ void callback(const unsigned char *data,
   cookie->ret_value  = malloc(len);
   cookie->ret_size   = len;
   memcpy(cookie->ret_value, data, len);
-  /*
-  if((++completions[cookie->core_id]) >= 1000000) {
-    BOOST_LOG_TRIVIAL(info) << "Completion rate = "
-			    << ((double)completions[cookie->core_id])
-      /(rtc_clock::current_time() - marks[cookie->core_id]);
-    completions[cookie->core_id] = 0;
-    marks[cookie->core_id] = rtc_clock::current_time();
-  }
-  */
 }
 
-int commute_callback(void *op1,void *op2)
+int commute_callback(unsigned long cmask1, void *op1, unsigned long cmask2, void *op2)
 {
-  return 0;
+  return 1; // parallel
 }
 
 void gc(rpc_cookie_t *cookie)

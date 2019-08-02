@@ -172,7 +172,6 @@ int schedule(op_commute_callback_t is_commute){
  *
  */
 int gc(){
-	//BOOST_LOG_TRIVIAL(info) << "gc start , list size: " << size ;
 	node_t *list_node = next_schedule->next; // most recent operation scheduled
 	while(list_node->next != NULL){
 		if(list_node->wal->marked){
@@ -183,7 +182,7 @@ int gc(){
 			list_node = list_node->next;
 			list_node->prev = prev_node;
 
-			rte_pktmbuf_free(del_node->m);
+			rte_pktmbuf_free(del_node->m); //TODO: persistent pointer from volatile structure. Must revisit
 			rte_free(del_node);
 			size--;
 			//BOOST_LOG_TRIVIAL(info) << "gc done , list size: " << size ;
