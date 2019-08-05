@@ -18,7 +18,7 @@ namespace {
         /* Code here will be called immediately after the constructor (right
            before each test). */
         void SetUp() override {
-            const std::string pmem_path = "/dev/shm/pmemds";
+            const std::string pmem_path = "/dev/shm/pmemds_test";
             /* server side data-structure creation */
             pmLib = new pmemds::PMLib(pmem_path);
 
@@ -41,7 +41,7 @@ namespace {
 
 
     };
-
+/*
     TEST_F(pmemdsHashMapTest, BasicHashMapRWTest) {
         pmemdsclient::HashMapEngine *hm = new pmemdsclient::HashMapEngine(testClient, hashmap1, 1024 * 1024 * 8, 0UL);
 
@@ -104,21 +104,49 @@ namespace {
 
         ASSERT_EQ(hm->close(), OK);
         ASSERT_EQ(hm->remove(), OK);
+    }*/
+
+
+
+    static void hashmap_bench(void *engine, thread_state_t *th_state){
+        pmemdsclient::HashMapEngine *hm = (pmemdsclient::HashMapEngine *) engine;
+        int keys = 10000;
+        for(int i = 0; i < keys*100; i++){
+            //coin = ((double)rand()) / RAND_MAX;
+            unsigned long key = th_state->rand.Next() % keys;
+            std::string str = "ts_" + std::to_string(key);
+            ASSERT_EQ(hm->put(key, str.c_str()), OK);
+            th_state->stats.nops_++;
+        }
     }
 
 
-
-    static void hashmap_bench(void *engine, thread_arg_t *th_arg, thread_state_t *th_state){
-
-
-    }
-
-
-    TEST_F(pmemdsHashMapTest, ConcurrentHashMapTest) {
-        pmemdsclient::HashMapEngine *hm = new pmemdsclient::HashMapEngine(testClient, hashmap1, 1024 * 1024 * 8, 0UL);
+    TEST_F(pmemdsHashMapTest, OneConcurrentHashMapTest) {
+        pmemdsclient::HashMapEngine *hm =
+                new pmemdsclient::HashMapEngine(testClient, hashmap1, 1024 * 1024 * 8, 0UL);
         ASSERT_EQ(hm->create(PM_CREAT), OK);
         Benchmark *benchmark = new Benchmark();
-        benchmark->run(2, hashmap_bench);
+        benchmark->run(1,(void*)hm ,hashmap_bench);
+        ASSERT_EQ(hm->close(), OK);
+        ASSERT_EQ(hm->remove(), OK);
+    }
+
+    TEST_F(pmemdsHashMapTest, TwoConcurrentHashMapTest) {
+        pmemdsclient::HashMapEngine *hm =
+                new pmemdsclient::HashMapEngine(testClient, hashmap1, 1024 * 1024 * 8, 0UL);
+        ASSERT_EQ(hm->create(PM_CREAT), OK);
+        Benchmark *benchmark = new Benchmark();
+        benchmark->run(2,(void*)hm ,hashmap_bench);
+        ASSERT_EQ(hm->close(), OK);
+        ASSERT_EQ(hm->remove(), OK);
+    }
+
+    TEST_F(pmemdsHashMapTest, ThreeConcurrentHashMapTest) {
+        pmemdsclient::HashMapEngine *hm =
+                new pmemdsclient::HashMapEngine(testClient, hashmap1, 1024 * 1024 * 8, 0UL);
+        ASSERT_EQ(hm->create(PM_CREAT), OK);
+        Benchmark *benchmark = new Benchmark();
+        benchmark->run(3,(void*)hm ,hashmap_bench);
         ASSERT_EQ(hm->close(), OK);
         ASSERT_EQ(hm->remove(), OK);
     }
