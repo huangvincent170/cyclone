@@ -38,10 +38,12 @@ namespace pmemds {
         std::string in_val;
         switch (op_name){
             case GET:
+				LOG("Get op : " << in_key);
                 this->get(in_key,resp);
                 break;
             case PUT:
                 in_val = std::string(req->value);
+				LOG("Put op : " << in_key << in_val);
                 this->put(in_key,in_val,resp);
                 break;
             default:
