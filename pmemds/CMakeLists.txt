@@ -7,9 +7,13 @@ set(CMAKE_CXX_FLAGS "-g -fPIC -Wall")
 add_definitions(-DDPDK_STACK
    -march=native -DRTE_MACHINE_CPUFLAG_SSE -DRTE_MACHINE_CPUFLAG_SSE2 -DRTE_MACHINE_CPUFLAG_SSE3 -DRTE_MACHINE_CPUFLAG_SSSE3 -DRTE_MACHINE_CPUFLAG_SSE4_1 -DRTE_MACHINE_CPUFLAG_SSE4_2 -DRTE_MACHINE_CPUFLAG_AES -DRTE_MACHINE_CPUFLAG_PCLMULQDQ -DRTE_MACHINE_CPUFLAG_AVX)
 
+set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${CMAKE_SOURCE_DIR}/cmake)
 
 set(CMAKE_VERBOSE_MAKEFILE ON)
 set(RTE_CSDK /home/pfernando/dpdk)
+
+
+find_package(PkgConfig QUIET)
 
 
 include_directories(../libpmemobj-cpp/include)
@@ -18,6 +22,9 @@ include_directories(${RTE_CSDK}/x86_64-native-linuxapp-gcc/include)
 include_directories(include)
 include_directories("../core")
 
+#intel thread building blocks used by concurrent hashmap
+include(tbb)
+list(APPEND PKG_CONFIG_REQUIRES tbb)
 #link dirs
 #link_directories(/home/pradeep/blizzard/pmdk/src/nondebug)
 link_directories(../pmdk/src/nondebug)
@@ -43,6 +50,7 @@ set(CLIENTLIB_TEST_SOURCE_FILES
         src/priority_queue/priority_queue-client.cc)
 
 add_library(pmemds STATIC ${SERVERLIB_SOURCE_FILES})
+target_link_libraries(pmemds PRIVATE ${TBB_LIBRARIES})
 
 add_library(pmemds-client STATIC ${CLIENTLIB_SOURCE_FILES})
 

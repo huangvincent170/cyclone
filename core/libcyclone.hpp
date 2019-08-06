@@ -34,7 +34,7 @@ static const int GC_IN_USE	= 0;
 static const int GC_READY	= 1;
 
 // Commute operation related constants
-static const unsigned int max_sched_buffer_length = 10;
+static const unsigned int max_sched_buffer_length = 64;
 #endif
 
 // ZMQ specific tuning

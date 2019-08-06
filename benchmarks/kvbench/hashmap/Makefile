@@ -15,7 +15,7 @@ PMEMDSCLIENT_LIBS=../../../pmemds/bin/libpmemds-client.a
 
 
 hashmap_server:hashmap_server.cpp
-	$(CXX) $(CXXFLAGS) $(PMEMDS_CXXFLAGS) hashmap_server.cpp $(BOOST_THREAD_LIB) $(PMEMDS_LIBS) $(SERVER_LIBS) -o $@
+	$(CXX) $(CXXFLAGS) $(PMEMDS_CXXFLAGS) hashmap_server.cpp $(BOOST_THREAD_LIB) $(PMEMDS_LIBS) $(SERVER_LIBS) -ltbb -o $@
 
 hashmap_client:hashmap_client.cpp
 	$(CXX) $(CLIENT_CXXFLAGS) hashmap_client.cpp $(BOOST_THREAD_LIB) $(CLIENT_LIBS) -o $@
