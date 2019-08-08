@@ -56,8 +56,9 @@ void merge(stats_t &prime, const stats_t &other) {
 
 void report(stats_t &merged_stats) {
     unsigned long elapsed_time = merged_stats.finish_ - merged_stats.start_;
-    fprintf(stdout, "stats : %.0f ops/sec\n",
-            (double)(merged_stats.nops_ * 1e+6)/ elapsed_time);
+    fprintf(stdout, "stats : %.0f ops/sec, %f us/op\n",
+            (double)(merged_stats.nops_ * 1e+6)/ elapsed_time,
+            elapsed_time/(double)merged_stats.nops_ );
 
     fflush(stdout);
 }
