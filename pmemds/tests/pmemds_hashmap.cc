@@ -18,7 +18,8 @@ namespace {
         /* Code here will be called immediately after the constructor (right
            before each test). */
         void SetUp() override {
-            const std::string pmem_path = "/dev/shm/pmemds_test";
+            //const std::string pmem_path = "/dev/shm/pmemds_test";
+            const std::string pmem_path = "/mnt/pmem1/pmemds_test";
             /* server side data-structure creation */
             pmLib = new pmemds::PMLib(pmem_path);
 
