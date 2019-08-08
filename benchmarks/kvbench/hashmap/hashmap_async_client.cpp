@@ -20,7 +20,7 @@
 #include "hashmap/hashmap-client.h"
 
 /* IMPORTANT - set to large enough value */
-unsigned long pmemds_keys = 1000;
+unsigned long pmemds_keys = 1000000;
 
 /* pmem structure names */
 const uint16_t hashmap_st = 0;
@@ -68,7 +68,7 @@ int driver(void *arg)
 	unsigned  long key;
 	char value_buffer[64];
 
-	double frac_read = 0.5;
+	double frac_read = 0.2;
 	const char *frac_read_env = getenv("KV_FRAC_READ");
 	if (frac_read_env != NULL)
 	{
@@ -92,11 +92,12 @@ int driver(void *arg)
 	pmlib->open("kvApp",nullptr);
 	uint8_t creation_flag = 0;
 	hashMap->create(creation_flag,nullptr);
+	//for(int i=0 ;i<10000 ;i++ ){
 	for( ; ; ){
 		double coin = ((double)rand()) / RAND_MAX;
 		unsigned long key = rand() % keys;
 		if (coin > frac_read){
-			snprintf(value_buffer,64,"%lu",key);
+			snprintf(value_buffer,MAX_VAL_LENGTH,"v_%lu",key);
 			//BOOST_LOG_TRIVIAL(info) << "put op :" << key;
 			hashMap->put(key,value_buffer, nullptr);
 		}

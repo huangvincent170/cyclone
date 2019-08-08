@@ -533,9 +533,12 @@ struct cyclone_monitor {
 #else
 					wal_entry_t *wal = pktadj2wal(m);
 					wal->marked = GC_IN_USE;
+					while(scheduler->add(core, cyclone_handle->me_quorum, m, rpc, wal) != 0);
+/*
 					if(scheduler->add(core, cyclone_handle->me_quorum, m, rpc, wal) != 0){
-						BOOST_LOG_TRIVIAL(fatal) << "operations scheduling failed";
+						BOOST_LOG_TRIVIAL(fatal) << "cyclone_context.cpp:537 operations scheduling failed";
 					}
+*/
 #endif
 				}
 				else {
@@ -581,9 +584,12 @@ struct cyclone_monitor {
 #else
 					wal_entry_t *wal = pktadj2wal(m);
 					wal->marked = GC_IN_USE;
+					while(scheduler->add(core, cyclone_handle->me_quorum, m, rpc, wal) != 0);
+/*
 					if(scheduler->add(core, cyclone_handle->me_quorum, m, rpc, wal) != 0){
-						BOOST_LOG_TRIVIAL(fatal) << "operations scheduling failed";
+						BOOST_LOG_TRIVIAL(fatal) << "cyclone_context.cpp:585 operations scheduling failed";
 					}
+*/
 #endif
 				}
 				else {

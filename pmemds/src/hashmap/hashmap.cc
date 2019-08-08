@@ -8,6 +8,9 @@
 #define DO_LOG 0
 #define LOG(msg) if (DO_LOG) std::cout << "[hashmap] " << msg << "\n"
 
+/// operation are echoed back. Zero-overhead hashmap
+#define ECHO_HASHMAP 0
+
 using pmem::obj::make_persistent_atomic;
 using pmem::obj::transaction;
 using pmem::detail::conditional_add_to_tx;
@@ -61,6 +64,10 @@ namespace pmemds {
 
 
     void HashMapEngine::get(const unsigned long key, pm_rpc_t *resp) {
+#ifdef ECHO_HASHMAP
+        SET_STATUS(resp->meta,OK);
+        snprintf(resp->value,MAX_VAL_LENGTH, "val_%lu",key);
+#elif
         LOG("get key= " << key);
         hashmap_type::const_accessor result;
         bool found = my_hashmap->find(result, key);
@@ -71,10 +78,13 @@ namespace pmemds {
         }
         SET_STATUS(resp->meta,OK);
         snprintf(resp->value,MAX_VAL_LENGTH, "%s",result->second.c_str());
-
+#endif
     }
 
     void HashMapEngine::put(const unsigned long key, const string &value, pm_rpc_t *resp) {
+#ifdef ECHO_HASHMAP
+        SET_STATUS(resp->meta,OK);
+#elif
         LOG("Put key=" << key << ", value.size=" << to_string(value.size()));
 
         hashmap_type::accessor acc;
@@ -87,6 +97,7 @@ namespace pmemds {
             pmem::obj::transaction::commit();
         }
         SET_STATUS(resp->meta,OK);
+#endif
     }
 
     void HashMapEngine::remove(const unsigned long key, pm_rpc_t *resp) {

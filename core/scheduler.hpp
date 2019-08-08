@@ -99,7 +99,6 @@ int cleanup(){
  */
 int add(int to_core, unsigned long me_quorum, rte_mbuf *m, rpc_t *rpc, wal_entry_t *wal){
 	if(size == max_sched_buffer_length){
-		BOOST_LOG_TRIVIAL(error) << "schedule buffer overflow";
 		return SCHED_BUFFER_FULL;
 	}
 	node_t *newest = (node_t *)rte_malloc("sched_node",sizeof(node_t),0);
@@ -144,7 +143,8 @@ int schedule(op_commute_callback_t is_commute){
 			if(!list_node->wal->marked && !is_commute(next_schedule->rpc->core_mask, next_op, 
 						list_node->rpc->core_mask, list_op)){
 //	BOOST_LOG_TRIVIAL(info) << "scheduler return, non-commute, " 
-//					<< "makred for gc : " << list_node->wal->marked;
+//					<< " makred for gc : " << list_node->wal->marked
+//					<< " buffer size : " << size;
 				return NON_COMMUTE;
 			}
 			list_node = list_node->next;
@@ -159,7 +159,7 @@ int schedule(op_commute_callback_t is_commute){
 			BOOST_LOG_TRIVIAL(fatal) << "raft->core comm ring is full (req stable)";
 			exit(-1);
 		}
-	//	BOOST_LOG_TRIVIAL(info) << "scheduler enqueue , list size: " << size << " quorum : " << next_schedule->me_quorum << " m :" << next_schedule->m << " rpc : " << next_schedule->rpc;
+//	BOOST_LOG_TRIVIAL(info) << "scheduler enqueue , list size: " << size << " quorum : " << next_schedule->me_quorum << " m :" << next_schedule->m << " rpc : " << next_schedule->rpc;
 
 		next_schedule = next_schedule->prev;
 		list_node = next_schedule->next;

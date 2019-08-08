@@ -2,7 +2,7 @@
 #define __PMEMDS_COMMON_H
 
 
-#define MAX_VAL_LENGTH 128
+#define MAX_VAL_LENGTH 32
 
 #include "stdint.h"
 
