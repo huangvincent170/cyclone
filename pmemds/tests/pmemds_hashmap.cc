@@ -110,7 +110,7 @@ namespace {
 
     static void hashmap_bench(void *engine, thread_state_t *th_state){
         pmemdsclient::HashMapEngine *hm = (pmemdsclient::HashMapEngine *) engine;
-        int keys = 10000;
+        int keys = 100000;
         for(int i = 0; i < keys*100; i++){
             //coin = ((double)rand()) / RAND_MAX;
             unsigned long key = th_state->rand.Next() % keys;
