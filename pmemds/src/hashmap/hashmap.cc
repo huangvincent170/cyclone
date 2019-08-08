@@ -90,7 +90,7 @@ namespace pmemds {
         hashmap_type::accessor acc;
         // XXX - do not create temporary string
         bool result =
-                my_hashmap->insert(acc, hashmap_type::value_type(key, pstring<MAX_VALUE_SIZE>(value)));
+                my_hashmap->insert(acc, hashmap_type::value_type(key, pstring<MAX_VAL_LENGTH>(value)));
         if (!result) {
             pmem::obj::transaction::manual tx(pmpool);
             acc->second = value;

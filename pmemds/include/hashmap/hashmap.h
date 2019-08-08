@@ -6,10 +6,6 @@
 #define LIBPMEMOBJ_CPP_USE_TBB_RW_MUTEX 1
 #include "concurrent_hash_map.hpp"
 
-
-#define MAX_KEY_SIZE 20
-#define MAX_VALUE_SIZE 100
-
 using pmem::obj::pool;
 using pmem::obj::persistent_ptr;
 
@@ -39,7 +35,7 @@ namespace pmemds {
 
         void operator=(const HashMapEngine &);
 
-        typedef pmem::obj::experimental::concurrent_hash_map<unsigned long, pstring<MAX_VALUE_SIZE>> hashmap_type;
+        typedef pmem::obj::experimental::concurrent_hash_map<unsigned long, pstring<MAX_VAL_LENGTH>> hashmap_type;
         struct RootData {
             persistent_ptr<hashmap_type> hashmap_ptr;
         };
