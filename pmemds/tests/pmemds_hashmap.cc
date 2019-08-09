@@ -42,8 +42,8 @@ namespace {
 
 
     };
-/*
-    TEST_F(pmemdsHashMapTest, BasicHashMapRWTest) {
+    
+	TEST_F(pmemdsHashMapTest, BasicHashMapRWTest) {
         pmemdsclient::HashMapEngine *hm = new pmemdsclient::HashMapEngine(testClient, hashmap1, 1024 * 1024 * 8, 0UL);
 
         ASSERT_EQ(hm->create(PM_CREAT), OK);
@@ -105,13 +105,13 @@ namespace {
 
         ASSERT_EQ(hm->close(), OK);
         ASSERT_EQ(hm->remove(), OK);
-    }*/
+    }
 
 
 
     static void hashmap_bench(void *engine, thread_state_t *th_state){
         pmemdsclient::HashMapEngine *hm = (pmemdsclient::HashMapEngine *) engine;
-        int keys = 100000;
+        int keys = 1000;
         for(int i = 0; i < keys*100; i++){
             //coin = ((double)rand()) / RAND_MAX;
             unsigned long key = th_state->rand.Next() % keys;
