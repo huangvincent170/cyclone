@@ -51,8 +51,8 @@ class BTreeEngine : public PMEngine {
     BTreeEngine(const string& path, size_t size);          // default constructor
     ~BTreeEngine();                                        // default destructor
 
-    void exec(uint16_t op_name,
-              uint8_t ds_type, std::string ds_id,unsigned long in_key, pm_rpc_t *req, pm_rpc_t *resp);
+    void exec(uint16_t op_name, uint8_t ds_type, std::string ds_id,
+                pm_rpc_t *req, pm_rpc_t *resp);
 
     string engine() final { return ENGINE; };
     const string ENGINE = "btree";
