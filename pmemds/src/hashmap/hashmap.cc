@@ -3,13 +3,13 @@
 #include <regex>
 #include <unistd.h>
 
-#include <libpmemobj++/transaction.hpp>
-#include <libpmemobj++/make_persistent_atomic.hpp>
-
 #include "hashmap/hashmap.h"
 
 #define DO_LOG 0
 #define LOG(msg) if (DO_LOG) std::cout << "[hashmap] " << msg << "\n"
+
+/// operation are echoed back. Zero-overhead hashmap
+#define ECHO_HASHMAP 0
 
 using pmem::obj::make_persistent_atomic;
 using pmem::obj::transaction;
@@ -36,41 +36,89 @@ namespace pmemds {
     }
 
 
-    void HashMapEngine::exec(uint16_t op_name, uint8_t ds_type, std::string ds_id, unsigned long in_key,
-                             pm_rpc_t *req, pm_rpc_t *resp) {
+    void HashMapEngine::exec(uint16_t op_name,
+                             uint8_t ds_type, std::string ds_id, unsigned long in_key, pm_rpc_t *req, pm_rpc_t *resp) {
+        std::string in_val;
+        switch (op_name){
+            case GET:
+				LOG("Get op : " << in_key);
+                this->get(in_key,resp);
+                break;
+            case PUT:
+                in_val = std::string(req->value);
+				LOG("Put op : " << in_key << in_val);
+                this->put(in_key,in_val,resp);
+                break;
+            default:
+                LOG_ERROR("unknown operation");
+                SET_STATUS(resp->meta,INVALID_OP);
+        }
 
     }
+
 
     void HashMapEngine::Exists(const unsigned long key, pm_rpc_t *resp) {
-
+        LOG("exists for key=" << key);
+        my_hashmap->count(key) == 1 ? SET_STATUS(resp->meta,OK) : SET_STATUS(resp->meta, NOT_FOUND);
     }
 
 
-void HashMapEngine::get(const unsigned long key, pm_rpc_t *resp) {
-	  hashmap_type::accessor access;
-		my_hashmap->find(access,pstring<20>(std::to_string(key)));
-		//access->release();
-    LOG("Get using callback for key=" << key);
-}
+    void HashMapEngine::get(const unsigned long key, pm_rpc_t *resp) {
+#ifdef ECHO_HASHMAP
+        SET_STATUS(resp->meta,OK);
+        snprintf(resp->value,MAX_VAL_LENGTH, "val_%lu",key);
+#elif
+        LOG("get key= " << key);
+        hashmap_type::const_accessor result;
+        bool found = my_hashmap->find(result, key);
+        if (!found) {
+            LOG("  key not found");
+            SET_STATUS(resp->meta, NOT_FOUND);
+            return;
+        }
+        SET_STATUS(resp->meta,OK);
+        snprintf(resp->value,MAX_VAL_LENGTH, "%s",result->second.c_str());
+#endif
+    }
 
-void HashMapEngine::put(const unsigned long key, const string& value, pm_rpc_t *resp) {
-    LOG("Put key=" << key << ", value.size=" << to_string(value.size()));
-		hashmap_type::accessor access;
-		my_hashmap->insert(access,pstring<20>(std::to_string(key)));
-		access->second = pstring<100>(value);
-		//access->release();
+    void HashMapEngine::put(const unsigned long key, const string &value, pm_rpc_t *resp) {
+#ifdef ECHO_HASHMAP
+        SET_STATUS(resp->meta,OK);
+#elif
+        LOG("Put key=" << key << ", value.size=" << to_string(value.size()));
 
-}
+        hashmap_type::accessor acc;
+        // XXX - do not create temporary string
+        bool result =
+                my_hashmap->insert(acc, hashmap_type::value_type(key, pstring<MAX_VAL_LENGTH>(value)));
+        if (!result) {
+            pmem::obj::transaction::manual tx(pmpool);
+            acc->second = value;
+            pmem::obj::transaction::commit();
+        }
+        SET_STATUS(resp->meta,OK);
+#endif
+    }
 
-void HashMapEngine::remove(const unsigned long key, pm_rpc_t *resp) {
-    LOG("Remove key=" << key);
-		my_hashmap->erase(pstring<20>(std::to_string(key)));
-}
+    void HashMapEngine::remove(const unsigned long key, pm_rpc_t *resp) {
+        LOG("remove key=" << key);
 
-void HashMapEngine::Recover() {
-	auto root_data = pmpool.get_root();
-	make_persistent_atomic<hashmap_type>(pmpool, root_data->hashmap_ptr);
-  my_hashmap = root_data->hashmap_ptr.get();
-}
+        bool erased = my_hashmap->erase(key);
+        erased ? SET_STATUS(resp->meta,OK) : SET_STATUS(resp->meta, NOT_FOUND);
+    }
+
+    void HashMapEngine::Recover() {
+        auto root_data = pmpool.root();
+        if (root_data->hashmap_ptr) {
+            my_hashmap = root_data->hashmap_ptr.get();
+            my_hashmap->initialize();
+        } else {
+            pmem::obj::transaction::manual tx(pmpool);
+            root_data->hashmap_ptr = pmem::obj::make_persistent<hashmap_type>();
+            pmem::obj::transaction::commit();
+            my_hashmap = root_data->hashmap_ptr.get();
+            my_hashmap->initialize(true);
+        }
+    }
 
 } // namespace pmemds

@@ -50,15 +50,16 @@ class PMEngine;
 class PMLib{
 
 	public:
+		PMLib(const std::string path){
+			this->pmem_path = path;
+		}
 		int open(const string& app);
 		int close();
 		void exec(pm_rpc_t *req, pm_rpc_t *resp);
 
 
 	private:
-
-        //const std::string pmem_path = "/dev/shm/pmemds";
-        const std::string pmem_path = "/mnt/pmem1/pmemds";
+		std::string pmem_path;
 
 
         PMEngine* find_ds(uint16_t id);

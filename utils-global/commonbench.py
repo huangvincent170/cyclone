@@ -137,8 +137,11 @@ class Common:
         cmd = 'make clean'
         sh(cmd)
         cmd = 'make'
+        cmd += ' CPPFLAGS='
         if m == nvram:
-            cmd += ' CPPFLAGS=' + '\"-DPMEM_HUGE\"'
+            cmd += '\"-DPMEM_HUGE\"'
+        if args.is_commute == True:
+            cmd += '\" -D__COMMUTE\"'
         sh(cmd)
         cd(home)
         
@@ -154,6 +157,8 @@ class Common:
             cmd += ' RTE_SSDK=' + rte_nvmsdk
         cmd +=  ' ' + self.get_server_cxx(w)
         
+        if args.is_commute == True:
+            cmd += ' CPPFLAGS=\"-D__COMMUTE\"' 
         sh(cmd)
         cd(home)
 

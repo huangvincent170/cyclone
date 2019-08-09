@@ -1,6 +1,7 @@
 all: libcyclone.a
 
 CXXFLAGS = -O3 -fPIC -DBOOST_LOG_DYN_LINK
+#CXXFLAGS = -O3 -fPIC -DBOOST_LOG_DYN_LINK -D__COMMUTE
 #CXXFLAGS = -O1 -fno-omit-frame-pointer -g -fPIC -DBOOST_LOG_DYN_LINK
 
 #Hardware Workaround

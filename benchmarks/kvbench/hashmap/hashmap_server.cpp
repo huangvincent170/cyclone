@@ -15,6 +15,7 @@
 
 #include "pmemds.h"
 
+static const std::string pmem_path = "/mnt/pmem1/pmemds";
 pmemds::PMLib *pmlib;
 
 void callback(const unsigned char *data,
@@ -22,25 +23,35 @@ void callback(const unsigned char *data,
               rpc_cookie_t *cookie, unsigned long *pmdk_state)
 {
 	pm_rpc_t *request, *response;
-
-    //cookie->ret_value = &response; //TODO: works only for one execution thread
     assert((sizeof(pm_rpc_t) == len) && "wrong payload length");
     cookie->ret_value = malloc(sizeof(pm_rpc_t));
     cookie->ret_size = sizeof(pm_rpc_t);
     response = (pm_rpc_t *)cookie->ret_value;
 
 	/* set mbuf/wal commit state as a thread local */
-	TX_SET_BLIZZARD_MBUF_COMMIT_ADDR(pmdk_state);
+	//TX_SET_BLIZZARD_MBUF_COMMIT_ADDR(pmdk_state);
     request = (pm_rpc_t *) data;
     pmlib->exec(request,response);
-
 }
 
-int wal_callback(const unsigned char *data,
-                 const int len,
-                 rpc_cookie_t *cookie)
+int commute_callback(unsigned long cmask1, void *arg1, unsigned long cmask2, void *arg2)
 {
-    return cookie->log_idx;
+	pm_rpc_t *op1 = (pm_rpc_t *) arg1;
+	pm_rpc_t *op2 = (pm_rpc_t *) arg2;
+
+    /* this is the signle partition data-structure. So we ignore partitions */
+	unsigned int op1_id = OP_ID(op1->meta);
+	unsigned int op2_id = OP_ID(op2->meta);
+	/* the key inserts and reads can operate in parallel as long as they do
+	 * not operate on the same key.
+	 */ 
+	if( (op1_id == PUT || op1_id == GET) &&
+			(op2_id == PUT || op2_id == GET) ){
+		if(op1->key != op2->key){
+			return 1;
+		}
+	}
+	return 0;
 }
 
 
@@ -49,12 +60,10 @@ void gc(rpc_cookie_t *cookie)
     free(cookie->ret_value);
 }
 
-rpc_callbacks_t rpc_callbacks =
-        {
-                callback,
-                gc,
-                wal_callback
-        };
+rpc_callbacks_t rpc_callbacks = { callback,
+								  gc,
+								  commute_callback
+								};
 
 
 int main(int argc, char *argv[])
@@ -71,7 +80,7 @@ int main(int argc, char *argv[])
                          atoi(argv[6]) + num_queues * num_quorums + executor_threads);
 
     assert(pmlib == NULL);
-    pmlib = new pmemds::PMLib();
+    pmlib = new pmemds::PMLib(pmem_path);
     if (pmlib == nullptr)
     {
         BOOST_LOG_TRIVIAL(fatal) << "cannot open pmemds";
@@ -84,6 +93,5 @@ int main(int argc, char *argv[])
                      server_id,
                      atoi(argv[2]),
                      atoi(argv[3]));
-
 }
 

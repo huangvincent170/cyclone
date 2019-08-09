@@ -1,9 +1,7 @@
-/*
- * Pradeep Fernando, GT-ID : 903070752
- * pradeepfn@gatech.edu
- *
-*/#ifndef PMEMDS_TEST_CLIENT_H
+#ifndef PMEMDS_TEST_CLIENT_H
 #define PMEMDS_TEST_CLIENT_H
+
+#include "pmemds.h"
 
 namespace pmemdsclient {
 

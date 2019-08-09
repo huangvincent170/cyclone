@@ -24,9 +24,18 @@ static const int RAFT_LOG_TARGET  = 1000;
 
 // Client side timeouts
 static const int timeout_msec  = 1200; // Client - failure detect
-
+#ifndef __COMMUTE
 // Execution resources
 static const int executor_threads = 1;
+#else
+static const int executor_threads = 2;
+
+static const int GC_IN_USE	= 0;
+static const int GC_READY	= 1;
+
+// Commute operation related constants
+static const unsigned int max_sched_buffer_length = 4096;
+#endif
 
 // ZMQ specific tuning
 static const int zmq_threads = 4;
@@ -48,9 +57,9 @@ static const char MAX_INFLIGHT = 12;
 static const unsigned int CLIENT_SYNC      = 1<<0;
 static const unsigned int CLIENT_ASYNC     = 1<<1;
 static const unsigned int MAX_ASYNC_CLIENTS = 32;
+static const int async_timeout_msec  = 500000000;  // async client timeout
 
 static const unsigned int EMAX_INFLIGHT = 1;
-
 
 
 static int core_to_quorum(int core_id)
@@ -73,23 +82,19 @@ typedef struct rpc_cookie_st {
 typedef 
 void (*rpc_callback_t)(const unsigned char *data,
 		       const int len,
-		       rpc_cookie_t * rpc_cookie);
-
-// Add a flashlog entry
-// Returns currently checkpointed log idx
-typedef
-int (*flashlog_callback_t)(const unsigned char *data,
-			   const int len,
-			   rpc_cookie_t *rpc_cookie);
+		       rpc_cookie_t * rpc_cookie, unsigned long *pmdk_state);
 
 //Garbage collect return value
 typedef void (*rpc_gc_callback_t)(rpc_cookie_t *cookie);
+
+//Checking operations commutativity
+typedef int (*op_commute_callback_t)(unsigned long cmask1, void *incoming, unsigned long cmask2, void *issued);
 
 // Callbacks structure
 typedef struct rpc_callbacks_st {
   rpc_callback_t rpc_callback;
   rpc_gc_callback_t gc_callback;
-  flashlog_callback_t flashlog_callback;
+  op_commute_callback_t op_callback;
 } rpc_callbacks_t;
 
 // Init network stack

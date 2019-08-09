@@ -5,7 +5,8 @@ BLIZZARD_HOME?=/home/pfernando/cyclone
 CXXFLAGS = -O3 -DBOOST_LOG_DYN_LINK -DBOOST_THREAD_DYN_LINK
 CXXFLAGS += $(CPPFLAGS)
 #CXXFLAGS = -O1 -g -fno-omit-frame-pointer -DBOOST_LOG_DYN_LINK
-PMEM_SLIB?=/home/pfernando/pmdk/src/nondebug
+#PMEM_SLIB?=/home/pfernando/blizzard_pmdk/src/nondebug
+PMEM_SLIB?=../../../pmdk/src/nondebug
 PMEM_CLIB?=../../../pmdk/src/nondebug
 
 LIBS = -lc ../../../core/libcyclone.a ../../../raft/libcraft.a -lboost_system -lboost_date_time -laio
