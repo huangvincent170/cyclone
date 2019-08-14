@@ -13,7 +13,7 @@ def launch_cmds_server_gen(f, q, r, m, quorums, replicas, clients, ports):
     cmd= cmd + 'rm -f /mnt/pmem1/rockswal/*\n'
     f.write(cmd)
     cmd=' echo ' + passwd + ' | sudo -S '
-    cmd=cmd + '/home/pfernando/cyclone/cyclone.git/test/rocksdb_checkpoint\n'
+    cmd=cmd + '/home/pfernando/cyclone/cyclone.git/benchmarks/kvbench/rocksdb/rocksdb_checkpoint\n'
     f.write(cmd)
     cmd=''
     if os.environ.has_key('RBT_SLEEP_USEC'):
@@ -21,7 +21,7 @@ def launch_cmds_server_gen(f, q, r, m, quorums, replicas, clients, ports):
     cmd=cmd + ' echo ' + passwd + ' | sudo -S '
     cmd=cmd + ' PMEM_IS_PMEM_FORCE=1 '
     cmd=cmd + ' LD_LIBRARY_PATH=/usr/lib:/usr/local/lib '
-    cmd=cmd + '/home/pfernando/cyclone/cyclone.git/test/rocksdb_server '
+    cmd=cmd + '/home/pfernando/cyclone/cyclone.git/benchmarks/kvbench/rocksdb/rocksdb_server '
     cmd=cmd + str(r) + ' '
     cmd=cmd + str(m) + ' '
     cmd=cmd + str(clients) + ' '
@@ -56,7 +56,7 @@ def launch_cmds_client_gen(f, m, c, quorums, replicas, clients, machines, ports,
             cmd=cmd + ' echo ' + passwd + ' | sudo -S '
             cmd=cmd + ' LD_LIBRARY_PATH=/usr/lib:/usr/local/lib '
             #cmd=cmd + '/home/pfernando/cyclone/cyclone.git/test/rocksdb_client '
-            cmd=cmd + '/home/pfernando/cyclone/cyclone.git/test/rocksdb_async_client '
+            cmd=cmd + '/home/pfernando/cyclone/cyclone.git/benchmarks/kvbench/rocksdb/rocksdb_async_client '
             cmd=cmd + str(c_start) + ' '
             cmd=cmd + str(c_stop) + ' '
             cmd=cmd + str(m) + ' '
@@ -73,7 +73,3 @@ def killall_cmds_gen(f):
         passwd=os.environ.get('CYCLONE_PASS')
     f.write('echo ' + passwd + ' | sudo -S pkill rocksdb_server\n')
     f.write('echo ' + passwd + ' | sudo -S pkill rocksdb_client\n')
-    #f.write('killall -9 counter_loader\n')
-    #f.write('killall -9 counter_driver\n')
-    #f.write('killall -9 counter_coordinator\n')
-    #f.write('killall -9 counter_driver_mt\n')

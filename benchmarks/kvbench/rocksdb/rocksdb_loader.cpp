@@ -44,8 +44,8 @@
 #include <rocksdb/write_batch.h>
 #include "rocksdb.hpp"
 
-#include "../core/logging.hpp"
-#include "../core/clock.hpp"
+#include "logging.hpp"
+#include "clock.hpp"
 
 // Rate measurement stuff
 rocksdb::DB* db = NULL;

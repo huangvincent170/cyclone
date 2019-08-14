@@ -42,9 +42,9 @@
 #include <rte_launch.h>
 #include <rte_malloc.h>
 
-#include "../core/clock.hpp"
-#include "../core/logging.hpp"
-#include "../core/libcyclone.hpp"
+#include "clock.hpp"
+#include "logging.hpp"
+#include "libcyclone.hpp"
 
 #include "rocksdb.hpp"
 

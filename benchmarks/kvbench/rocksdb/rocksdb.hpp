@@ -16,7 +16,6 @@ typedef struct rock_kv_pair_st {
 const char *preload_dir = "/mnt/pmem1/preloaded";
 const char *data_dir = "/mnt/pmem1/rocksdata";
 const char *log_dir  = "/mnt/pmem1/rockswal";
-const unsigned long rocks_keys = 100000000;
-const int use_flashlog   = 0;
+const unsigned long rocks_keys = 10000000;
 const int use_rocksdbwal = 1;
 #endif
