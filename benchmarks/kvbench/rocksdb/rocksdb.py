@@ -74,3 +74,4 @@ def killall_cmds_gen(f):
         passwd=os.environ.get('CYCLONE_PASS')
     f.write('echo ' + passwd + ' | sudo -S pkill rocksdb_server\n')
     f.write('echo ' + passwd + ' | sudo -S pkill rocksdb_client\n')
+    f.write('echo ' + passwd + ' | sudo -S pkill rocksdb_async\n')

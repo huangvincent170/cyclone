@@ -46,8 +46,6 @@
 #include "../../../core/libcyclone.hpp"
 #include <rte_launch.h>
 
-#define NUM_QUEUES 2 // 2 qpairs for sync and async client modes
-
 unsigned long request_id = 0UL; // wrap around at MAX
 std::vector<unsigned long> *replayq;
 std::map<unsigned long, unsigned long> *clnt_map;
@@ -96,7 +94,7 @@ void async_callback(void *args, int code, unsigned long msg_latency){
 	total_latency += msg_latency; //timouts get added in to message latency
 	if(tx_block_cnt >= 5000) {
 		unsigned long total_elapsed_time = (rtc_clock::current_time() - tx_begin_time);
-		BOOST_LOG_TRIVIAL(info) << "LOAD = "
+		std::cout << "LOAD = "
 				<< ((double)1000000*tx_block_cnt)/total_elapsed_time
 				<< " tx/sec "
 				<< "LATENCY = "
@@ -107,7 +105,8 @@ void async_callback(void *args, int code, unsigned long msg_latency){
                 << " success count "
                 << tx_block_cnt
                 << " elpsd time "
-                << total_elapsed_time;
+                << total_elapsed_time
+				<< std::endl;
 		tx_block_cnt   = 0;
 		tx_failed_cnt  = 0;
 		total_latency  = 0;
