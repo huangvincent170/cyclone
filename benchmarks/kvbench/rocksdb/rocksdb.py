@@ -13,6 +13,7 @@ def launch_cmds_server_gen(f, q, r, m, quorums, replicas, clients, ports):
     cmd= cmd + 'rm -f /mnt/pmem1/rockswal/*\n'
     f.write(cmd)
     cmd=' echo ' + passwd + ' | sudo -S '
+    cmd=cmd + ' LD_LIBRARY_PATH=/usr/lib:/usr/local/lib '
     cmd=cmd + '/home/pfernando/cyclone/cyclone.git/benchmarks/kvbench/rocksdb/rocksdb_checkpoint\n'
     f.write(cmd)
     cmd=''

@@ -15,10 +15,10 @@ rocksdb_server:rocksdb_server.cpp
 	$(CXX) $(CXXFLAGS) $(ROCKS_CXXFLAGS) rocksdb_server.cpp $(BOOST_THREAD_LIB) $(ROCKS_LIBS) $(SERVER_LIBS) -o $@
 
 rocksdb_checkpoint:rocksdb_checkpoint.cpp
-	$(CXX) $(CXXFLAGS) $(ROCKS_CXXFLAGS) rocksdb_checkpoint.cpp $(BOOST_THREAD_LIB) $(ROCKS_LIBS) $(SERVER_LIBS) -o $@
+	$(CXX) $(CXXFLAGS) $(ROCKS_CXXFLAGS) rocksdb_checkpoint.cpp $(ROCKS_LIBS) $(SERVER_LIBS) -o $@
 
 rocksdb_loader:rocksdb_loader.cpp
-	$(CXX) $(CXXFLAGS) $(ROCKS_CXXFLAGS) rocksdb_loader.cpp $(BOOST_THREAD_LIB) $(ROCKS_LIBS) $(SERVER_LIBS) -o $@
+	$(CXX) $(CXXFLAGS) $(ROCKS_CXXFLAGS) rocksdb_loader.cpp $(ROCKS_LIBS) $(SERVER_LIBS) -o $@
 
 
 rocksdb_async_client:rocksdb_async_client.cpp
