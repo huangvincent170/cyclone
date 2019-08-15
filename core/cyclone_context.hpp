@@ -667,7 +667,7 @@ struct cyclone_monitor {
 					NULL,
 					1);
 			if(e != 0) {
-					rte_pktmbuf_free((rte_mbuf *)messages[accepted].data.buf);
+					rte_pktmbuf_free((rte_mbuf *)messages[accepted-1].data.buf);
 			}
 		}
 #else
