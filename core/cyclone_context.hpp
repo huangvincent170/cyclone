@@ -659,7 +659,17 @@ struct cyclone_monitor {
 				LT_START(trcekey_raft, rpc);
 				accepted++;
 			}
+#ifdef __NO_BATCHING
+			int e = raft_recv_entry_batch(cyclone_handle->raft_handle,
+					messages+i,
+					NULL,
+					1);
+			if(e != 0) {
+					rte_pktmbuf_free((rte_mbuf *)messages[i].data.buf);
+			}
 		}
+#else
+		} // end of for loop
 		if(accepted > 0) {
 			int e = raft_recv_entry_batch(cyclone_handle->raft_handle,
 					messages,
@@ -671,6 +681,7 @@ struct cyclone_monitor {
 				}
 			}
 		}
+#endif // __NO_BATCHING
 	}
 
 
