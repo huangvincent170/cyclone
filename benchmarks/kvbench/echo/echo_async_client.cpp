@@ -100,12 +100,6 @@ void async_callback(void *args, int code, unsigned long msg_latency){
 				<< "LATENCY = "
 				<< ((double)total_latency)/tx_block_cnt
 				<< " us "
-				<< " timedout count "
-                << tx_failed_cnt
-                << " success count "
-                << tx_block_cnt
-                << " elpsd time "
-                << total_elapsed_time
 				<< std::endl;
 		tx_block_cnt   = 0;
 		tx_failed_cnt  = 0;
