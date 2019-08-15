@@ -66,16 +66,16 @@ BTreeEngine::~BTreeEngine() { //TODO: support deleting ds altogether
     LOG("Closed ok");
 }
 
-    void BTreeEngine::exec(uint16_t op_name,
-                           uint8_t ds_type, std::string ds_id, unsigned long in_key, pm_rpc_t *req, pm_rpc_t *resp) {
+    void BTreeEngine::exec(uint16_t op_name, uint8_t ds_type, std::string ds_id,
+                           pm_rpc_t *req, pm_rpc_t *resp) {
         std::string in_val;
         switch (op_name){
             case GET:
-                this->get(in_key,resp);
+                this->get(req->key,resp);
                 break;
             case PUT:
                 in_val = std::string(req->value);
-                this->put(in_key,in_val,resp);
+                this->put(req->key,in_val,resp);
                 break;
             default:
                 LOG_ERROR("unknown operation");

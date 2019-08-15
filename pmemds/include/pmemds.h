@@ -40,6 +40,78 @@ using std::string;
 using std::to_string;
 
 namespace pmemds {
+
+
+
+class string_view {
+public:
+	string_view() noexcept;
+	string_view(const char *data, size_t size);
+	string_view(const std::string &s);
+	string_view(const char *data);
+
+	string_view(const string_view &rhs) noexcept = default;
+	string_view &operator=(const string_view &rhs) noexcept = default;
+
+	const char *data() const noexcept;
+	std::size_t size() const noexcept;
+
+	/**
+	 * Compares this string_view with other. Works in the same way as
+	 * std::basic_string::compare.
+	 *
+	 * @return 0 if both character sequences compare equal,
+	 *         positive value if this is lexicographically greater than other,
+	 *         negative value if this is lexicographically less than other.
+	 */
+	int compare(const string_view &other) noexcept;
+
+private:
+	const char *_data;
+	std::size_t _size;
+};
+
+inline string_view::string_view() noexcept : _data(""), _size(0)
+{
+}
+
+inline string_view::string_view(const char *data, size_t size) : _data(data), _size(size)
+{
+}
+
+inline string_view::string_view(const std::string &s) : _data(s.c_str()), _size(s.size())
+{
+}
+
+inline string_view::string_view(const char *data)
+		: _data(data), _size(std::char_traits<char>::length(data))
+{
+}
+
+inline const char *string_view::data() const noexcept
+{
+	return _data;
+}
+
+inline std::size_t string_view::size() const noexcept
+{
+	return _size;
+}
+
+inline int string_view::compare(const string_view &other) noexcept
+{
+	int ret = std::char_traits<char>::compare(data(), other.data(),
+											  std::min(size(), other.size()));
+	if (ret != 0)
+		return ret;
+	if (size() < other.size())
+		return -1;
+	if (size() > other.size())
+		return 1;
+	return 0;
+}
+
+
 /* forward declare */
 class PMEngine;
 
@@ -89,7 +161,7 @@ public:
     PMEngine(){};
 	virtual ~PMEngine(){};
 
-	virtual void exec(uint16_t op_id,uint8_t ds_type, std::string ds_id,unsigned long in_key,
+	virtual void exec(uint16_t op_id,uint8_t ds_type, std::string ds_id,
 				  pm_rpc_t *req, pm_rpc_t *resp)=0;
 
 	virtual string engine() =0;                           // engine identifier

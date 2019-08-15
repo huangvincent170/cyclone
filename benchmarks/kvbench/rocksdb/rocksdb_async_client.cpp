@@ -42,9 +42,9 @@
 #include <rte_launch.h>
 #include <rte_malloc.h>
 
-#include "../core/clock.hpp"
-#include "../core/logging.hpp"
-#include "../core/libcyclone.hpp"
+#include "clock.hpp"
+#include "logging.hpp"
+#include "libcyclone.hpp"
 
 #include "rocksdb.hpp"
 
@@ -89,14 +89,15 @@ void async_callback(void *args, int code, unsigned long msg_latency)
     if ((tx_wr_block_cnt + tx_ro_block_cnt) >= 5000)
     {
         unsigned long total_elapsed_time = (rtc_clock::current_time() - tx_begin_time);
-        BOOST_LOG_TRIVIAL(info) << "LOAD = "
+		std::cout << "LOAD = "
             << ((double)1000000 * (tx_wr_block_cnt + tx_ro_block_cnt)) / total_elapsed_time
             << " tx/sec "
             << "LATENCY = "
             << ((double)total_latency) / (tx_wr_block_cnt + tx_ro_block_cnt)
             << " us "
             << "wr/rd = "
-            <<((double)tx_wr_block_cnt/tx_ro_block_cnt);
+            <<((double)tx_wr_block_cnt/tx_ro_block_cnt)
+			<<std::endl;
         tx_wr_block_cnt   = 0;
         tx_ro_block_cnt   = 0;
         tx_failed_cnt  = 0;

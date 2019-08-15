@@ -230,10 +230,15 @@ class Common:
         m = args.memtype
         b = args.bufsize
         r = args.replicas
+        c = args.is_commute
         if r == empty:
             print "Error gathering output, specify replicas"
             return 1
-        outdir = 'results/'+ self.bench() + '/' + w + '/rep' + r  + '/' + m + '/' + b
+        outdir = 'results/'+ self.bench() + '/' + w + '/rep' + r  + '/' + m + '/' 
+        if c is True:
+            outdir = outdir + 'commute' + '/' + b
+        else:
+            outdir = outdir + 'non-commute' + '/' + b
         print 'collect output data and copying in to' + outdir
         cmd = './gather_output.sh '
         cmd += gen_dir + ' ' + deploy_dir + ' ' + outdir

@@ -16,7 +16,7 @@ set(RTE_CSDK /home/pfernando/dpdk)
 find_package(PkgConfig QUIET)
 
 
-include_directories(../libpmemobj-cpp/include)
+include_directories(../../libpmemobj-cpp/include)
 include_directories(../pmdk/src/include)
 include_directories(${RTE_CSDK}/x86_64-native-linuxapp-gcc/include)
 include_directories(include)
@@ -54,7 +54,7 @@ target_link_libraries(pmemds PRIVATE ${TBB_LIBRARIES})
 
 add_library(pmemds-client STATIC ${CLIENTLIB_SOURCE_FILES})
 
-#add_library(pmemds-test STATIC ${CLIENTLIB_TEST_SOURCE_FILES})
+add_library(pmemds-test STATIC ${CLIENTLIB_TEST_SOURCE_FILES})
 
 # ---[ CTest
 include(CTest)

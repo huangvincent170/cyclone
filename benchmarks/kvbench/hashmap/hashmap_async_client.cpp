@@ -68,7 +68,7 @@ int driver(void *arg)
 	unsigned  long key;
 	char value_buffer[64];
 
-	double frac_read = 0.2;
+	double frac_read = 0.5;
 	const char *frac_read_env = getenv("KV_FRAC_READ");
 	if (frac_read_env != NULL)
 	{

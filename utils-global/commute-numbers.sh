@@ -1,12 +1,10 @@
 #!/bin/bash
-declare -a bf=()
-#declare -a wl=("echo")
-declare -a wl=("echo")
-#declare -a bf=(1 2 4 6 8 10 12 16 20)
-declare -a bf=(1)
+declare -a wl=("hashmap")
+declare -a bf=(1 2 4 6 8 10 12 16 20)
+#declare -a bf=(12)
 
 #declare -a mt=("dram" "nvram")
-declare -a mt=("dram")
+declare -a mt=("nvram")
 
 declare -r rl=(3)
 
@@ -29,7 +27,7 @@ do
     ./kv_bench.py -stop -m "$m" -w "$w"
 
 	# gather output
-    ./kv_bench.py -collect -rep "$replicas" -m "$m" -w "$w" -b "$b"
+    ./kv_bench.py -collect -rep "$replicas" -m "$m" -w "$w" -b "$b" -commute
 	done
   done
 done

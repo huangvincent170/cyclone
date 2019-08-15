@@ -2,6 +2,7 @@
 #define __PMEMDS_COMMON_H
 
 
+#define KEY_SIZE 8
 #define MAX_VAL_LENGTH 32
 
 #include "stdint.h"
@@ -79,7 +80,10 @@ const uint8_t PM_CREAT = 1;
 /* payload structure of pmemds lib */
 typedef struct pm_rpc_st{
     unsigned int meta;
-    unsigned long key;
+    union {
+        unsigned long key;
+        char ckey[8];
+    };
     char value[MAX_VAL_LENGTH];
 }pm_rpc_t;
 
