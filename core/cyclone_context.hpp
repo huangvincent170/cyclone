@@ -611,6 +611,7 @@ struct cyclone_monitor {
 				chain_tail = m;
 				accepted++;
 			}
+#ifndef __NO_BATCHING // no chaining
 			else if(accepted > 0 &&
 					(messages[accepted - 1].data.len + msg_size) <= MSG_MAXSIZE &&
 					messages[accepted - 1].type == RAFT_LOGTYPE_NORMAL &&
@@ -629,6 +630,7 @@ struct cyclone_monitor {
 				chain_size[accepted - 1]++;
 				//compact(mprev); // debug
 			}
+#endif
 			else {
 				if(is_multicore_rpc(rpc)) { // Add a fresh head
 					rte_mbuf *m_pre = rte_pktmbuf_alloc(global_dpdk_context->mempools
@@ -659,7 +661,17 @@ struct cyclone_monitor {
 				LT_START(trcekey_raft, rpc);
 				accepted++;
 			}
+#ifdef __NO_BATCHING
+			int e = raft_recv_entry_batch(cyclone_handle->raft_handle,
+					&messages[accepted-1],
+					NULL,
+					1);
+			if(e != 0) {
+					rte_pktmbuf_free((rte_mbuf *)messages[accepted-1].data.buf);
+			}
 		}
+#else
+		} // end of for loop
 		if(accepted > 0) {
 			int e = raft_recv_entry_batch(cyclone_handle->raft_handle,
 					messages,
@@ -671,6 +683,7 @@ struct cyclone_monitor {
 				}
 			}
 		}
+#endif // __NO_BATCHING
 	}
 
 

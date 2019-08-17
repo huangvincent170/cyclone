@@ -1,6 +1,5 @@
 #include "pmemds.h"
 #include "pmemds_log.h"
-#include "hashmap/concurrent_hash_map.hpp"
 #include "tree/btree.h"
 #include "hashmap/hashmap.h"
 #include "priority_queue/priority_queue.h"
@@ -109,7 +108,7 @@ void PMLib::exec(pm_rpc_t *req,pm_rpc_t *resp){
 				SET_STATUS(resp->meta,NOT_FOUND);
 				return;
 			}
-			engine->exec(op_id,ds_type,std::to_string(ds_id),req->key,req,resp);
+			engine->exec(op_id,ds_type,std::to_string(ds_id),req,resp);
 	}
 }
 

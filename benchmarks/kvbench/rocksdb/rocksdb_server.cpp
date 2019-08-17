@@ -80,7 +80,7 @@ static void barrier(batch_barrier_t *barrier,
 
 void callback(const unsigned char *data,
 	      const int len,
-	      rpc_cookie_t *cookie)
+	      rpc_cookie_t *cookie, unsigned long *pmdk_state)
 {
   cookie->ret_value  = malloc(len);
   cookie->ret_size   = len;
@@ -170,21 +170,9 @@ void callback(const unsigned char *data,
   */
 }
 
-int wal_callback(const unsigned char *data,
-		 const int len,
-		 rpc_cookie_t *cookie)
+int commute_callback(unsigned long cmask1, void *op1, unsigned long cmask2, void *op2)
 {
-  if(use_flashlog) {
-	assert(0);
-    int idx = log_append(logs[cookie->core_id],
-			 (const char *)data,
-			 len, 
-			 cookie->log_idx);
-    return idx;
-  }
-  else {
-    return cookie->log_idx;
-  }
+  return 0; // not used 
 }
 
 void gc(rpc_cookie_t *cookie)
@@ -195,7 +183,7 @@ void gc(rpc_cookie_t *cookie)
 rpc_callbacks_t rpc_callbacks =  {
   callback,
   gc,
-  wal_callback
+  commute_callback
 };
 
 

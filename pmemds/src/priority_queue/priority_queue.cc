@@ -15,21 +15,21 @@ namespace pmemds{
     priority_queue::~priority_queue(){
     }
 
-    void priority_queue::exec(uint16_t op_id, uint8_t ds_type, std::string ds_id, unsigned long in_key,
+    void priority_queue::exec(uint16_t op_id, uint8_t ds_type, std::string ds_id,
                               pm_rpc_t *req, pm_rpc_t *resp){
          unsigned long priority;
          switch (op_id){
              case INSERT:
                  priority = parse_priority(req->value);
-                 this->insert(in_key,priority,resp);
+                 this->insert(req->key,priority,resp);
                  break;
              case INCREASE_PRIO:
                  priority = parse_priority(req->value);
-                 this->increase_prio(in_key,priority,resp);
+                 this->increase_prio(req->key,priority,resp);
                  break;
              case DECREASE_PRIO:
                  priority = parse_priority(req->value);
-                 this->decrease_prio(in_key,priority,resp);
+                 this->decrease_prio(req->key,priority,resp);
                  break;
              case GET_MAX:
                  this->get_max(resp);

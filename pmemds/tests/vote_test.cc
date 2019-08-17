@@ -26,7 +26,7 @@ namespace {
 
             const std::string pmem_path = "/dev/shm/pmemds";
             /* server side data-structure creation */
-            pmemds::PMLib *pmLib = new pmemds::PMLib(pmem_path);
+            pmLib = new pmemds::PMLib(pmem_path);
 
             testClient = new pmemdsclient::TestClient(pmLib,&request,&response);
             testClient->open("testApp");

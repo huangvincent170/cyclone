@@ -15,7 +15,7 @@ namespace pmemds {
         const string ENGINE = "prio_queue";
         string engine() final { return ENGINE; };
 
-        void exec(uint16_t op_id,uint8_t ds_type, std::string ds_id,unsigned long in_key,
+        void exec(uint16_t op_id,uint8_t ds_type, std::string ds_id,
                   pm_rpc_t *req,pm_rpc_t *resp);
 
         void insert(unsigned long key, unsigned long priority,pm_rpc_t *resp);

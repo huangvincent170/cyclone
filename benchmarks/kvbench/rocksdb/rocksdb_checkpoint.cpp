@@ -3,8 +3,6 @@
 #include<errno.h>
 #include<string.h>
 #include<stdlib.h>
-#include "../core/logging.hpp"
-#include "../core/clock.hpp"
 #include<stdio.h>
 #include <time.h>
 #include<unistd.h>
@@ -12,7 +10,10 @@
 #include <rocksdb/options.h>
 #include <rocksdb/write_batch.h>
 #include <rocksdb/utilities/checkpoint.h>
+
 #include "rocksdb.hpp"
+#include "logging.hpp"
+#include "clock.hpp"
 
 // Rate measurement stuff
 rocksdb::DB* db = NULL;
