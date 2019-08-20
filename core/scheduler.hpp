@@ -6,8 +6,7 @@
 #define CYCLONE_SCHEDULER_QUEUE_HPP
 
 #include <rte_mbuf.h>
-#include <rte_malloc.h>
-
+#include <rte_malloc.h> 
 #include "libcyclone.hpp"
 #include "cyclone.hpp"
 #include "logging.hpp"
@@ -133,7 +132,7 @@ int add(int to_core, unsigned long me_quorum, rte_mbuf *m, rpc_t *rpc, wal_entry
  *  go through the buffered operations list and enqueue, ready operations
  *  in to exeuction threads 
  */
-int schedule(op_commute_callback_t is_commute){
+int schedule(op_commute_callback_t is_commute, op_partition_callback my_partition){
 	//BOOST_LOG_TRIVIAL(info) << "schdule attempt...";
 	node_t *list_node = next_schedule->next;
 	while(next_schedule != head){
@@ -154,8 +153,16 @@ int schedule(op_commute_callback_t is_commute){
 		triple[0] = (void *)(unsigned long)next_schedule->me_quorum;
 		triple[1] = next_schedule->m;
 		triple[2] = next_schedule->rpc;
+#ifdef __PARTITION
+		uint8_t partition = 0;
+		if((parition = my_partition(next_schedule->rpc)) >= executor_threads){
+			BOOST_LOG_TRIVIAL(error) << "partition id is greater than available executors";
+			exit(-1);
+		}
+		if(rte_ring_mp_enqueue_bulk(to_cores[partition]], triple, 3) == -ENOBUFS) {
+#else
 		if(rte_ring_mp_enqueue_bulk(to_cores[rb_counter++%executor_threads], triple, 3) == -ENOBUFS) {
-			//if(rte_ring_mp_enqueue_bulk(to_cores[next_schedule->to_core], triple, 3) == -ENOBUFS) {
+#endif
 			BOOST_LOG_TRIVIAL(fatal) << "raft->core comm ring is full (req stable)";
 			exit(-1);
 		}
