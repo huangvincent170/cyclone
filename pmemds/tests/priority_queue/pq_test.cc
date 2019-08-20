@@ -29,21 +29,16 @@ namespace {
     };
 
     TEST_F(pqTest, readTest) {
-        unsigned long key, value;
-        ASSERT_EQ(pq->get_max(key,value),0);
-        ASSERT_EQ(key,0);
-        ASSERT_EQ(value,10);
+        unsigned long *array;
+        int size;
+        ASSERT_EQ(pq->read_topK(&array,&size),0);
+        for(int i = 0; i < size; i++){
+            std::cout << array[i] << " ";
+        }
+        std::cout << std::endl;
 
-
-        ASSERT_EQ(pq->get_max(key,value),0);
-        ASSERT_EQ(key,9);
-        ASSERT_EQ(value,10);
-
-        ASSERT_EQ(pq->get_max(key,value),0);
-        ASSERT_EQ(key,8);
-        ASSERT_EQ(value,10);
     }
-
+/*
 
     TEST_F(pqTest, incrTest){
         unsigned long key, value;
@@ -62,10 +57,6 @@ namespace {
         ASSERT_NE(value,5);
     }
 
-    /*TEST_F(pqTest,maxTest){
-        for(int i = 11; i < 20; i++){
-            votes->insert(i,i);
-        }
-    }*/
+   */
 
 }

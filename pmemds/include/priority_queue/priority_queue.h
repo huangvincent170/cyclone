@@ -2,7 +2,7 @@
 #define PMEMDS_PRIORITY_QUEUE_H
 
 
-#include "volatile_priority_queue.hpp"
+#include "persistent_priority_queue.hpp"
 
 
 namespace pmemds {

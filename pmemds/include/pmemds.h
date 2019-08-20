@@ -125,6 +125,12 @@ class PMLib{
 		PMLib(const std::string path){
 			this->pmem_path = path;
 		}
+
+		PMLib(const std::string path,uint8_t npartitions){
+			this->pmem_path = path;
+			this->npartitions = npartitions;
+		}
+
 		int open(const string& app);
 		int close();
 		void exec(pm_rpc_t *req, pm_rpc_t *resp);
@@ -132,7 +138,7 @@ class PMLib{
 
 	private:
 		std::string pmem_path;
-
+		uint8_t npartitions;
 
         PMEngine* find_ds(uint16_t id);
 		int create_ds(uint8_t ds_type,uint16_t ds_id);

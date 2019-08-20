@@ -18,7 +18,7 @@
 static const std::string pmem_path = "/mnt/pmem1/pmemds";
 pmemds::PMLib *pmlib;
 
-void callback(const unsigned char *data,
+void callback(uint8_t thread_id, const unsigned char *data,
               const int len,
               rpc_cookie_t *cookie, unsigned long *pmdk_state)
 {
@@ -31,7 +31,7 @@ void callback(const unsigned char *data,
 	/* set mbuf/wal commit state as a thread local */
 	//TX_SET_BLIZZARD_MBUF_COMMIT_ADDR(pmdk_state);
     request = (pm_rpc_t *) data;
-    pmlib->exec(request,response);
+    pmlib->exec(thread_id, request,response);
 }
 
 int commute_callback(unsigned long cmask1, void *arg1, unsigned long cmask2, void *arg2)
@@ -39,20 +39,17 @@ int commute_callback(unsigned long cmask1, void *arg1, unsigned long cmask2, voi
 	pm_rpc_t *op1 = (pm_rpc_t *) arg1;
 	pm_rpc_t *op2 = (pm_rpc_t *) arg2;
 
-    /* this is the signle partition data-structure. So we ignore partitions */
 	unsigned int op1_id = OP_ID(op1->meta);
 	unsigned int op2_id = OP_ID(op2->meta);
-	/* the key inserts and reads can operate in parallel as long as they do
-	 * not operate on the same key.
-	 */ 
-	if( (op1_id == PUT || op1_id == GET) &&
-			(op2_id == PUT || op2_id == GET) ){
-		if(op1->key != op2->key){
-			return 1;
-		}
+	if(cmask1 != cmask2){
+		return 1;
+	}
+	if(op1_id == GET_TOPK && op2_id == GET_TOPK){
+		return 1;
 	}
 	return 0;
 }
+
 /*
  * commute scheduler uses return value to decide the the core.
  * Alternatively, the client can specify core_mask. But this
@@ -94,7 +91,7 @@ int main(int argc, char *argv[])
                          atoi(argv[6]) + num_queues * num_quorums + executor_threads);
 
     assert(pmlib == NULL);
-    pmlib = new pmemds::PMLib(pmem_path);
+    pmlib = new pmemds::PMLib(pmem_path,executor_threads);
     if (pmlib == nullptr)
     {
         BOOST_LOG_TRIVIAL(fatal) << "cannot open pmemds";

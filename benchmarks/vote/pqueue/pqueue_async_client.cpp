@@ -39,6 +39,7 @@ typedef struct driver_args_st
 	int buf_cap;
 	pmemdsclient::DPDKPMClient *dpdkClient;
 	pmemdsclient::HashMapEngine *hashMap;
+	pmemdsclient::priority_queue *prio_queue;
 	void **handles;
 	void operator() ()
 	{
@@ -59,6 +60,7 @@ int driver(void *arg)
 	// char *buffer = new char[DISP_MAX_MSGSIZE];
 	pmemdsclient::DPDKPMClient *pmlib = dargs->dpdkClient;
 	pmemdsclient::HashMapEngine *hashMap = dargs->hashMap;
+	pmemdsclient::priority_queue *prio_queue = dargs->prio_queue;
 	//struct proposal *prop = (struct proposal *)buffer;
 	srand(time(NULL));
 	int ret;
@@ -69,28 +71,16 @@ int driver(void *arg)
 	char value_buffer[64];
 
 	double frac_read = 0.5;
-	const char *frac_read_env = getenv("KV_FRAC_READ");
-	if (frac_read_env != NULL)
-	{
-		frac_read = atof(frac_read_env);
-	}
-	BOOST_LOG_TRIVIAL(info) << "FRAC_READ = " << frac_read;
-
 	unsigned long keys = pmemds_keys;
-	const char *keys_env = getenv("KV_KEYS");
-	if (keys_env != NULL)
-	{
-		keys = atol(keys_env);
-	}
+	
+	BOOST_LOG_TRIVIAL(info) << "FRAC_READ = " << frac_read;
 	BOOST_LOG_TRIVIAL(info) << "KEYS = " << keys;
-
-	//pm_rpc_t *rpc_buf = (pm_rpc_t *)buffer;
 
 	srand(rtc_clock::current_time());
 	//struct cb_st *cb_ctxt;
-
-	pmlib->open("kvApp",nullptr);
+  pmlib->open("voteApp",nullptr);
 	uint8_t creation_flag = 0;
+	
 	hashMap->create(creation_flag,nullptr);
 	//for(int i=0 ;i<10000 ;i++ ){
 	for( ; ; ){
@@ -164,6 +154,7 @@ int main(int argc, const char *argv[])
 			dargs->dpdkClient = new pmemdsclient::DPDKPMClient(dargs->handles[i]);
 			//TBD: priority_queue and hashmap
 			dargs->hashMap = new pmemdsclient::HashMapEngine(dargs->dpdkClient,hashmap_st,1000,1UL);
+			dargs->prio_queue = new pmemdsclient::priority_queue(dargs->dpdkClient,hashmap_st,1000,1UL);
 		}
 	}
 	for (int me = client_id_start; me < client_id_stop; me++){
