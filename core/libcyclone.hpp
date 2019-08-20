@@ -90,11 +90,19 @@ typedef void (*rpc_gc_callback_t)(rpc_cookie_t *cookie);
 //Checking operations commutativity
 typedef int (*op_commute_callback_t)(unsigned long cmask1, void *incoming, unsigned long cmask2, void *issued);
 
+#ifdef __PARTITION
+//Partitions routing
+typedef int (*op_partition_callback_t)(void *request);
+#endif
+
 // Callbacks structure
 typedef struct rpc_callbacks_st {
   rpc_callback_t rpc_callback;
   rpc_gc_callback_t gc_callback;
   op_commute_callback_t op_callback;
+#ifdef __PARTITION
+	op_partition_callback_t op_partition;
+#endif
 } rpc_callbacks_t;
 
 // Init network stack
@@ -152,18 +160,5 @@ static const int RPC_FLAG_RO            = 1; // Read-only RPC
 
 ////// RocksDB parameters
 const int rocksdb_num_threads           = 16;
-
-
-
-/////////////////// Flash log interfaces /////////////////////
-static const int flashlog_pagesize = (128*1024);
-static const int flashlog_hwm = 200;
-static const int flashlog_use_osync = 0;
-static const unsigned long flashlog_segsize   =  (1024*1024*1024);
-void *create_flash_log(const char *path);
-int log_append(void *log_, 
-	       const char *data, 
-	       int size,
-	       int raft_idx);
 
 #endif

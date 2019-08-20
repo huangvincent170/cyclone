@@ -30,15 +30,24 @@ struct GetCallbackContext {
 		std::string* value;
 };
 
-	PMEngine * PMLib::find_ds(uint16_t id) {
-		auto engine = engine_map->find(id);
-		return engine->second;
-	}
+PMEngine * PMLib::find_ds(uint16_t id) {
+	auto engine = engine_map->find(id);
+	return engine->second;
+}
+
+/*
+ *  vote benchmarks' get top-K stored prodecure
+ */
+void PMLib::vote_topk(pm_rpc_t *request, pm_rpc_t *response){
+
+
+}
+
 
 /*
  * The routing function call
  */
-void PMLib::exec(pm_rpc_t *req,pm_rpc_t *resp){
+void PMLib::exec(unsigned long thread_id, pm_rpc_t *req,pm_rpc_t *resp){
 		uint8_t ds_type = TYPE_ID(req->meta);
 		uint16_t op_id  = OP_ID(req->meta);
 		uint16_t ds_id  = DS_ID(req->meta);
@@ -92,12 +101,12 @@ void PMLib::exec(pm_rpc_t *req,pm_rpc_t *resp){
 				SET_STATUS(resp->meta,NOT_FOUND);
 				return;
 			}
-			engine->exec(op_id,ds_type,std::to_string(ds_id),req,resp);
+			engine->exec(thread_id, op_id,ds_type,std::to_string(ds_id),req,resp);
 	}
 }
 
 
-int PMLib::create_ds(uint8_t ds_type, uint16_t ds_id){
+int PMLib::create_ds(uint8_t ds_type, uint16_t ds_id, uint8_t npartitions){
 		PMEngine *engine = nullptr;
         std::string path = pmem_path + "/" + std::to_string(ds_id);
         //std::string path = pmem_path;
@@ -105,13 +114,16 @@ int PMLib::create_ds(uint8_t ds_type, uint16_t ds_id){
 		case SORTED_BTREE:
 			engine = new BTreeEngine( path ,ds_pool_size);
 			break;
-		case HASHMAP:
+		case CONCURRENT_HASHMAP:
 			engine = new HashMapEngine(path,ds_pool_size);
+			break;
+		case SHARDED_HASHMAP:
+			engine = new ShardedHashMapEngine(path,ds_pool_size,npartitions);
 			break;
 		case VECTOR:
             break;
-        case PRIORITY_QUEUE:
-            engine = new priority_queue(path,ds_pool_size);
+        case SHARDED_PRIORITY_QUEUE:
+            engine = new priority_queue(path,ds_pool_size,npartitions);
             break;
 		default:
 			LOG_ERROR("Invalid DS type");

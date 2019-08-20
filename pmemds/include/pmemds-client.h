@@ -35,8 +35,10 @@ namespace pmemdsclient {
     protected:
         PMClient *client;
         uint16_t ds_id;
+        uint8_t type_id;
         size_t size;
         unsigned long core_mask;
+        uint8_t npartitions;
 
     public:
 

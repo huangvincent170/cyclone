@@ -139,6 +139,9 @@ class PMLib{
         int remove_ds(uint8_t ds_type,uint16_t ds_id);
 		int close_ds(uint8_t ds_type,uint16_t ds_id);
 
+		/// vote benchmark specific
+		void vote_topk(pm_rpc_t *request, pm_rpc_t *response);
+
 		std::map<uint16_t ,PMEngine*> *engine_map; //name to data-structure mapping
 
 };
@@ -153,7 +156,7 @@ public:
     PMEngine(){};
 	virtual ~PMEngine(){};
 
-	virtual void exec(uint16_t op_id,uint8_t ds_type, std::string ds_id,
+	virtual void exec(uint8_t thread_id, uint16_t op_id,uint8_t ds_type, std::string ds_id,
 				  pm_rpc_t *req, pm_rpc_t *resp)=0;
 
 	virtual string engine() =0;                           // engine identifier

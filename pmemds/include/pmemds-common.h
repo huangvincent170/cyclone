@@ -11,7 +11,8 @@
 const uint8_t UPDATE_OPERATION = 0;
 const uint8_t READ_OPERATION   = 1;
 
-
+/// partition constatns
+#define MAX_PARTITIONS 4
 
 
 //common operations
@@ -30,14 +31,15 @@ enum opnames{
     INSERT,
     INCREASE_PRIO,
     DECREASE_PRIO,
-    GET_MAX
+    GET_TOPK
 };
 
 //supported data-structures
 enum dstypes{
     SORTED_BTREE = 0,
-    HASHMAP,
-    PRIORITY_QUEUE,
+    CONCURRENT_HASHMAP,
+    SHARDED_HASHMAP,
+    SHARDED_PRIORITY_QUEUE,
     VECTOR,
 };
 

@@ -83,4 +83,41 @@ private:
         map_t *container;
     };
 
+
+
+    /*
+     * Partitioned hashmap engine.
+     */
+    class ShardedHashMapEngine : public PMEngine {
+    public:
+        ShardedHashMapEngine(uint8_t npartitions, const string &path, size_t size);          // default constructor
+        ~ShardedHashMapEngine();                                        // default destructor
+        const string ENGINE = "shardedhashmap";
+
+        string engine() final { return ENGINE; }               // engine identifier
+
+        void exec(uint8_t thread_id, uint16_t op_name,
+                  uint8_t ds_type, std::string ds_id, pm_rpc_t *req, pm_rpc_t *resp);
+
+        void exists(uint8_t thread_id, string_view key, pm_rpc_t *resp);              // does key have a value?
+
+        void get(uint8_t thread_id, string_view key, pm_rpc_t *resp);
+
+        void put(uint8_t thread_id, string_view key, string_view value, pm_rpc_t *resp);
+
+        void remove(uint8_t thread_id, string_view key, pm_rpc_t *resp);              // remove value for key
+    private:
+        using string_t = pmemds::polymorphic_string;
+        using map_t = pmem::obj::experimental::concurrent_hash_map<string_t, string_t, string_hasher>;
+
+        struct RootData {
+            pmem::obj::persistent_ptr<map_t> map_ptr;
+        };
+        using pool_t = pmem::obj::pool<RootData>;
+
+        void Recover(uint8_t npartitions);
+        pool_t pmpool;
+        map_t *container;
+    };
+
 }
