@@ -118,7 +118,7 @@ namespace pmemds {
                 l_idx = parent_of(l_idx);
             }
 
-            if(max_elems->at(0) > min_elems->at(0)){
+            if(max_elems->at(0)->priority > min_elems->at(0)->priority){
                 struct pqelem_st *temp = max_elems->at(0);
 
                 max_elems->at(0) = min_elems->at(0);
@@ -176,7 +176,7 @@ namespace pmemds {
                 l_idx = parent_of(l_idx);
             }
 
-            if(min_elems->at(0) < max_elems->at(0)){
+            if(min_elems->at(0)->priority < max_elems->at(0)->priority){
                 struct pqelem_st *temp = min_elems->at(0);
 
                 min_elems->at(0) = max_elems->at(0);
@@ -219,7 +219,7 @@ namespace pmemds {
         }
 
         /// if incoming element does not belong to top-K, then insert in to max-heap
-        if(min_elems->at(0)->priority < priority) {
+        if(min_elems->at(0)->priority > priority) {
             max_elems->push_back(pqelem);
             unsigned long l_idx = max_elems->size() - 1;
             keymap->insert(std::pair<unsigned long, unsigned long>(key, maxtog(l_idx)));
@@ -244,7 +244,6 @@ namespace pmemds {
         }
         it->second = maxtog(l_idx);
 
-        keymap->insert(std::pair<unsigned long, unsigned long>(key, maxtog(l_idx)));
         while (l_idx > 0 && max_elems->at(l_idx)->priority > max_elems->at(parent_of(l_idx))->priority) {
             swap(max_elems, MAX_HEAP, l_idx, parent_of(l_idx));
             l_idx = parent_of(l_idx);
@@ -253,7 +252,7 @@ namespace pmemds {
         keymap->insert(std::pair<unsigned long, unsigned long>(key, mintog(0)));
         min_elems->at(0) = pqelem;
         min_heapify(0);
-
+        return 0;
     }
 
     inline void persistent_priority_queue::max_heapify(const unsigned long idx) {
@@ -281,12 +280,12 @@ namespace pmemds {
         unsigned long rchild_idx = right_child(idx);
         unsigned long lchild_idx = left_child(idx);
 
-        if(rchild_idx < max_elems->size() && max_elems->at(rchild_idx)->priority < max_elems->at(idx)->priority){
+        if(rchild_idx < min_elems->size() && min_elems->at(rchild_idx)->priority < min_elems->at(idx)->priority){
             min = rchild_idx;
         }else{
             min = idx;
         }
-        if(lchild_idx < max_elems->size() &&  max_elems->at(lchild_idx)->priority < max_elems->at(min)->priority){
+        if(lchild_idx < min_elems->size() &&  min_elems->at(lchild_idx)->priority < min_elems->at(min)->priority){
             min = lchild_idx;
         }
         if(min != idx){

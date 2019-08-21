@@ -12,10 +12,6 @@ namespace {
            before each test). */
         void SetUp() override {
             pq = new pmemds::persistent_priority_queue();
-            for(int i = 0; i < 10; i++) {
-                pq->insert(i,10);
-            }
-
         }
 
         /* Code here will be called immediately after each test (right
@@ -28,9 +24,29 @@ namespace {
 
     };
 
-    TEST_F(pqTest, readTest) {
+    TEST_F(pqTest, descendPrio) {
         unsigned long *array;
         int size;
+
+        for(int i = 0; i < 10; i++) {
+            pq->insert(i,10-i);
+        }
+
+        ASSERT_EQ(pq->read_topK(&array,&size),0);
+        for(int i = 0; i < size; i++){
+            std::cout << array[i] << " ";
+        }
+        std::cout << std::endl;
+    }
+
+    TEST_F(pqTest, ascendPrio) {
+        unsigned long *array;
+        int size;
+
+        for(int i = 0; i < 10; i++) {
+            pq->insert(i,i);
+        }
+
         ASSERT_EQ(pq->read_topK(&array,&size),0);
         for(int i = 0; i < size; i++){
             std::cout << array[i] << " ";
@@ -38,6 +54,41 @@ namespace {
         std::cout << std::endl;
 
     }
+
+    TEST_F(pqTest, decreasePrio) {
+        unsigned long *array;
+        int size;
+
+        for(int i = 0; i < 10; i++) {
+            pq->insert(i,i);
+        }
+        pq->decrease_prio(8,6);
+        ASSERT_EQ(pq->read_topK(&array,&size),0);
+        for(int i = 0; i < size; i++){
+            std::cout << array[i] << " ";
+        }
+        std::cout << std::endl;
+
+    }
+
+
+    TEST_F(pqTest, increasePrio) {
+        unsigned long *array;
+        int size;
+
+        for(int i = 0; i < 10; i++) {
+            pq->insert(i,i);
+        }
+        pq->increase_prio(2,10);
+        ASSERT_EQ(pq->read_topK(&array,&size),0);
+        for(int i = 0; i < size; i++){
+            std::cout << array[i] << " ";
+        }
+        std::cout << std::endl;
+
+    }
+
+
 /*
 
     TEST_F(pqTest, incrTest){
