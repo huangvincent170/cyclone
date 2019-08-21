@@ -114,8 +114,8 @@ namespace pmemds {
             unsigned long l_idx = gtol(g_idx);
             max_elems->at(l_idx)->priority += delta_prio;
             while(l_idx > 0 && max_elems->at(l_idx)->priority > max_elems->at(parent_of(l_idx))->priority){
-                swap( max-elems,MAX_HEAP,l_idx,parent_of(l_idx)); /// TBD
-                l_idx = parent_of(idx);
+                swap( max_elems,MAX_HEAP,l_idx,parent_of(l_idx)); /// TBD
+                l_idx = parent_of(l_idx);
             }
 
             if(max_elems->at(0) > min_elems->at(0)){
@@ -172,8 +172,8 @@ namespace pmemds {
             unsigned long l_idx = gtol(g_idx);
             min_elems->at(l_idx)->priority -= delta_prio;
             while(l_idx > 0 && min_elems->at(l_idx)->priority < min_elems->at(parent_of(l_idx))->priority){
-                swap( min-elems,MIN_HEAP,l_idx,parent_of(l_idx));
-                l_idx = parent_of(idx);
+                swap( min_elems,MIN_HEAP,l_idx,parent_of(l_idx));
+                l_idx = parent_of(l_idx);
             }
 
             if(min_elems->at(0) < max_elems->at(0)){
@@ -203,7 +203,7 @@ namespace pmemds {
     }
 
     inline int persistent_priority_queue::insert(unsigned long key, unsigned long priority) {
-        std::vector<struct pqelem_st*>::iterator it;
+        std::unordered_map<unsigned long,unsigned long>::iterator  it;
         struct pqelem_st *pqelem = new struct pqelem_st(key,priority);
 
         /// if min-heap is not filled, then fill it
@@ -212,7 +212,7 @@ namespace pmemds {
             unsigned long l_idx = min_elems->size()-1;
             keymap->insert(std::pair<unsigned long, unsigned long>(key,mintog(l_idx)));
             while(l_idx > 0 && min_elems->at(l_idx)->priority < min_elems->at(parent_of(l_idx))->priority){
-                swap(min_elems,l_idx,parent_of(l_idx));
+                swap(min_elems,MIN_HEAP,l_idx,parent_of(l_idx));
                 l_idx = parent_of(l_idx);
             }
             return 0;
@@ -237,7 +237,7 @@ namespace pmemds {
 
         max_elems->push_back(minimum);
         unsigned long l_idx  = max_elems->size() - 1;
-        std::unordered_map<unsigned long,unsigned long>::iterator  it = keymap->find(minimum->key);
+        it = keymap->find(minimum->key);
         if(it == keymap->end()){
             LOG_ERROR("key not found");
             return -1;
@@ -257,21 +257,21 @@ namespace pmemds {
     }
 
     inline void persistent_priority_queue::max_heapify(const unsigned long idx) {
-        unsigned long largest;
+        unsigned long max;
         unsigned long rchild_idx = right_child(idx);
         unsigned long lchild_idx = left_child(idx);
 
         if(rchild_idx < max_elems->size() && max_elems->at(rchild_idx)->priority > max_elems->at(idx)->priority){
-            largest = rchild_idx;
+            max = rchild_idx;
         }else{
-            largest = idx;
+            max = idx;
         }
-        if(lchild_idx < max_elems->size() &&  max_elems->at(lchild_idx)->priority > max_elems->at(largest)->priority){
-            largest = lchild_idx;
+        if(lchild_idx < max_elems->size() &&  max_elems->at(lchild_idx)->priority > max_elems->at(max)->priority){
+            max = lchild_idx;
         }
-        if(largest != idx){
-            swap(max_elems,MAX_HEAP,largest,idx);
-            max_heapify(largest);
+        if(max != idx){
+            swap(max_elems,MAX_HEAP,max,idx);
+            max_heapify(max);
         }
     }
 
@@ -286,7 +286,7 @@ namespace pmemds {
         }else{
             min = idx;
         }
-        if(lchild_idx < max_elems->size() &&  max_elems->at(lchild_idx)->priority < max_elems->at(largest)->priority){
+        if(lchild_idx < max_elems->size() &&  max_elems->at(lchild_idx)->priority < max_elems->at(min)->priority){
             min = lchild_idx;
         }
         if(min != idx){
@@ -296,12 +296,13 @@ namespace pmemds {
     }
     
     
-    inline int persistent_priority_queue::read_topK(unsigend long **array, int *size){
-        size = min_elems->size();
-        *array = malloc(sizeof(unsigned long) * size);
-        for(int i =0; i < size; i++){
-            array[i] = min_elems->at(i);
+    inline int persistent_priority_queue::read_topK(unsigned long **array, int *size){
+        int nelems = min_elems->size();
+        *array = (unsigned long *)malloc(sizeof(unsigned long) * nelems);
+        for(int i =0; i < nelems; i++){
+            (*array)[i] = min_elems->at(i)->key;
         }
+        *size = nelems;
         return 0;
     }
 

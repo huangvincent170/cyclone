@@ -66,7 +66,7 @@ BTreeEngine::~BTreeEngine() { //TODO: support deleting ds altogether
     LOG("Closed ok");
 }
 
-    void BTreeEngine::exec(uint16_t op_name, uint8_t ds_type, std::string ds_id,
+    void BTreeEngine::exec(uint8_t thread_id, uint16_t op_name, uint8_t ds_type, std::string ds_id,
                            pm_rpc_t *req, pm_rpc_t *resp) {
         std::string in_val;
         switch (op_name){

@@ -133,7 +133,7 @@ class PMLib{
 
 		int open(const string& app);
 		int close();
-		void exec(pm_rpc_t *req, pm_rpc_t *resp);
+		void exec(uint8_t thread_id, pm_rpc_t *req, pm_rpc_t *resp);
 
 
 	private:
@@ -141,7 +141,7 @@ class PMLib{
 		uint8_t npartitions;
 
         PMEngine* find_ds(uint16_t id);
-		int create_ds(uint8_t ds_type,uint16_t ds_id);
+		int create_ds(uint8_t ds_type,uint16_t ds_id,uint8_t npartitions);
         int remove_ds(uint8_t ds_type,uint16_t ds_id);
 		int close_ds(uint8_t ds_type,uint16_t ds_id);
 

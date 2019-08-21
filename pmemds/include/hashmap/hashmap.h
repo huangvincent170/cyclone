@@ -59,7 +59,7 @@ private:
 
         string engine() final { return ENGINE; }               // engine identifier
 
-        void exec(uint16_t op_name,
+        void exec(uint8_t thread_id,uint16_t op_name,
                   uint8_t ds_type, std::string ds_id, pm_rpc_t *req, pm_rpc_t *resp);
 
         void exists(string_view key, pm_rpc_t *resp);              // does key have a value?
@@ -90,7 +90,7 @@ private:
      */
     class ShardedHashMapEngine : public PMEngine {
     public:
-        ShardedHashMapEngine(uint8_t npartitions, const string &path, size_t size);          // default constructor
+        ShardedHashMapEngine(const string &path, size_t size, uint8_t npartitions );          // default constructor
         ~ShardedHashMapEngine();                                        // default destructor
         const string ENGINE = "shardedhashmap";
 

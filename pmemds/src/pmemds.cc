@@ -47,7 +47,7 @@ void PMLib::vote_topk(pm_rpc_t *request, pm_rpc_t *response){
 /*
  * The routing function call
  */
-void PMLib::exec(unsigned long thread_id, pm_rpc_t *req,pm_rpc_t *resp){
+void PMLib::exec(uint8_t thread_id, pm_rpc_t *req,pm_rpc_t *resp){
 		uint8_t ds_type = TYPE_ID(req->meta);
 		uint16_t op_id  = OP_ID(req->meta);
 		uint16_t ds_id  = DS_ID(req->meta);
@@ -71,7 +71,7 @@ void PMLib::exec(unsigned long thread_id, pm_rpc_t *req,pm_rpc_t *resp){
 			break;
 	/* handle data-structure creation and deletion */
 		case CREATE_DS:
-				if(!create_ds(ds_type,ds_id)){
+				if(!create_ds(ds_type,ds_id,this->npartitions)){
                     SET_STATUS(resp->meta,OK);
                 }else{
                     SET_STATUS(resp->meta,FAILED);

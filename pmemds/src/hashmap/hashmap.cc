@@ -33,7 +33,7 @@ namespace pmemds {
     }
 
 
-    void HashMapEngine::exec(uint16_t op_name,
+    void HashMapEngine::exec(uint8_t thread_id, uint16_t op_name,
                              uint8_t ds_type, std::string ds_id, pm_rpc_t *req, pm_rpc_t *resp) {
         string_view in_key(req->ckey, KEY_SIZE);
 
@@ -118,7 +118,7 @@ namespace pmemds {
     }
 
     /// Shared hashmap impl
-        ShardedHashMapEngine::ShardedHashMapEngine(uint8_t npartitions, const string &path, const size_t size) {
+        ShardedHashMapEngine::ShardedHashMapEngine(const string &path, const size_t size, uint8_t npartitions) {
         if ((access(path.c_str(), F_OK) != 0) && (size > 0)) {
             LOG("Creating filesystem pool, path=" << path << ", size=" << to_string(size));
             pmpool = pool<RootData>::create(path.c_str(), LAYOUT, size, S_IRWXU);
@@ -126,7 +126,7 @@ namespace pmemds {
             LOG("Opening pool, path=" << path);
             pmpool = pool<RootData>::open(path.c_str(), LAYOUT);
         }
-        Recover();
+        Recover(npartitions);
         LOG("Opened ok");
     }
 
@@ -144,13 +144,13 @@ namespace pmemds {
         switch (op_name){
             case GET:
                 //LOG("Get op : " << in_key.);
-                this->get(in_key,resp);
+                this->get(thread_id,in_key,resp);
                 break;
             case PUT: {
                 std::string val = std::string(req->value);
                 string_view in_val(val);
                 //LOG("Put op : " << in_key << in_val);
-                this->put(in_key, in_val, resp);
+                this->put(thread_id,in_key, in_val, resp);
             }
                 break;
             default:

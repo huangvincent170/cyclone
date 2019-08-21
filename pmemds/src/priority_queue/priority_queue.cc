@@ -13,10 +13,10 @@ namespace pmemds{
             LOG_INFO("npartitions defaulted to 1");
         }
         if(npartitions > MAX_PARTITIONS){
-            LOG_ERROR("npartitions, should be less than MAX_PARTITIONS" + );
+            LOG_ERROR("npartitions, should be less than MAX_PARTITIONS");
         }
         for(int i = 0; i < npartitions; i++) {
-            this->my_pq[i] = new persistent_priority_queue();
+            this->my_pq[i] = new persistent_priority_queue(); // make these persistent
         }
     }
 
@@ -89,7 +89,7 @@ namespace pmemds{
     }
 
     void priority_queue::read_topk(uint8_t thread_id, pm_rpc_t *resp) {
-        LOG("get max");
+        /*LOG("get max");
         unsigned long key;
         unsigned long prio;
         int ret = my_pq[thread_id]->read_topK();
@@ -98,7 +98,7 @@ namespace pmemds{
             resp->key = key;
             return;
         }
-        SET_STATUS(resp->meta, FAILED);
+        SET_STATUS(resp->meta, FAILED);*/  /// TBD
     }
 
     void priority_queue::erase(unsigned long key, pm_rpc_t *resp) {

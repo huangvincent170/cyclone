@@ -35,7 +35,6 @@ namespace pmemdsclient {
     }
 
     int BTreeEngine::create(uint8_t flags, void (*cb)(void *)) {
-        pm_rpc_t *response;
         pm_rpc_t payload = {0, 0, "\0"};
         SET_OP_ID(payload.meta, CREATE_DS);
         SET_TYPE_ID(payload.meta, SORTED_BTREE);
@@ -64,7 +63,6 @@ namespace pmemdsclient {
     }
 
     int BTreeEngine::close(void (*cb)(void *)) {
-        pm_rpc_t *response;
         pm_rpc_t payload = {0, 0, "\0"};
         SET_OP_ID(payload.meta, CLOSE_DS);
         SET_TYPE_ID(payload.meta, SORTED_BTREE);
@@ -72,6 +70,7 @@ namespace pmemdsclient {
         if (client->sendmsg_async(&payload, this->core_mask, cb) != 0) {
             LOG_ERROR("btree async close");
         }
+        return OK;
     }
 
 
@@ -94,7 +93,6 @@ namespace pmemdsclient {
     }
 
     int BTreeEngine::remove(void (*cb)(void *)) {
-        pm_rpc_t *response;
         pm_rpc_t payload = {0,0,"\0"};
         SET_OP_ID(payload.meta,REMOVE_DS);
         SET_TYPE_ID(payload.meta,SORTED_BTREE);
@@ -102,6 +100,7 @@ namespace pmemdsclient {
         if (client->sendmsg_async(&payload, this->core_mask, cb) != 0) {
             LOG_ERROR("btree async remove");
         }
+        return OK;
     }
 
 
@@ -123,7 +122,6 @@ namespace pmemdsclient {
     }
 
     int BTreeEngine::get(const unsigned long key,void (*cb)(void *)) {
-        pm_rpc_t *response;
         pm_rpc_t payload = {0,0,"\0"};
         SET_DS_ID(payload.meta, this->ds_id);
         SET_OP_ID(payload.meta,GET);
@@ -132,7 +130,7 @@ namespace pmemdsclient {
         if (client->sendmsg_async(&payload, this->core_mask, cb) != 0) {
             LOG_ERROR("btree async get");
         }
-
+        return OK;
     }
 
 
@@ -153,7 +151,6 @@ namespace pmemdsclient {
     }
 
     int BTreeEngine::put(const unsigned long key, const std::string& value,void (*cb)(void *)) {
-        pm_rpc_t *response;
         pm_rpc_t payload = {0,0,"\0"};
         SET_DS_ID(payload.meta, this->ds_id);
         SET_OP_ID(payload.meta,PUT);
@@ -185,7 +182,6 @@ namespace pmemdsclient {
     }
 
     int BTreeEngine::remove(const unsigned long key ,void (*cb)(void *)) {
-        pm_rpc_t *response;
         pm_rpc_t payload = {0,0,"\0"};
         SET_DS_ID(payload.meta, this->ds_id);
         SET_OP_ID(payload.meta,DELETE);

@@ -10,7 +10,7 @@ namespace pmemds {
     class priority_queue : public PMEngine {
     public:
 
-        priority_queue(const string& path, size_t size);
+        priority_queue(const string& path, size_t size,uint8_t npartitions);
         ~priority_queue();
         const string ENGINE = "prio_queue";
         string engine() final { return ENGINE; };
