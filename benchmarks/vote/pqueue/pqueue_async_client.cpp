@@ -15,15 +15,20 @@
 #include "../../../core/logging.hpp"
 #include "../../../core/clock.hpp"
 #include "../../../core/libcyclone.hpp"
+#include "../../common/genzip.hpp"
 
 #include "dpdk_client.hpp"
 #include "hashmap/hashmap-client.h"
+#include "priority-queue/priority-queue.h"
 
 /* IMPORTANT - set to large enough value */
 unsigned long pmemds_keys = 1000000;
+double alpha = 1.08;
+int nreqs = 20;
 
 /* pmem structure names */
 const uint16_t hashmap_st = 0;
+const uint16_t pq_st = 1;
 
 
 int driver(void *arg);
@@ -69,34 +74,38 @@ int driver(void *arg)
 
 	unsigned  long key;
 	char value_buffer[64];
-
-	double frac_read = 0.5;
 	unsigned long keys = pmemds_keys;
-	
+
+  double frac_read = ((double)(nreqs-1))/nreqs;	
 	BOOST_LOG_TRIVIAL(info) << "FRAC_READ = " << frac_read;
 	BOOST_LOG_TRIVIAL(info) << "KEYS = " << keys;
+	BOOST_LOG_TRIVIAL(info) << "ZIPFIAN (ALPHA) = " << alpha;
 
 	srand(rtc_clock::current_time());
-	//struct cb_st *cb_ctxt;
   pmlib->open("voteApp",nullptr);
 	uint8_t creation_flag = 0;
 	
 	hashMap->create(creation_flag,nullptr);
-	//for(int i=0 ;i<10000 ;i++ ){
-	for( ; ; ){
-		double coin = ((double)rand()) / RAND_MAX;
-		unsigned long key = rand() % keys;
-		if (coin > frac_read){
+	prio_queue->create(creation_flag,nullptr);
+
+	// populate articles
+	for(int i = 0; i < keys; i++){
+	 hashmap->put(i, "article name");
+	 prio_queue->insert(i,0); // 0 votes initially
+	}
+
+	for( int rcount = 0 ; ; rcount = ++rcount%nreqs){
+		key = zipf(keys,alpha);
+		if(rcount){ // read request
+			pmlib->topk(key, nullptr);
+		}else{ // update request
 			snprintf(value_buffer,MAX_VAL_LENGTH,"v_%lu",key);
-			//BOOST_LOG_TRIVIAL(info) << "put op :" << key;
 			hashMap->put(key,value_buffer, nullptr);
-		}
-		else{
-			//BOOST_LOG_TRIVIAL(info) << "get op :" << key;
-			hashMap->get(key, nullptr);
+			prio_queue->increase_prio(key);
 		}
 	}
 	hashMap->close(nullptr);
+	prio_queue->close(nullptr);
 	pmlib->close(nullptr);
 	return 0;
 }
@@ -116,7 +125,6 @@ int main(int argc, const char *argv[])
 	cyclone_network_init(argv[7], 1, atoi(argv[3]), 2 + client_id_stop - client_id_start);
 	driver_args_t ** dargs_array =
 		(driver_args_t **)malloc((client_id_stop - client_id_start) * sizeof(driver_args_t *));
-	//BOOST_LOG_TRIVIAL(info) << "no. clients: " << (client_id_stop - client_id_start);
 	for (int me = client_id_start; me < client_id_stop; me++)
 	{
 		dargs = (driver_args_t *) malloc(sizeof(driver_args_t));
@@ -154,7 +162,7 @@ int main(int argc, const char *argv[])
 			dargs->dpdkClient = new pmemdsclient::DPDKPMClient(dargs->handles[i]);
 			//TBD: priority_queue and hashmap
 			dargs->hashMap = new pmemdsclient::HashMapEngine(dargs->dpdkClient,hashmap_st,1000,1UL);
-			dargs->prio_queue = new pmemdsclient::priority_queue(dargs->dpdkClient,hashmap_st,1000,1UL);
+			dargs->prio_queue = new pmemdsclient::PriorityQueueEngine(dargs->dpdkClient,hashmap_st,1000,1UL);
 		}
 	}
 	for (int me = client_id_start; me < client_id_stop; me++){
