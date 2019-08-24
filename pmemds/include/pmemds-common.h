@@ -84,4 +84,13 @@ typedef struct pm_rpc_st{
 }pm_rpc_t;
 
 
+static const unsigned long MAX_VOTE_PAYLOAD = 100;
+/// vote benchmark specific payload
+struct vote_payload_st{
+    unsigned long idx;
+    char art[10];       // article
+};
+
+
+
 #endif

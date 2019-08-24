@@ -7,7 +7,7 @@
 namespace pmemds{
 
 
-    priority_queue::priority_queue(const string &path, size_t size, uint8_t npartitions){
+    ShardedPriorityQueueEngine::ShardedPriorityQueueEngine(const string &path, size_t size, uint8_t npartitions){
         if(npartitions < 1) {
             npartitions = 1;
             LOG_INFO("npartitions defaulted to 1");
@@ -21,10 +21,10 @@ namespace pmemds{
     }
 
 
-    priority_queue::~priority_queue(){
+    ShardedPriorityQueueEngine::~ShardedPriorityQueueEngine(){
     }
 
-    void priority_queue::exec(uint8_t thread_id, uint16_t op_id, uint8_t ds_type, std::string ds_id,
+    void ShardedPriorityQueueEngine::exec(uint8_t thread_id, uint16_t op_id, uint8_t ds_type, std::string ds_id,
                               pm_rpc_t *req, pm_rpc_t *resp){
          unsigned long priority;
          switch (op_id){
@@ -50,7 +50,7 @@ namespace pmemds{
     }
 
 
-    void priority_queue::increase_prio(uint8_t thread_id, const unsigned &key, unsigned long &delta_prio,pm_rpc_t *resp) {
+    void ShardedPriorityQueueEngine::increase_prio(uint8_t thread_id, const unsigned &key, unsigned long &delta_prio,pm_rpc_t *resp) {
         LOG("increase priority = " << key);
         int ret = my_pq[thread_id]->increase_prio(key,delta_prio);
         resp->key = key;
@@ -62,7 +62,7 @@ namespace pmemds{
         SET_STATUS(resp->meta, FAILED);
     }
 
-    void priority_queue::decrease_prio(uint8_t thread_id,const unsigned &key, unsigned long &delta_prio, pm_rpc_t *resp) {
+    void ShardedPriorityQueueEngine::decrease_prio(uint8_t thread_id,const unsigned &key, unsigned long &delta_prio, pm_rpc_t *resp) {
         LOG("decrease priority = " << key);
         resp->key = key;
         int ret = my_pq[thread_id]->decrease_prio(key,delta_prio);
@@ -76,7 +76,7 @@ namespace pmemds{
     }
 
 
-    void priority_queue::insert(uint8_t thread_id, unsigned long key, unsigned long priority, pm_rpc_t *resp) {
+    void ShardedPriorityQueueEngine::insert(uint8_t thread_id, unsigned long key, unsigned long priority, pm_rpc_t *resp) {
         LOG("insert key = " << key);
         resp->key = key;
         int ret = my_pq[thread_id]->insert(key,priority);
@@ -88,7 +88,7 @@ namespace pmemds{
         SET_STATUS(resp->meta, FAILED);
     }
 
-    void priority_queue::read_topk(uint8_t thread_id, pm_rpc_t *resp) {
+    void ShardedPriorityQueueEngine::read_topk(uint8_t thread_id, pm_rpc_t *resp) {
         /*LOG("get max");
         unsigned long key;
         unsigned long prio;
@@ -101,11 +101,11 @@ namespace pmemds{
         SET_STATUS(resp->meta, FAILED);*/  /// TBD
     }
 
-    void priority_queue::erase(unsigned long key, pm_rpc_t *resp) {
+    void ShardedPriorityQueueEngine::erase(unsigned long key, pm_rpc_t *resp) {
 
     }
 
-    unsigned long priority_queue::parse_priority(char *data){
+    unsigned long ShardedPriorityQueueEngine::parse_priority(char *data){
             unsigned long *prio = reinterpret_cast<unsigned long *>(data);
         return *prio;
     }

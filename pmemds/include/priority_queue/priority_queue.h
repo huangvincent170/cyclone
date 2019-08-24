@@ -7,11 +7,11 @@
 
 namespace pmemds {
 
-    class priority_queue : public PMEngine {
+    class ShardedPriorityQueueEngine : public PMEngine {
     public:
 
-        priority_queue(const string& path, size_t size,uint8_t npartitions);
-        ~priority_queue();
+        ShardedPriorityQueueEngine(const string& path, size_t size,uint8_t npartitions);
+        ~ShardedPriorityQueueEngine();
         const string ENGINE = "prio_queue";
         string engine() final { return ENGINE; };
 

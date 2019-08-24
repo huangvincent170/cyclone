@@ -2,7 +2,7 @@
 #include "priority_queue/priority_queue-client.h"
 
 namespace pmemdsclient {
-    priority_queue::priority_queue(PMClient *handle,
+    PriorityQueueEngine::PriorityQueueEngine(PMClient *handle,
                                    const uint16_t ds_id, size_t size, unsigned long core_mask) {
         this->client = handle;
         this->ds_id = ds_id;
@@ -10,11 +10,11 @@ namespace pmemdsclient {
         this->size = size;
     }
 
-    priority_queue::~priority_queue() {
+    PriorityQueueEngine::~PriorityQueueEngine() {
 
     }
 
-    int priority_queue::create(uint8_t flags) {
+    int PriorityQueueEngine::create(uint8_t flags) {
         pm_rpc_t *response;
         pm_rpc_t payload = {0, 0, "\0"};
         SET_OP_ID(payload.meta, CREATE_DS);
@@ -31,7 +31,7 @@ namespace pmemdsclient {
     }
 
 
-    int priority_queue::close(){
+    int PriorityQueueEngine::close(){
         pm_rpc_t *response;
         pm_rpc_t payload = {0,0,"\0"};
         SET_OP_ID(payload.meta,CLOSE_DS);
@@ -41,13 +41,13 @@ namespace pmemdsclient {
             LOG_ERROR("priority_queue close");
         }
         if(STATUS(response->meta) != OK){
-            LOG_ERROR("priority_queue close");
+            LOG_ERROR("PriorityQueueEngine close");
             return FAILED;
         }
         return OK;
     }
 
-    int priority_queue::remove(){
+    int PriorityQueueEngine::remove(){
         pm_rpc_t *response;
         pm_rpc_t payload = {0,0,"\0"};
         SET_OP_ID(payload.meta,REMOVE_DS);
@@ -63,7 +63,7 @@ namespace pmemdsclient {
         return OK;
     }
 
-    int priority_queue::insert(unsigned long key, unsigned long priority) {
+    int PriorityQueueEngine::insert(unsigned long key, unsigned long priority) {
         pm_rpc_t *response;
         pm_rpc_t payload = {0,0,"\0"};
         SET_OP_ID(payload.meta,INSERT);
@@ -82,7 +82,7 @@ namespace pmemdsclient {
 
     }
 
-    int priority_queue::topk() {
+    int PriorityQueueEngine::topk() {
         pm_rpc_t *response;
         pm_rpc_t payload = {0,0,"\0"};
         SET_OP_ID(payload.meta,GET_TOPK);
@@ -98,7 +98,7 @@ namespace pmemdsclient {
         return OK;
     }
 
-    int priority_queue::increase_prio(const unsigned &key, unsigned long &delta_prio) {
+    int PriorityQueueEngine::increase_prio(const unsigned &key, unsigned long &delta_prio) {
         pm_rpc_t *response;
         pm_rpc_t payload = {0,0,"\0"};
         SET_OP_ID(payload.meta,INSERT);
@@ -117,7 +117,7 @@ namespace pmemdsclient {
         return OK;
     }
 
-    int priority_queue::decrease_prio(const unsigned &key, unsigned long &delta_prio) {
+    int PriorityQueueEngine::decrease_prio(const unsigned &key, unsigned long &delta_prio) {
         pm_rpc_t *response;
         pm_rpc_t payload = {0,0,"\0"};
         SET_OP_ID(payload.meta,INSERT);
@@ -135,6 +135,5 @@ namespace pmemdsclient {
         }
         return OK;
     }
-
 
 }

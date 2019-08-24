@@ -39,8 +39,34 @@ PMEngine * PMLib::find_ds(uint16_t id) {
  *  vote benchmarks' get top-K stored prodecure
  */
 void PMLib::vote_topk(pm_rpc_t *request, pm_rpc_t *response){
+	struct vote_payload_st vpayload[MAX_VOTE_PAYLOAD];
+ 	uint16_t  sharded_hashmap = 0;
+ 	uint16_t  sharded_pq = 1;  /// TBD: these are request params
 
+		PMEngine *hm_temp = find_ds(sharded_hashmap);
+		PMEngine *pq_temp = find_ds(sharded_pq);
 
+	ShardedHashMapEngine * hashmap_engine = reinterpret_cast<ShardedHashMapEngine *>(hm_temp);
+	ShardedPriorityQueueEngine * pq_engine = reinterpret_cast<ShardedPriorityQueueEngine *>(pq_temp);
+
+		using hashmap_t = pmem::obj::experimental::concurrent_hash_map<string_t, string_t, string_hasher>;
+
+		unsigned long *array;
+		int fill_index = 0;
+		int size;
+		for(int i=0; i < this->npartitions; i++) {
+
+			hashmap_t *hm = hashmap_engine->engine(i);
+			persistent_priority_queue *pq = pq_engine->engine(i);
+			pq->read_topK(&vpayload[fill_index],&size);
+			// fill the titles next
+			if(size != 0){
+				for(int j = 0 ; j < size; j++){
+					hm->find(,array[j]);
+
+				}
+			}
+		}
 }
 
 
@@ -123,7 +149,7 @@ int PMLib::create_ds(uint8_t ds_type, uint16_t ds_id, uint8_t npartitions){
 		case VECTOR:
             break;
         case SHARDED_PRIORITY_QUEUE:
-            engine = new priority_queue(path,ds_pool_size,npartitions);
+            engine = new ShardedPriorityQueueEngine(path,ds_pool_size,npartitions);
             break;
 		default:
 			LOG_ERROR("Invalid DS type");

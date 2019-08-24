@@ -79,7 +79,7 @@ namespace {
         ASSERT_EQ(bt2->remove(),OK);
 }
 
-
+/*
     TEST_F(pmemdsTest, BasicQueueTest) {
         pmemdsclient::priority_queue *pq = new pmemdsclient::priority_queue(testClient,pq1,1024*1024*8, 0UL);
 
@@ -93,6 +93,6 @@ namespace {
         ASSERT_EQ(max,2UL);
         //ASSERT_EQ(pq->remove(),FAILED); // currently a volatile data-structure present
 
-    }
+    }*/
 
 }

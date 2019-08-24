@@ -6,12 +6,12 @@
 
 namespace pmemdsclient{
 
-    class priority_queue:public PMEngine{
+    class PriorityQueueEngine:public PMEngine{
 
 
     public:
-        priority_queue(PMClient *handle, const uint16_t ds_id, size_t size, unsigned long core_mask);
-        ~priority_queue();
+        PriorityQueueEngine(PMClient *handle, const uint16_t ds_id, size_t size, unsigned long core_mask);
+        ~PriorityQueueEngine();
 
         int create(uint8_t flags);
         int close();

@@ -14,7 +14,7 @@ namespace pmemdsclient {
     }
 
 
-    HashMapEngine::HashMapEngine(PMClient *handle, const uint16_t ds_id, size_t size,uint8_t npartitions) {
+    HashMapEngine::HashMapEngine(PMClient *handle, const uint16_t ds_id, size_t size, unsigned long core_mask, uint8_t npartitions) { // change this to a bitmap flag
         this->ds_id = ds_id;
         this->size = size;
         this->client = handle;

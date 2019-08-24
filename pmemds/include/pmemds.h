@@ -148,7 +148,7 @@ class PMLib{
 		/// vote benchmark specific
 		void vote_topk(pm_rpc_t *request, pm_rpc_t *response);
 
-		std::map<uint16_t ,PMEngine*> *engine_map; //name to data-structure mapping
+		std::map<uint16_t ,PMEngine*> *engine_map; /// TBD: name to data-structure mapping. Make this an array
 
 };
 
