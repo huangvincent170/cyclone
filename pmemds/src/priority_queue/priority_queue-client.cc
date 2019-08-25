@@ -10,6 +10,15 @@ namespace pmemdsclient {
         this->size = size;
     }
 
+    PriorityQueueEngine::PriorityQueueEngine(PMClient *handle,
+                                             const uint16_t ds_id, size_t size, unsigned long core_mask, uint8_t npartitions) {
+        this->client = handle;
+        this->ds_id = ds_id;
+        this->core_mask = core_mask;
+        this->type_id = SHARDED_PRIORITY_QUEUE;
+        this->size = size;
+    }
+
     PriorityQueueEngine::~PriorityQueueEngine() {
 
     }

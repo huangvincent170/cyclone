@@ -11,6 +11,7 @@ namespace pmemdsclient{
 
     public:
         PriorityQueueEngine(PMClient *handle, const uint16_t ds_id, size_t size, unsigned long core_mask);
+        PriorityQueueEngine(PMClient *handle, const uint16_t ds_id, size_t size, unsigned long core_mask,uint8_t npartitions);
         ~PriorityQueueEngine();
 
         int create(uint8_t flags);

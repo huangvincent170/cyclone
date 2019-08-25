@@ -70,6 +70,7 @@ void PMLib::vote_topk(pm_rpc_t *request, pm_rpc_t *response){
 					snprintf(vpayload[j].art,16, "%s",result->second.c_str());
 
 				}
+                fill_index += size;
 			}
 		}
 }
@@ -122,7 +123,9 @@ void PMLib::exec(uint8_t thread_id, pm_rpc_t *req,pm_rpc_t *resp){
                     SET_STATUS(resp->meta,FAILED);
                 }
 				break;
-			
+        case GET_TOPK:
+            vote_topk(req,resp);
+            break;
 	/* handle data-structure local requests*/
 		default:
 			PMEngine *engine = find_ds(ds_id);
