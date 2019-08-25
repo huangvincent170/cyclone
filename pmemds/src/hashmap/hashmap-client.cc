@@ -126,7 +126,7 @@ namespace pmemdsclient {
         if(STATUS(response->meta) != OK){
             return nullptr;
         }
-        std::string ret_string(response->value,MAX_VAL_LENGTH);
+        std::string ret_string(response->value);
         return ret_string;
     }
 

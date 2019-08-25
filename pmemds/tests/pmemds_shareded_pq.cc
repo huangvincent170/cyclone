@@ -49,7 +49,7 @@ namespace {
         ASSERT_EQ(pq->create(PM_CREAT), OK);
         ASSERT_EQ(pq->insert(1234UL, 10UL), OK);
         ASSERT_EQ(pq->close(), OK);
-        ASSERT_EQ(pq->remove(), OK);
+        //ASSERT_EQ(pq->remove(), OK);
     }
 
 }

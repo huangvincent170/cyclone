@@ -206,7 +206,7 @@ namespace pmemds {
 
     void ShardedHashMapEngine::Recover(uint8_t npartitions) {
         auto root_data = pmpool.root();
-        if (root_data->map_ptr) { // TBD : revisit this, now we have to check weather partition array initialized correct
+        if (root_data->map_ptr[0]) { // TBD : revisit this, now we have to check weather partition array initialized correct
            for(int i=0; i < npartitions; i++) {
                container[i] = root_data->map_ptr[i].get();
                container[i]->initialize();

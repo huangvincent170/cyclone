@@ -13,7 +13,6 @@ namespace {
     }
 
 
-
 // testing concurrent HashMap impl with our routing bits
     class pmemdsShardedHMTest : public ::testing::Test {
     protected:
@@ -52,4 +51,15 @@ namespace {
         ASSERT_EQ(hm->remove(), OK);
     }
 
+    TEST_F(pmemdsShardedHMTest, BasicRTest) {
+        pmemdsclient::HashMapEngine *hm = new pmemdsclient::HashMapEngine(shardedTestClient, sharded_pq, 1024 * 1024 * 8, 0UL,1);
+
+        ASSERT_EQ(hm->create(PM_CREAT), OK);
+        ASSERT_EQ(hm->put(1234UL, "test_1234"), OK);
+        ASSERT_EQ(hm->put(1345UL, "test_1345"), OK);
+        ASSERT_EQ(hm->put(1456UL, "test_1456"), OK);
+        ASSERT_EQ(hm->get(1345UL),"test_1345");
+        ASSERT_EQ(hm->close(), OK);
+        ASSERT_EQ(hm->remove(), OK);
+    }
 }
