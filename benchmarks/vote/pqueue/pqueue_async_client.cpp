@@ -73,7 +73,7 @@ int driver(void *arg)
 	int my_core;
 
 	unsigned  long key;
-	char value_buffer[64];
+	char article_name[16]; // noria uses varchar[16] for its benchmark
 	unsigned long keys = pmemds_keys;
 
   double frac_read = ((double)(nreqs-1))/nreqs;	
@@ -90,7 +90,8 @@ int driver(void *arg)
 
 	// populate articles
 	for(int i = 0; i < keys; i++){
-	 hashmap->put(i, "article name");
+	 snprintf(article_name,16,"Article #%lu",key);
+	 hashmap->put(i,article_name);
 	 prio_queue->insert(i,0); // 0 votes initially
 	}
 
@@ -99,8 +100,6 @@ int driver(void *arg)
 		if(rcount){ // read request
 			pmlib->topk(key, nullptr);
 		}else{ // update request
-			snprintf(value_buffer,MAX_VAL_LENGTH,"v_%lu",key);
-			hashMap->put(key,value_buffer, nullptr);
 			prio_queue->increase_prio(key);
 		}
 	}
