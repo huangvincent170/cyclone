@@ -54,7 +54,9 @@ class BTreeEngine : public PMEngine {
     void exec(uint8_t thread_id, uint16_t op_name, uint8_t ds_type, std::string ds_id,
                 pm_rpc_t *req, pm_rpc_t *resp);
 
-    string engine() final { return ENGINE; };
+    void* engine(uint8_t thread_id) {
+        return NULL;
+    };
     const string ENGINE = "btree";
     void Exists(const unsigned long key ,pm_rpc_t *resp);              // does key have a value?
 

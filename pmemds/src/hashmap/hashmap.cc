@@ -163,7 +163,7 @@ namespace pmemds {
 
     void ShardedHashMapEngine::exists(uint8_t thread_id,string_view key, pm_rpc_t *resp) {
         //LOG("exists for key=" << key);
-        container->count(key) == 1 ? SET_STATUS(resp->meta,OK) : SET_STATUS(resp->meta, NOT_FOUND);
+        container[thread_id]->count(key) == 1 ? SET_STATUS(resp->meta,OK) : SET_STATUS(resp->meta, NOT_FOUND);
     }
 
 
@@ -171,7 +171,7 @@ namespace pmemds {
 
         //LOG("get key= " << key);
         map_t ::const_accessor result;
-        bool found = container->find(result, key);
+        bool found = container[thread_id]->find(result, key);
         if (!found) {
             LOG("  key not found");
             SET_STATUS(resp->meta, NOT_FOUND);
@@ -189,7 +189,7 @@ namespace pmemds {
         map_t ::accessor acc;
         // XXX - do not create temporary string
         bool result =
-                container->insert(acc, map_t::value_type(string_t(key), string_t(value)));
+                container[thread_id]->insert(acc, map_t::value_type(string_t(key), string_t(value)));
         if (!result) {
             pmem::obj::transaction::manual tx(pmpool);
             acc->second = value;
@@ -202,21 +202,25 @@ namespace pmemds {
     void ShardedHashMapEngine::remove(uint8_t thread_id,string_view key, pm_rpc_t *resp) {
         //LOG("remove key=" << key);
 
-        bool erased = container->erase(key);
+        bool erased = container[thread_id]->erase(key);
         erased ? SET_STATUS(resp->meta,OK) : SET_STATUS(resp->meta, NOT_FOUND);
     }
 
     void ShardedHashMapEngine::Recover(uint8_t npartitions) {
         auto root_data = pmpool.root();
-        if (root_data->map_ptr) {
-            container = root_data->map_ptr.get();
-            container->initialize();
+        if (root_data->map_ptr) { // TBD : revisit this, now we have to check weather partition array initialized correct
+           for(int i=0; i < npartitions; i++) {
+               container[i] = root_data->map_ptr[i].get();
+               container[i]->initialize();
+           }
         } else {
-            pmem::obj::transaction::manual tx(pmpool);
-            root_data->map_ptr = pmem::obj::make_persistent<map_t>();
-            pmem::obj::transaction::commit();
-            container = root_data->map_ptr.get();
-            container->initialize(true);
+            for(int i=0; i < npartitions; i++) {
+                pmem::obj::transaction::manual tx(pmpool);
+                root_data->map_ptr[i] = pmem::obj::make_persistent<map_t>();
+                pmem::obj::transaction::commit();
+                container[i] = root_data->map_ptr[i].get();
+                container[i]->initialize(true);
+            }
         }
 
     }

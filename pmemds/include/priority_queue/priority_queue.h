@@ -13,7 +13,9 @@ namespace pmemds {
         ShardedPriorityQueueEngine(const string& path, size_t size,uint8_t npartitions);
         ~ShardedPriorityQueueEngine();
         const string ENGINE = "prio_queue";
-        string engine() final { return ENGINE; };
+        void* engine(uint8_t thread_id){
+            return my_pq[thread_id];
+        };
 
         void exec(uint8_t thread_id, uint16_t op_id,uint8_t ds_type, std::string ds_id,
                   pm_rpc_t *req,pm_rpc_t *resp);

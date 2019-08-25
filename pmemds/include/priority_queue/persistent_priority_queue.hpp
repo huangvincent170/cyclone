@@ -38,7 +38,7 @@ namespace pmemds {
 
         int increase_prio(const unsigned long key, unsigned long delta_prio);
         int decrease_prio(const unsigned long key, unsigned long delta_prio);
-        int read_topK(unsigned long **array, int *size);
+        int read_topK(struct vote_payload_st *array, int *size);
 
         void printq();
 
@@ -295,11 +295,10 @@ namespace pmemds {
     }
     
     
-    inline int persistent_priority_queue::read_topK(unsigned long **array, int *size){
+    inline int persistent_priority_queue::read_topK(struct vote_payload_st *array, int *size){
         int nelems = min_elems->size();
-        *array = (unsigned long *)malloc(sizeof(unsigned long) * nelems);
         for(int i =0; i < nelems; i++){
-            (*array)[i] = min_elems->at(i)->key;
+            array[i].idx = min_elems->at(i)->key;
         }
         *size = nelems;
         return 0;

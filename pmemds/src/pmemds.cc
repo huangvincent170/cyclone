@@ -43,26 +43,31 @@ void PMLib::vote_topk(pm_rpc_t *request, pm_rpc_t *response){
  	uint16_t  sharded_hashmap = 0;
  	uint16_t  sharded_pq = 1;  /// TBD: these are request params
 
-		PMEngine *hm_temp = find_ds(sharded_hashmap);
-		PMEngine *pq_temp = find_ds(sharded_pq);
+    PMEngine *hm_temp = find_ds(sharded_hashmap);
+    PMEngine *pq_temp = find_ds(sharded_pq);
 
 	ShardedHashMapEngine * hashmap_engine = reinterpret_cast<ShardedHashMapEngine *>(hm_temp);
 	ShardedPriorityQueueEngine * pq_engine = reinterpret_cast<ShardedPriorityQueueEngine *>(pq_temp);
 
-		using hashmap_t = pmem::obj::experimental::concurrent_hash_map<string_t, string_t, string_hasher>;
+		using hashmap_t = pmem::obj::experimental::concurrent_hash_map<unsigned long, pstring<16>, string_hasher>;
 
-		unsigned long *array;
 		int fill_index = 0;
 		int size;
+		hashmap_t::accessor result;
 		for(int i=0; i < this->npartitions; i++) {
 
-			hashmap_t *hm = hashmap_engine->engine(i);
-			persistent_priority_queue *pq = pq_engine->engine(i);
+			hashmap_t *hm = (hashmap_t *)hashmap_engine->engine(i);
+			persistent_priority_queue *pq = (persistent_priority_queue *) pq_engine->engine(i);
 			pq->read_topK(&vpayload[fill_index],&size);
 			// fill the titles next
 			if(size != 0){
 				for(int j = 0 ; j < size; j++){
-					hm->find(,array[j]);
+					bool found = hm->find(result,vpayload[j].idx);
+					if(!found){
+						LOG_ERROR("key not found");
+						return;
+					}
+					snprintf(vpayload[j].art,16, "%s",result->second.c_str());
 
 				}
 			}

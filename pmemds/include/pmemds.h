@@ -165,7 +165,7 @@ public:
 	virtual void exec(uint8_t thread_id, uint16_t op_id,uint8_t ds_type, std::string ds_id,
 				  pm_rpc_t *req, pm_rpc_t *resp)=0;
 
-	virtual string engine() =0;                           // engine identifier
+	virtual void* engine(uint8_t thread_id) = 0;                           // engine identifier
 
 };
 }

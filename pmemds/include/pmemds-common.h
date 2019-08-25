@@ -88,7 +88,7 @@ static const unsigned long MAX_VOTE_PAYLOAD = 100;
 /// vote benchmark specific payload
 struct vote_payload_st{
     unsigned long idx;
-    char art[10];       // article
+    char art[16];       // article
 };
 
 

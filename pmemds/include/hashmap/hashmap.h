@@ -57,7 +57,9 @@ private:
         ~HashMapEngine();                                        // default destructor
         const string ENGINE = "hashmap";
 
-        string engine() final { return ENGINE; }               // engine identifier
+        void* engine(uint8_t thread_id){
+            return NULL;
+        }
 
         void exec(uint8_t thread_id,uint16_t op_name,
                   uint8_t ds_type, std::string ds_id, pm_rpc_t *req, pm_rpc_t *resp);
@@ -94,7 +96,9 @@ private:
         ~ShardedHashMapEngine();                                        // default destructor
         const string ENGINE = "shardedhashmap";
 
-        string engine() final { return ENGINE; }               // engine identifier
+        void* engine(uint8_t thread_id) {
+            return container[thread_id];
+        }
 
         void exec(uint8_t thread_id, uint16_t op_name,
                   uint8_t ds_type, std::string ds_id, pm_rpc_t *req, pm_rpc_t *resp);
@@ -111,13 +115,13 @@ private:
         using map_t = pmem::obj::experimental::concurrent_hash_map<string_t, string_t, string_hasher>;
 
         struct RootData {
-            pmem::obj::persistent_ptr<map_t> map_ptr;
+            pmem::obj::persistent_ptr<map_t> map_ptr[MAX_PARTITIONS];
         };
         using pool_t = pmem::obj::pool<RootData>;
 
         void Recover(uint8_t npartitions);
         pool_t pmpool;
-        map_t *container;
+        map_t *container[MAX_PARTITIONS];
     };
 
 }
