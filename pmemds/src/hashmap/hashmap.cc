@@ -139,18 +139,16 @@ namespace pmemds {
 
     void ShardedHashMapEngine::exec(uint8_t thread_id, uint16_t op_name,
                              uint8_t ds_type, std::string ds_id, pm_rpc_t *req, pm_rpc_t *resp) {
-        string_view in_key(req->ckey, KEY_SIZE);
 
         switch (op_name){
             case GET:
                 //LOG("Get op : " << in_key.);
-                this->get(thread_id,in_key,resp);
+                this->get(thread_id,req->key,resp);
                 break;
             case PUT: {
                 std::string val = std::string(req->value);
-                string_view in_val(val);
                 //LOG("Put op : " << in_key << in_val);
-                this->put(thread_id,in_key, in_val, resp);
+                this->put(thread_id,req->key, val, resp);
             }
                 break;
             default:
@@ -161,13 +159,13 @@ namespace pmemds {
     }
 
 
-    void ShardedHashMapEngine::exists(uint8_t thread_id,string_view key, pm_rpc_t *resp) {
+    void ShardedHashMapEngine::exists(uint8_t thread_id,unsigned long key, pm_rpc_t *resp) {
         //LOG("exists for key=" << key);
         container[thread_id]->count(key) == 1 ? SET_STATUS(resp->meta,OK) : SET_STATUS(resp->meta, NOT_FOUND);
     }
 
 
-    void ShardedHashMapEngine::get(uint8_t thread_id,string_view key, pm_rpc_t *resp) {
+    void ShardedHashMapEngine::get(uint8_t thread_id,unsigned long key, pm_rpc_t *resp) {
 
         //LOG("get key= " << key);
         map_t ::const_accessor result;
@@ -182,24 +180,24 @@ namespace pmemds {
 
     }
 
-    void ShardedHashMapEngine::put(uint8_t thread_id,string_view key, string_view value, pm_rpc_t *resp) {
+    void ShardedHashMapEngine::put(uint8_t thread_id,unsigned long key, string &value, pm_rpc_t *resp) {
 
         //LOG("Put key=" << key << ", value.size=" << to_string(value.size()));
 
         map_t ::accessor acc;
         // XXX - do not create temporary string
         bool result =
-                container[thread_id]->insert(acc, map_t::value_type(string_t(key), string_t(value)));
+                container[thread_id]->insert(acc, map_t::value_type(key, pstring<16>(value)));
         if (!result) {
             pmem::obj::transaction::manual tx(pmpool);
-            acc->second = value;
+            acc->second = pstring<16>(value);
             pmem::obj::transaction::commit();
         }
         SET_STATUS(resp->meta,OK);
 
     }
 
-    void ShardedHashMapEngine::remove(uint8_t thread_id,string_view key, pm_rpc_t *resp) {
+    void ShardedHashMapEngine::remove(uint8_t thread_id,unsigned long key, pm_rpc_t *resp) {
         //LOG("remove key=" << key);
 
         bool erased = container[thread_id]->erase(key);

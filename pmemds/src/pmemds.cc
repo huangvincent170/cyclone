@@ -49,7 +49,7 @@ void PMLib::vote_topk(pm_rpc_t *request, pm_rpc_t *response){
 	ShardedHashMapEngine * hashmap_engine = reinterpret_cast<ShardedHashMapEngine *>(hm_temp);
 	ShardedPriorityQueueEngine * pq_engine = reinterpret_cast<ShardedPriorityQueueEngine *>(pq_temp);
 
-		using hashmap_t = pmem::obj::experimental::concurrent_hash_map<unsigned long, pstring<16>, string_hasher>;
+		using hashmap_t = pmem::obj::experimental::concurrent_hash_map<unsigned long, pstring<16>>;
 
 		int fill_index = 0;
 		int size;

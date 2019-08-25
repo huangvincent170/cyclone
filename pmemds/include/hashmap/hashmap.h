@@ -3,6 +3,7 @@
 
 #include "../pmemds.h"
 #include "../polymorphic_string.h"
+#include "pstring.h"
 #define LIBPMEMOBJ_CPP_USE_TBB_RW_MUTEX 1
 #include "libpmemobj++/experimental/concurrent_hash_map.hpp"
 
@@ -103,16 +104,16 @@ private:
         void exec(uint8_t thread_id, uint16_t op_name,
                   uint8_t ds_type, std::string ds_id, pm_rpc_t *req, pm_rpc_t *resp);
 
-        void exists(uint8_t thread_id, string_view key, pm_rpc_t *resp);              // does key have a value?
+        void exists(uint8_t thread_id, unsigned long key, pm_rpc_t *resp);              // does key have a value?
 
-        void get(uint8_t thread_id, string_view key, pm_rpc_t *resp);
+        void get(uint8_t thread_id, unsigned long key, pm_rpc_t *resp);
 
-        void put(uint8_t thread_id, string_view key, string_view value, pm_rpc_t *resp);
+        void put(uint8_t thread_id, unsigned long key, std::string &value, pm_rpc_t *resp);
 
-        void remove(uint8_t thread_id, string_view key, pm_rpc_t *resp);              // remove value for key
+        void remove(uint8_t thread_id, unsigned long key, pm_rpc_t *resp);              // remove value for key
     private:
-        using string_t = pmemds::polymorphic_string;
-        using map_t = pmem::obj::experimental::concurrent_hash_map<string_t, string_t, string_hasher>;
+        //using string_t = pmemds::polymorphic_string;
+        using map_t = pmem::obj::experimental::concurrent_hash_map<unsigned long, pstring<16> >;
 
         struct RootData {
             pmem::obj::persistent_ptr<map_t> map_ptr[MAX_PARTITIONS];

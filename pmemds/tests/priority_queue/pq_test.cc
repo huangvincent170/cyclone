@@ -25,47 +25,47 @@ namespace {
     };
 
     TEST_F(pqTest, descendPrio) {
-        unsigned long *array;
+        struct vote_payload_st array[MAX_VOTE_PAYLOAD];
         int size;
 
         for(int i = 0; i < 10; i++) {
             pq->insert(i,10-i);
         }
 
-        ASSERT_EQ(pq->read_topK(&array,&size),0);
+        ASSERT_EQ(pq->read_topK(array,&size),0);
         for(int i = 0; i < size; i++){
-            std::cout << array[i] << " ";
+            std::cout << std::string(array[i].art) << " ";
         }
         std::cout << std::endl;
     }
 
     TEST_F(pqTest, ascendPrio) {
-        unsigned long *array;
+        struct vote_payload_st array[MAX_VOTE_PAYLOAD];
         int size;
 
         for(int i = 0; i < 10; i++) {
             pq->insert(i,i);
         }
 
-        ASSERT_EQ(pq->read_topK(&array,&size),0);
+        ASSERT_EQ(pq->read_topK(array,&size),0);
         for(int i = 0; i < size; i++){
-            std::cout << array[i] << " ";
+            std::cout << std::string(array[i].art) << " ";
         }
         std::cout << std::endl;
 
     }
 
     TEST_F(pqTest, decreasePrio) {
-        unsigned long *array;
+        struct vote_payload_st array[MAX_VOTE_PAYLOAD];
         int size;
 
         for(int i = 0; i < 10; i++) {
             pq->insert(i,i);
         }
         pq->decrease_prio(8,6);
-        ASSERT_EQ(pq->read_topK(&array,&size),0);
+        ASSERT_EQ(pq->read_topK(array,&size),0);
         for(int i = 0; i < size; i++){
-            std::cout << array[i] << " ";
+            std::cout << std::string(array[i].art) << " ";
         }
         std::cout << std::endl;
 
@@ -73,16 +73,16 @@ namespace {
 
 
     TEST_F(pqTest, increasePrio) {
-        unsigned long *array;
+        struct vote_payload_st array[MAX_VOTE_PAYLOAD];
         int size;
 
         for(int i = 0; i < 10; i++) {
             pq->insert(i,i);
         }
         pq->increase_prio(2,10);
-        ASSERT_EQ(pq->read_topK(&array,&size),0);
+        ASSERT_EQ(pq->read_topK(array,&size),0);
         for(int i = 0; i < size; i++){
-            std::cout << array[i] << " ";
+            std::cout << std::string(array[i].art) << " ";
         }
         std::cout << std::endl;
 
