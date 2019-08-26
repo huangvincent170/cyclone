@@ -93,13 +93,14 @@ namespace pmemdsclient {
 
 
 
-    int PriorityQueueEngine::increase_prio(const unsigned &key, unsigned long &delta_prio) {
+    int PriorityQueueEngine::increase_prio(const unsigned key, unsigned long delta_prio) {
         pm_rpc_t *response;
+
         pm_rpc_t payload = {0,0,"\0"};
         SET_OP_ID(payload.meta,INSERT);
         SET_DS_ID(payload.meta,this->ds_id);
         payload.key = key;
-        unsigned long *value = reinterpret_cast<unsigned long *>(response->value);
+        unsigned long *value = reinterpret_cast<unsigned long *>(payload.value);
         *value = delta_prio;
 
         if(!client->sendmsg(&payload,&response,this->core_mask)){
@@ -112,13 +113,14 @@ namespace pmemdsclient {
         return OK;
     }
 
-    int PriorityQueueEngine::decrease_prio(const unsigned &key, unsigned long &delta_prio) {
+    int PriorityQueueEngine::decrease_prio(const unsigned key, unsigned long delta_prio) {
         pm_rpc_t *response;
+
         pm_rpc_t payload = {0,0,"\0"};
         SET_OP_ID(payload.meta,INSERT);
         SET_DS_ID(payload.meta,this->ds_id);
         payload.key = key;
-        unsigned long *value = reinterpret_cast<unsigned long *>(response->value);
+        unsigned long *value = reinterpret_cast<unsigned long *>(payload.value);
         *value = delta_prio;
 
         if(!client->sendmsg(&payload,&response,this->core_mask)){

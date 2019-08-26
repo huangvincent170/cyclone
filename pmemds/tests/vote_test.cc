@@ -79,6 +79,17 @@ namespace {
             ASSERT_EQ(testClient->topk(),OK);
     }
 
+
+    TEST_F(voteTest, VoteIncrTest) {
+        ASSERT_EQ(votes->increase_prio(13,1),OK);
+        ASSERT_EQ(votes->increase_prio(14,2),OK);
+        ASSERT_EQ(votes->increase_prio(15,1),OK);
+        ASSERT_EQ(votes->increase_prio(16,3),OK);
+        ASSERT_EQ(votes->increase_prio(17,4),OK);
+        ASSERT_EQ(testClient->topk(),OK);
+    }
+
+
     /* retrieve top K post from the vote db */
     /*Test_F(voteTest, VoteTopKTest){
 

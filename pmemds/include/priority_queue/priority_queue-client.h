@@ -24,9 +24,9 @@ namespace pmemdsclient{
 
         int erase(unsigned long key);
 
-        int increase_prio(const unsigned &key, unsigned long &delta_prio);
+        int increase_prio(const unsigned key, unsigned long delta_prio);
 
-        int decrease_prio(const unsigned &key, unsigned long &delta_prio);
+        int decrease_prio(const unsigned key, unsigned long delta_prio);
 
     private:
         std::string ds_name;
