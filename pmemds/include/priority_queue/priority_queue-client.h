@@ -18,15 +18,22 @@ namespace pmemdsclient{
         int close();
         int remove();
 
+        int create(uint8_t flags,void (*cb)(void *));
+        int close(void (*cb)(void *));
+        int remove(void (*cb)(void *));
+
         int insert(unsigned long key, unsigned long priority);
-
         int topk();
-
         int erase(unsigned long key);
-
         int increase_prio(const unsigned key, unsigned long delta_prio);
-
         int decrease_prio(const unsigned key, unsigned long delta_prio);
+
+        //async member functions
+        int insert(unsigned long key, unsigned long priority,void (*cb)(void *));
+        int topk(void (*cb)(void *));
+        int erase(unsigned long key,void (*cb)(void *));
+        int increase_prio(const unsigned key, unsigned long delta_prio,void (*cb)(void *));
+        int decrease_prio(const unsigned key, unsigned long delta_prio,void (*cb)(void *));
 
     private:
         std::string ds_name;

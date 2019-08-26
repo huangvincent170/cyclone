@@ -82,4 +82,12 @@ namespace pmemdsclient {
     }
 
 
+    int PMClient::topk(void (*cb)(void *)) {
+        pm_rpc_t payload = {0,0,"\0"};
+        SET_OP_ID(payload.meta,GET_TOPK);
+        if (sendmsg_async(&payload, 1UL, cb) != 0) {
+            LOG_ERROR("btree async put");
+        }
+        return OK;
+    }
 }

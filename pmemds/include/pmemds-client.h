@@ -25,6 +25,7 @@ namespace pmemdsclient {
 
         /// vote benchmark specific routines. Move them out of this class later
         int topk();
+        int topk(void (*cb)(void *));
 
 
         virtual int sendmsg(pm_rpc_t *msg, pm_rpc_t **response, unsigned long core_mask)=0;
