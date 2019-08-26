@@ -62,11 +62,9 @@ int driver(void *arg)
 	int clients = dargs->clients;
 	int partitions = dargs->partitions;
 	void **handles = dargs->handles;
-	// char *buffer = new char[DISP_MAX_MSGSIZE];
 	pmemdsclient::DPDKPMClient *pmlib = dargs->dpdkClient;
 	pmemdsclient::HashMapEngine *hashMap = dargs->hashMap;
 	pmemdsclient::priority_queue *prio_queue = dargs->prio_queue;
-	//struct proposal *prop = (struct proposal *)buffer;
 	srand(time(NULL));
 	int ret;
 	int rpc_flags;
@@ -91,16 +89,17 @@ int driver(void *arg)
 	// populate articles
 	for(int i = 0; i < keys; i++){
 	 snprintf(article_name,16,"Article #%lu",key);
-	 hashmap->put(i,article_name);
-	 prio_queue->insert(i,0); // 0 votes initially
+	 hashmap->put(i,article_name,nullptr);
+	 prio_queue->insert(i,0,nullptr); // 0 votes initially
 	}
 
-	for( int rcount = 0 ; ; rcount = ++rcount%nreqs){
+	//for( int rcount = 0 ; ; rcount = ++rcount%nreqs){
+	for( int rcount = 0,int i=0 ;i <20 ; i++, rcount = ++rcount%nreqs){
 		key = zipf(keys,alpha);
 		if(rcount){ // read request
-			pmlib->topk(key, nullptr);
+			pmlib->topk(nullptr);
 		}else{ // update request
-			prio_queue->increase_prio(key);
+			prio_queue->increase_prio(key,1,nullptr);
 		}
 	}
 	hashMap->close(nullptr);
@@ -159,9 +158,9 @@ int main(int argc, const char *argv[])
 					dargs->buf_cap);
 			BOOST_LOG_TRIVIAL(info) << "init dpdkclient and hashmap";
 			dargs->dpdkClient = new pmemdsclient::DPDKPMClient(dargs->handles[i]);
-			//TBD: priority_queue and hashmap
-			dargs->hashMap = new pmemdsclient::HashMapEngine(dargs->dpdkClient,hashmap_st,1000,1UL);
-			dargs->prio_queue = new pmemdsclient::PriorityQueueEngine(dargs->dpdkClient,hashmap_st,1000,1UL);
+			// sharded priority queue and sharded hashmap
+			dargs->hashMap = new pmemdsclient::HashMapEngine(dargs->dpdkClient,hashmap_st,1000,1UL,1);
+			dargs->prio_queue = new pmemdsclient::PriorityQueueEngine(dargs->dpdkClient,hashmap_st,1000,1UL,1);
 		}
 	}
 	for (int me = client_id_start; me < client_id_stop; me++){
