@@ -38,7 +38,7 @@ PMEngine * PMLib::find_ds(uint16_t id) {
 /*
  *  vote benchmarks' get top-K stored prodecure
  */
-void PMLib::vote_topk(pm_rpc_t *request, pm_rpc_t *response){
+void PMLib::vote_topk(pm_rpc_t *request, pm_rpc_t **response_ptr, int *resp_size){
 	struct vote_payload_st vpayload[MAX_VOTE_PAYLOAD];
  	uint16_t  sharded_hashmap = 0;
  	uint16_t  sharded_pq = 1;  /// TBD: these are request params
@@ -73,21 +73,37 @@ void PMLib::vote_topk(pm_rpc_t *request, pm_rpc_t *response){
                 fill_index += size;
 			}
 		}
+        //prepare response
+        /// TBD avoid the extra copy during response preparation
+        int payload_size = sizeof(struct vote_payload_st)*fill_index + (sizeof(pm_rpc_t) - ART_ARRAY_SIZE) ;
+        pm_rpc_t *resp = (pm_rpc_t *)SAFECALLOC(payload_size);
+        struct vote_payload_st *valbuf = (struct vote_payload_st *) resp->value;
+        for(int i  = 0; i < fill_index; i++){
+            valbuf[i].idx = vpayload[i].idx;
+            memcpy(valbuf[i].art,vpayload[i].art,ART_ARRAY_SIZE);
+        }
+        *response_ptr = resp;
+        *resp_size = payload_size;
 }
 
 
 /*
  * The routing function call
  */
-void PMLib::exec(uint8_t thread_id, pm_rpc_t *req,pm_rpc_t *resp){
+void PMLib::exec(uint8_t thread_id, pm_rpc_t *req, pm_rpc_t **resp_ptr, int *resp_size){
 		uint8_t ds_type = TYPE_ID(req->meta);
 		uint16_t op_id  = OP_ID(req->meta);
 		uint16_t ds_id  = DS_ID(req->meta);
+
+        pm_rpc_t *resp;
 
 	//LOG_DEBUG("data-structure type : " + std::to_string(ds_type) + " operation id : " + std::to_string(op_id) + " data-structure id : " + std::to_string(ds_id));
 	switch(op_id){
   /* open-close data-structures */	
 		case OPEN:
+            resp = (pm_rpc_t *)SAFECALLOC(sizeof(pm_rpc_t));
+            *resp_ptr = resp;
+            *resp_size = sizeof(pm_rpc_t);
 			if(!open(pmem_path)){
                     SET_STATUS(resp->meta,OK);
                 }else{
@@ -95,6 +111,9 @@ void PMLib::exec(uint8_t thread_id, pm_rpc_t *req,pm_rpc_t *resp){
                 }
 			break;
 		case CLOSE:
+            resp = (pm_rpc_t *)SAFECALLOC(sizeof(pm_rpc_t));
+            *resp_ptr = resp;
+            *resp_size = sizeof(pm_rpc_t);
 			if(!close()){
                     SET_STATUS(resp->meta,OK);
                 }else{
@@ -103,6 +122,9 @@ void PMLib::exec(uint8_t thread_id, pm_rpc_t *req,pm_rpc_t *resp){
 			break;
 	/* handle data-structure creation and deletion */
 		case CREATE_DS:
+            resp = (pm_rpc_t *)SAFECALLOC(sizeof(pm_rpc_t));
+            *resp_ptr = resp;
+            *resp_size = sizeof(pm_rpc_t);
 				if(!create_ds(ds_type,ds_id,this->npartitions)){
                     SET_STATUS(resp->meta,OK);
                 }else{
@@ -110,6 +132,9 @@ void PMLib::exec(uint8_t thread_id, pm_rpc_t *req,pm_rpc_t *resp){
                 }
 				break;
         case CLOSE_DS:
+            resp = (pm_rpc_t *)SAFECALLOC(sizeof(pm_rpc_t));
+            *resp_ptr = resp;
+            *resp_size = sizeof(pm_rpc_t);
             if(!close_ds(ds_type,ds_id)){
                 SET_STATUS(resp->meta,OK);
             }else{
@@ -117,6 +142,9 @@ void PMLib::exec(uint8_t thread_id, pm_rpc_t *req,pm_rpc_t *resp){
             }
             break;
 		case REMOVE_DS:
+            resp = (pm_rpc_t *)SAFECALLOC(sizeof(pm_rpc_t));
+            *resp_ptr = resp;
+            *resp_size = sizeof(pm_rpc_t);
                 if(!remove_ds(ds_type,ds_id)){
                     SET_STATUS(resp->meta,OK);
                 }else{
@@ -124,7 +152,7 @@ void PMLib::exec(uint8_t thread_id, pm_rpc_t *req,pm_rpc_t *resp){
                 }
 				break;
         case GET_TOPK:
-            vote_topk(req,resp);
+            vote_topk(req,resp_ptr,resp_size);
             break;
 	/* handle data-structure local requests*/
 		default:
@@ -135,7 +163,7 @@ void PMLib::exec(uint8_t thread_id, pm_rpc_t *req,pm_rpc_t *resp){
 				SET_STATUS(resp->meta,NOT_FOUND);
 				return;
 			}
-			engine->exec(thread_id, op_id,ds_type,std::to_string(ds_id),req,resp);
+			engine->exec(thread_id, op_id,ds_type,std::to_string(ds_id), req, resp_ptr, resp_size);
 	}
 }
 

@@ -133,7 +133,7 @@ class PMLib{
 
 		int open(const string& app);
 		int close();
-		void exec(uint8_t thread_id, pm_rpc_t *req, pm_rpc_t *resp);
+		void exec(uint8_t thread_id, pm_rpc_t *req, pm_rpc_t **resp_ptr, int *resp_size);
 
 
 	private:
@@ -146,7 +146,7 @@ class PMLib{
 		int close_ds(uint8_t ds_type,uint16_t ds_id);
 
 		/// vote benchmark specific
-		void vote_topk(pm_rpc_t *request, pm_rpc_t *response);
+		void vote_topk(pm_rpc_t *request, pm_rpc_t **response, int *resp_size);
 
 		std::map<uint16_t ,PMEngine*> *engine_map; /// TBD: name to data-structure mapping. Make this an array
 
@@ -163,7 +163,7 @@ public:
 	virtual ~PMEngine(){};
 
 	virtual void exec(uint8_t thread_id, uint16_t op_id,uint8_t ds_type, std::string ds_id,
-				  pm_rpc_t *req, pm_rpc_t *resp)=0;
+				  pm_rpc_t *req, pm_rpc_t **resp, int *resp_size)=0;
 
 	virtual void* engine(uint8_t thread_id) = 0;                           // engine identifier
 

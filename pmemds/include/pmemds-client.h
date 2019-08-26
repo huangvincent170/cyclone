@@ -23,6 +23,9 @@ namespace pmemdsclient {
         int open(const std::string &appname,  void (*cb)(void *));
         int close(void (*cb)(void *));
 
+        /// vote benchmark specific routines. Move them out of this class later
+        int topk();
+
 
         virtual int sendmsg(pm_rpc_t *msg, pm_rpc_t **response, unsigned long core_mask)=0;
         virtual int sendmsg_async(pm_rpc_t *msg, unsigned long core_mask, void (*cb)(void *))=0;

@@ -16,6 +16,12 @@
 
 namespace {
 
+    uint8_t partition_callback(void *){
+        return 0;
+    }
+
+
+
 // The fixture for testing class Foo.
     class voteTest : public ::testing::Test {
     protected:
@@ -28,7 +34,7 @@ namespace {
             /* server side data-structure creation */
             pmLib = new pmemds::PMLib(pmem_path,1);
 
-            testClient = new pmemdsclient::TestClient(pmLib);
+            testClient = new pmemdsclient::ShardedTestClient(pmLib,partition_callback);
             testClient->open("testApp");
 
             /* create art and vote structures */
@@ -59,7 +65,7 @@ namespace {
 
         // Objects declared here can be used by all tests in the test case for Foo.
         pm_rpc_t request,response;
-        pmemdsclient::TestClient *testClient;
+        pmemdsclient::ShardedTestClient *testClient;
         pmemds::PMLib *pmLib;
         pmemdsclient::HashMapEngine *art;
         pmemdsclient::PriorityQueueEngine *votes;
@@ -70,7 +76,7 @@ namespace {
 
 
     TEST_F(voteTest, VoteRTest) {
-            ASSERT_EQ(votes->topk(),OK);
+            ASSERT_EQ(testClient->topk(),OK);
     }
 
     /* retrieve top K post from the vote db */

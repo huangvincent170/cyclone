@@ -34,7 +34,7 @@ namespace {
 
         ASSERT_EQ(pq->read_topK(array,&size),0);
         for(int i = 0; i < size; i++){
-            std::cout << std::string(array[i].art) << " ";
+            std::cout << std::to_string(array[i].idx) << " ";
         }
         std::cout << std::endl;
     }
@@ -49,7 +49,7 @@ namespace {
 
         ASSERT_EQ(pq->read_topK(array,&size),0);
         for(int i = 0; i < size; i++){
-            std::cout << std::string(array[i].art) << " ";
+            std::cout << std::to_string(array[i].idx) << " ";
         }
         std::cout << std::endl;
 
@@ -65,7 +65,7 @@ namespace {
         pq->decrease_prio(8,6);
         ASSERT_EQ(pq->read_topK(array,&size),0);
         for(int i = 0; i < size; i++){
-            std::cout << std::string(array[i].art) << " ";
+            std::cout << std::to_string(array[i].idx) << " ";
         }
         std::cout << std::endl;
 
@@ -82,7 +82,7 @@ namespace {
         pq->increase_prio(2,10);
         ASSERT_EQ(pq->read_topK(array,&size),0);
         for(int i = 0; i < size; i++){
-            std::cout << std::string(array[i].art) << " ";
+            std::cout << std::to_string(array[i].idx) << " ";
         }
         std::cout << std::endl;
 

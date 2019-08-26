@@ -63,7 +63,7 @@ private:
         }
 
         void exec(uint8_t thread_id,uint16_t op_name,
-                  uint8_t ds_type, std::string ds_id, pm_rpc_t *req, pm_rpc_t *resp);
+                  uint8_t ds_type, std::string ds_id, pm_rpc_t *req, pm_rpc_t **resp_ptr, int *resp_size);
 
         void exists(string_view key, pm_rpc_t *resp);              // does key have a value?
 
@@ -102,7 +102,7 @@ private:
         }
 
         void exec(uint8_t thread_id, uint16_t op_name,
-                  uint8_t ds_type, std::string ds_id, pm_rpc_t *req, pm_rpc_t *resp);
+                  uint8_t ds_type, std::string ds_id, pm_rpc_t *req, pm_rpc_t **resp_ptr, int *resp_size);
 
         void exists(uint8_t thread_id, unsigned long key, pm_rpc_t *resp);              // does key have a value?
 

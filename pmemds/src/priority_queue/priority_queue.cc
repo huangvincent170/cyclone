@@ -25,8 +25,14 @@ namespace pmemds{
     }
 
     void ShardedPriorityQueueEngine::exec(uint8_t thread_id, uint16_t op_id, uint8_t ds_type, std::string ds_id,
-                              pm_rpc_t *req, pm_rpc_t *resp){
-         unsigned long priority;
+                              pm_rpc_t *req, pm_rpc_t **resp_ptr, int *resp_size){
+
+        pm_rpc_t *resp = (pm_rpc_t *)SAFECALLOC(sizeof(pm_rpc_t));
+        *resp_ptr = resp;
+        *resp_size = sizeof(pm_rpc_t);
+
+
+        unsigned long priority;
          switch (op_id){
              case INSERT:
                  priority = parse_priority(req->value);
@@ -39,9 +45,6 @@ namespace pmemds{
              case DECREASE_PRIO:
                  priority = parse_priority(req->value);
                  this->decrease_prio(thread_id, req->key,priority,resp);
-                 break;
-             case GET_TOPK:
-                 this->read_topk(thread_id, resp);
                  break;
              default:
                  LOG_ERROR("unknown operation");

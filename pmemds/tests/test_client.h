@@ -25,10 +25,11 @@ namespace pmemdsclient {
     }
 
 
-    inline int TestClient::sendmsg(pm_rpc_t *req, pm_rpc_t **response, unsigned long core_mask) {
-        *response = new pm_rpc_t();
-        pmLib->exec(0,req, *response);
-        return 0; // no send errors
+    inline int TestClient::sendmsg(pm_rpc_t *req, pm_rpc_t **response,unsigned long core_mask) {
+        //*response = new pm_rpc_t();
+        int resp_size;
+        pmLib->exec(0,req, response, &resp_size);
+        return resp_size;
     }
 
     inline int TestClient::sendmsg_async(pm_rpc_t *msg, unsigned long core_mask, void (*cb)(void *)) {
@@ -60,10 +61,11 @@ namespace pmemdsclient {
 
 
     inline int ShardedTestClient::sendmsg(pm_rpc_t *req, pm_rpc_t **response, unsigned long core_mask) {
-        *response = new pm_rpc_t();
+        //*response = new pm_rpc_t();
+        int resp_size;
         uint8_t part = this->partition((void *)req);
-        pmLib->exec(part, req, *response);
-        return 0; // no send errors
+        pmLib->exec(part, req, response, &resp_size);
+        return resp_size;
     }
 
     inline int ShardedTestClient::sendmsg_async(pm_rpc_t *msg, unsigned long core_mask, void (*cb)(void *)) {

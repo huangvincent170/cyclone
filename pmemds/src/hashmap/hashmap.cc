@@ -34,9 +34,13 @@ namespace pmemds {
 
 
     void HashMapEngine::exec(uint8_t thread_id, uint16_t op_name,
-                             uint8_t ds_type, std::string ds_id, pm_rpc_t *req, pm_rpc_t *resp) {
-        string_view in_key(req->ckey, KEY_SIZE);
+                             uint8_t ds_type, std::string ds_id, pm_rpc_t *req, pm_rpc_t **resp_ptr, int *resp_size) {
 
+        pm_rpc_t *resp = (pm_rpc_t *)SAFECALLOC(sizeof(pm_rpc_t));
+        *resp_ptr = resp;
+        *resp_size = sizeof(pm_rpc_t);
+
+        string_view in_key(req->ckey, KEY_SIZE);
         switch (op_name){
             case GET:
 				//LOG("Get op : " << in_key.);
@@ -137,8 +141,14 @@ namespace pmemds {
     }
 
 
-    void ShardedHashMapEngine::exec(uint8_t thread_id, uint16_t op_name,
-                             uint8_t ds_type, std::string ds_id, pm_rpc_t *req, pm_rpc_t *resp) {
+    void ShardedHashMapEngine::exec(uint8_t thread_id,
+                                    uint16_t op_name,
+                                    uint8_t ds_type, std::string ds_id, pm_rpc_t *req,
+                                    pm_rpc_t **resp_ptr, int *resp_size) {
+
+        pm_rpc_t *resp = (pm_rpc_t *)SAFECALLOC(sizeof(pm_rpc_t));
+        *resp_ptr = resp;
+        *resp_size = sizeof(pm_rpc_t);
 
         switch (op_name){
             case GET:

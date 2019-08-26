@@ -3,9 +3,11 @@
 
 
 #define KEY_SIZE 8
-#define MAX_VAL_LENGTH 32
+#define MAX_VAL_LENGTH 16
 
 #include "stdint.h"
+#include "stdlib.h"
+#include "stdio.h"
 
 // update, read operation flags
 const uint8_t UPDATE_OPERATION = 0;
@@ -84,13 +86,41 @@ typedef struct pm_rpc_st{
 }pm_rpc_t;
 
 
+#define ART_ARRAY_SIZE 16
+
 static const unsigned long MAX_VOTE_PAYLOAD = 100;
 /// vote benchmark specific payload
 struct vote_payload_st{
     unsigned long idx;
-    char art[16];       // article
+    char art[ART_ARRAY_SIZE];       // article
 };
 
 
+static inline void* safe_malloc(size_t n, unsigned long line)
+{
+    void* p = malloc(n);
+    if (!p)
+    {
+        fprintf(stderr, "[%s:%ul]Out of memory(%ul bytes)\n",
+                __FILE__, line, (unsigned long)n);
+        exit(EXIT_FAILURE);
+    }
+    return p;
+}
+
+static inline void* safe_calloc(size_t n, unsigned long line)
+{
+    void* p = calloc(1,n);
+    if (!p)
+    {
+        fprintf(stderr, "[%s:%ul]Out of memory(%ul bytes)\n",
+                __FILE__, line, (unsigned long)n);
+        exit(EXIT_FAILURE);
+    }
+    return p;
+}
+
+//#define SAFEMALLOC(n) safe_malloc(n, __LINE__)
+#define SAFECALLOC(n) safe_calloc(n, __LINE__)
 
 #endif

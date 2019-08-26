@@ -18,7 +18,7 @@ namespace pmemds {
         };
 
         void exec(uint8_t thread_id, uint16_t op_id,uint8_t ds_type, std::string ds_id,
-                  pm_rpc_t *req,pm_rpc_t *resp);
+                  pm_rpc_t *req,pm_rpc_t **resp_ptr, int *resp_size);
 
         void insert(uint8_t thread_id, unsigned long key, unsigned long priority,pm_rpc_t *resp);
 
