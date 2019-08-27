@@ -1,13 +1,16 @@
-all: clean configure staticlib
+all: clean configure
 
 clean:
 	rm -rf ./bin
 
 configure:
 	mkdir -p ./bin
-	cd ./bin && cmake .. -DCMAKE_BUILD_TYPE=Release
+	cd ./bin && cmake ..
 
-staticlib:
-	cd ./bin && make pmemds pmemds-client
+server: configure
+	cd ./bin && make pmemds
 
-test: configure reset
+client: configure
+	cd ./bin && make pmemds-client
+
+test: configure 
