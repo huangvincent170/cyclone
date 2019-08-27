@@ -101,7 +101,7 @@ typedef struct rpc_callbacks_st {
   rpc_gc_callback_t gc_callback;
   op_commute_callback_t op_callback;
 #ifdef __PARTITION
-	op_partition_callback_t op_partition;
+	op_partition_callback_t part_callback;
 #endif
 } rpc_callbacks_t;
 
