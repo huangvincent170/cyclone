@@ -18,7 +18,7 @@ CXXFLAGS += -march=native -DRTE_MACHINE_CPUFLAG_SSE -DRTE_MACHINE_CPUFLAG_SSE2 -
 BOOST_THREAD_LIB=-lboost_thread
 
 
-libcyclone.a: libcyclone.o dispatcher.o dispatch_client.o flash_log.o
+libcyclone.a: libcyclone.o dispatcher.o dispatch_client.o
 	ar rcs $@ $^
 
 libcyclone.o: cyclone.cpp libcyclone.hpp
@@ -30,8 +30,8 @@ dispatcher.o: dispatcher.cpp libcyclone.hpp
 dispatch_client.o: dispatch_client.cpp  libcyclone.hpp
 	$(CXX) $(CXXFLAGS) dispatch_client.cpp -c -o $@
 
-flash_log.o: flash_log.cpp  libcyclone.hpp
-	$(CXX) $(CXXFLAGS) flash_log.cpp -c -o $@
+#flash_log.o: flash_log.cpp  libcyclone.hpp
+#	$(CXX) $(CXXFLAGS) flash_log.cpp -c -o $@
 
 .PHONY:clean install
 
