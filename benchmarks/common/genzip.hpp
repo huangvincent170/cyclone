@@ -35,7 +35,7 @@ int zipf(double alpha, int n)
       c = c + (1.0 / pow((double) i, alpha));
     c = 1.0 / c;
 
-    sum_probs = malloc((n+1)*sizeof(*sum_probs));
+    sum_probs = (double *)malloc((n+1)*sizeof(*sum_probs));
     sum_probs[0] = 0;
     for (i=1; i<=n; i++) {
       sum_probs[i] = sum_probs[i-1] + c / pow((double) i, alpha);

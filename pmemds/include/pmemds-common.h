@@ -101,8 +101,8 @@ static inline void* safe_malloc(size_t n, unsigned long line)
     void* p = malloc(n);
     if (!p)
     {
-        fprintf(stderr, "[%s:%ul]Out of memory(%ul bytes)\n",
-                __FILE__, line, (unsigned long)n);
+        fprintf(stderr, "[%s:%lu]Out of memory\n",
+                __FILE__, line);
         exit(EXIT_FAILURE);
     }
     return p;
@@ -113,8 +113,8 @@ static inline void* safe_calloc(size_t n, unsigned long line)
     void* p = calloc(1,n);
     if (!p)
     {
-        fprintf(stderr, "[%s:%ul]Out of memory(%ul bytes)\n",
-                __FILE__, line, (unsigned long)n);
+        fprintf(stderr, "[%s:%lu]Out of memory\n",
+                __FILE__, line);
         exit(EXIT_FAILURE);
     }
     return p;

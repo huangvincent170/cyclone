@@ -19,7 +19,7 @@
 
 #include "dpdk_client.hpp"
 #include "hashmap/hashmap-client.h"
-#include "priority-queue/priority-queue.h"
+#include "priority_queue/priority_queue-client.h"
 
 /* IMPORTANT - set to large enough value */
 unsigned long pmemds_keys = 1000000;
@@ -44,7 +44,7 @@ typedef struct driver_args_st
 	int buf_cap;
 	pmemdsclient::DPDKPMClient *dpdkClient;
 	pmemdsclient::HashMapEngine *hashMap;
-	pmemdsclient::priority_queue *prio_queue;
+	pmemdsclient::PriorityQueueEngine *prio_queue;
 	void **handles;
 	void operator() ()
 	{
@@ -64,7 +64,7 @@ int driver(void *arg)
 	void **handles = dargs->handles;
 	pmemdsclient::DPDKPMClient *pmlib = dargs->dpdkClient;
 	pmemdsclient::HashMapEngine *hashMap = dargs->hashMap;
-	pmemdsclient::priority_queue *prio_queue = dargs->prio_queue;
+	pmemdsclient::PriorityQueueEngine *prio_queue = dargs->prio_queue;
 	srand(time(NULL));
 	int ret;
 	int rpc_flags;
@@ -89,12 +89,12 @@ int driver(void *arg)
 	// populate articles
 	for(int i = 0; i < keys; i++){
 	 snprintf(article_name,16,"Article #%lu",key);
-	 hashmap->put(i,article_name,nullptr);
+	 hashMap->put(i,article_name,nullptr);
 	 prio_queue->insert(i,0,nullptr); // 0 votes initially
 	}
 
 	//for( int rcount = 0 ; ; rcount = ++rcount%nreqs){
-	for( int rcount = 0,int i=0 ;i <20 ; i++, rcount = ++rcount%nreqs){
+	for( int rcount = 0,i=0 ;i <20 ; i++, rcount = ++rcount%nreqs){
 		key = zipf(keys,alpha);
 		if(rcount){ // read request
 			pmlib->topk(nullptr);
