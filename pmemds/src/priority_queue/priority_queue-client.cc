@@ -152,7 +152,7 @@ namespace pmemdsclient {
         pm_rpc_t *response;
 
         pm_rpc_t payload = {0,0,"\0"};
-        SET_OP_ID(payload.meta,INSERT);
+        SET_OP_ID(payload.meta,INCREASE_PRIO);
         SET_DS_ID(payload.meta,this->ds_id);
         SET_TYPE_ID(payload.meta, this->type_id);
         payload.key = key;
@@ -173,7 +173,7 @@ namespace pmemdsclient {
         pm_rpc_t *response;
 
         pm_rpc_t payload = {0,0,"\0"};
-        SET_OP_ID(payload.meta,INSERT);
+        SET_OP_ID(payload.meta,INCREASE_PRIO);
         SET_DS_ID(payload.meta,this->ds_id);
         SET_TYPE_ID(payload.meta, this->type_id);
         payload.key = key;
@@ -189,7 +189,7 @@ namespace pmemdsclient {
         pm_rpc_t *response;
 
         pm_rpc_t payload = {0,0,"\0"};
-        SET_OP_ID(payload.meta,INSERT);
+        SET_OP_ID(payload.meta,DECREASE_PRIO);
         SET_DS_ID(payload.meta,this->ds_id);
         SET_TYPE_ID(payload.meta, this->type_id);
         payload.key = key;
@@ -210,7 +210,7 @@ namespace pmemdsclient {
         pm_rpc_t *response;
 
         pm_rpc_t payload = {0,0,"\0"};
-        SET_OP_ID(payload.meta,INSERT);
+        SET_OP_ID(payload.meta,DECREASE_PRIO);
         SET_DS_ID(payload.meta,this->ds_id);
         SET_TYPE_ID(payload.meta, this->type_id);
         payload.key = key;
