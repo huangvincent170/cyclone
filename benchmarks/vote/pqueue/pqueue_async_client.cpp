@@ -160,7 +160,7 @@ int main(int argc, const char *argv[])
 			dargs->dpdkClient = new pmemdsclient::DPDKPMClient(dargs->handles[i]);
 			// sharded priority queue and sharded hashmap
 			dargs->hashMap = new pmemdsclient::HashMapEngine(dargs->dpdkClient,hashmap_st,1000,1UL,1);
-			dargs->prio_queue = new pmemdsclient::PriorityQueueEngine(dargs->dpdkClient,hashmap_st,1000,1UL,1);
+			dargs->prio_queue = new pmemdsclient::PriorityQueueEngine(dargs->dpdkClient,pq_st,1000,1UL,1);
 		}
 	}
 	for (int me = client_id_start; me < client_id_stop; me++){

@@ -152,12 +152,12 @@ namespace pmemds {
 
         switch (op_name){
             case GET:
-                //LOG("Get op : " << in_key.);
+                //LOG("sharded hashmap get operation");
                 this->get(thread_id,req->key,resp);
                 break;
             case PUT: {
                 std::string val = std::string(req->value);
-                //LOG("Put op : " << in_key << in_val);
+                //LOG("sharded hashmap put operation");
                 this->put(thread_id,req->key, val, resp);
             }
                 break;
