@@ -162,7 +162,7 @@ namespace pmemds {
             }
                 break;
             default:
-                LOG_ERROR("unknown operation");
+                LOG_ERROR("unknown operation : " + std::to_string(op_name) );
                 SET_STATUS(resp->meta,INVALID_OP);
         }
 

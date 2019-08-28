@@ -22,7 +22,7 @@
 #include "priority_queue/priority_queue-client.h"
 
 /* IMPORTANT - set to large enough value */
-unsigned long pmemds_keys = 1000000;
+unsigned long pmemds_keys = 100;
 double alpha = 1.08;
 int nreqs = 20;
 

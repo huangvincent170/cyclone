@@ -18,6 +18,7 @@ namespace pmemdsclient {
         this->ds_id = ds_id;
         this->size = size;
         this->client = handle;
+        this->core_mask = core_mask;
         this->type_id = SHARDED_HASHMAP;
     }
 

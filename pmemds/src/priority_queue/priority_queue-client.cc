@@ -8,6 +8,8 @@ namespace pmemdsclient {
         this->ds_id = ds_id;
         this->core_mask = core_mask;
         this->size = size;
+	LOG_ERROR("this version of priority queue not supported");
+	exit(1);
     }
 
     PriorityQueueEngine::PriorityQueueEngine(PMClient *handle,
@@ -27,7 +29,7 @@ namespace pmemdsclient {
         pm_rpc_t *response;
         pm_rpc_t payload = {0, 0, "\0"};
         SET_OP_ID(payload.meta, CREATE_DS);
-        SET_TYPE_ID(payload.meta, SHARDED_PRIORITY_QUEUE);
+        SET_TYPE_ID(payload.meta, this->type_id);
         SET_DS_ID(payload.meta,this->ds_id);
         if (!client->sendmsg(&payload, &response, this->core_mask)) {
             LOG_ERROR("priority queue create");
@@ -43,7 +45,7 @@ namespace pmemdsclient {
         pm_rpc_t *response;
         pm_rpc_t payload = {0, 0, "\0"};
         SET_OP_ID(payload.meta, CREATE_DS);
-        SET_TYPE_ID(payload.meta, SHARDED_PRIORITY_QUEUE);
+        SET_TYPE_ID(payload.meta, this->type_id);
         SET_DS_ID(payload.meta,this->ds_id);
         if (client->sendmsg_async(&payload, this->core_mask, cb) != 0) {
             LOG_ERROR("prioq async create");
@@ -56,7 +58,7 @@ namespace pmemdsclient {
         pm_rpc_t *response;
         pm_rpc_t payload = {0,0,"\0"};
         SET_OP_ID(payload.meta,CLOSE_DS);
-        SET_TYPE_ID(payload.meta,SHARDED_PRIORITY_QUEUE);
+        SET_TYPE_ID(payload.meta, this->type_id);
         SET_DS_ID(payload.meta,this->ds_id);
         if(!client->sendmsg(&payload,&response,this->core_mask)){
             LOG_ERROR("priority_queue close");
@@ -72,7 +74,7 @@ namespace pmemdsclient {
         pm_rpc_t *response;
         pm_rpc_t payload = {0,0,"\0"};
         SET_OP_ID(payload.meta,CLOSE_DS);
-        SET_TYPE_ID(payload.meta,SHARDED_PRIORITY_QUEUE);
+        SET_TYPE_ID(payload.meta, this->type_id);
         SET_DS_ID(payload.meta,this->ds_id);
         if (client->sendmsg_async(&payload, this->core_mask, cb) != 0) {
             LOG_ERROR("prioq async close");
@@ -84,7 +86,7 @@ namespace pmemdsclient {
         pm_rpc_t *response;
         pm_rpc_t payload = {0,0,"\0"};
         SET_OP_ID(payload.meta,REMOVE_DS);
-        SET_TYPE_ID(payload.meta,SHARDED_PRIORITY_QUEUE);
+        SET_TYPE_ID(payload.meta, this->type_id);
         SET_DS_ID(payload.meta,this->ds_id);
         if(!client->sendmsg(&payload,&response,this->core_mask)){
             LOG_ERROR("priority_queue remove");
@@ -100,7 +102,7 @@ namespace pmemdsclient {
         pm_rpc_t *response;
         pm_rpc_t payload = {0,0,"\0"};
         SET_OP_ID(payload.meta,REMOVE_DS);
-        SET_TYPE_ID(payload.meta,SHARDED_PRIORITY_QUEUE);
+        SET_TYPE_ID(payload.meta, this->type_id);
         SET_DS_ID(payload.meta,this->ds_id);
         if (client->sendmsg_async(&payload, this->core_mask, cb) != 0) {
             LOG_ERROR("prioq async remove");
@@ -114,6 +116,7 @@ namespace pmemdsclient {
         pm_rpc_t payload = {0,0,"\0"};
         SET_OP_ID(payload.meta,INSERT);
         SET_DS_ID(payload.meta,this->ds_id);
+        SET_TYPE_ID(payload.meta, this->type_id);
         payload.key = key;
         unsigned long *value = reinterpret_cast<unsigned long *>(payload.value);
         *value = priority;
@@ -133,6 +136,7 @@ namespace pmemdsclient {
         pm_rpc_t payload = {0,0,"\0"};
         SET_OP_ID(payload.meta,INSERT);
         SET_DS_ID(payload.meta,this->ds_id);
+        SET_TYPE_ID(payload.meta, this->type_id);
         payload.key = key;
         unsigned long *value = reinterpret_cast<unsigned long *>(payload.value);
         *value = priority;
@@ -150,6 +154,7 @@ namespace pmemdsclient {
         pm_rpc_t payload = {0,0,"\0"};
         SET_OP_ID(payload.meta,INSERT);
         SET_DS_ID(payload.meta,this->ds_id);
+        SET_TYPE_ID(payload.meta, this->type_id);
         payload.key = key;
         unsigned long *value = reinterpret_cast<unsigned long *>(payload.value);
         *value = delta_prio;
@@ -170,6 +175,7 @@ namespace pmemdsclient {
         pm_rpc_t payload = {0,0,"\0"};
         SET_OP_ID(payload.meta,INSERT);
         SET_DS_ID(payload.meta,this->ds_id);
+        SET_TYPE_ID(payload.meta, this->type_id);
         payload.key = key;
         unsigned long *value = reinterpret_cast<unsigned long *>(payload.value);
         *value = delta_prio;
@@ -185,6 +191,7 @@ namespace pmemdsclient {
         pm_rpc_t payload = {0,0,"\0"};
         SET_OP_ID(payload.meta,INSERT);
         SET_DS_ID(payload.meta,this->ds_id);
+        SET_TYPE_ID(payload.meta, this->type_id);
         payload.key = key;
         unsigned long *value = reinterpret_cast<unsigned long *>(payload.value);
         *value = delta_prio;
@@ -205,6 +212,7 @@ namespace pmemdsclient {
         pm_rpc_t payload = {0,0,"\0"};
         SET_OP_ID(payload.meta,INSERT);
         SET_DS_ID(payload.meta,this->ds_id);
+        SET_TYPE_ID(payload.meta, this->type_id);
         payload.key = key;
         unsigned long *value = reinterpret_cast<unsigned long *>(payload.value);
         *value = delta_prio;
