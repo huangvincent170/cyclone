@@ -23,15 +23,11 @@ void callback(uint8_t thread_id, const unsigned char *data,
               rpc_cookie_t *cookie, unsigned long *pmdk_state)
 {
 	pm_rpc_t *request, *response;
-    assert((sizeof(pm_rpc_t) == len) && "wrong payload length");
-    cookie->ret_value = malloc(sizeof(pm_rpc_t));
-    cookie->ret_size = sizeof(pm_rpc_t);
-    response = (pm_rpc_t *)cookie->ret_value;
-
 	/* set mbuf/wal commit state as a thread local */
 	//TX_SET_BLIZZARD_MBUF_COMMIT_ADDR(pmdk_state);
     request = (pm_rpc_t *) data;
-    pmlib->exec(thread_id, request,response);
+    pmlib->exec(thread_id, request,&response,&(cookie->ret_size));
+    cookie->ret_value = (void *)response;
 }
 
 int commute_callback(unsigned long cmask1, void *arg1, unsigned long cmask2, void *arg2)
@@ -73,7 +69,7 @@ void gc(rpc_cookie_t *cookie)
 rpc_callbacks_t rpc_callbacks = { callback,
 								  gc,
 								  commute_callback,
-									partition_callback
+								  partition_callback
 								};
 
 

@@ -7,8 +7,17 @@
 #ifndef __PMEMDS_H
 #define __PMEMDS_H
 
+#include <stdint.h>
 #include <string>
+#include <map>
+#include <libpmemobj++/make_persistent.hpp>
+#include <libpmemobj++/make_persistent_array.hpp>
+#include <libpmemobj++/persistent_ptr.hpp>
+#include <libpmemobj++/pool.hpp>
+#include <libpmemobj++/transaction.hpp>
+
 #include "pmemds-common.h"
+#include "pmemds_log.h"
 
 typedef void(PMEachCallback)(void* context,                // callback function for Each operation
                              int keybytes,
@@ -25,23 +34,11 @@ struct PMGetCallbackContext {
 	std::string* value;
 };
 
-#include <string>
-#include <map>
-#include <libpmemobj++/make_persistent.hpp>
-#include <libpmemobj++/make_persistent_array.hpp>
-#include <libpmemobj++/persistent_ptr.hpp>
-#include <libpmemobj++/pool.hpp>
-#include <libpmemobj++/transaction.hpp>
-
-#include "pmemds-common.h"
-#include "pmemds_log.h"
 
 using std::string;
 using std::to_string;
 
 namespace pmemds {
-
-
 
 class string_view {
 public:

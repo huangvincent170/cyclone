@@ -79,8 +79,9 @@ typedef struct rpc_cookie_st {
 } rpc_cookie_t;
 
 ////// RPC Server side interface
+#include <stdint.h>
 typedef 
-void (*rpc_callback_t)(const unsigned char *data,
+void (*rpc_callback_t)(uint8_t thread_id,const unsigned char *data,
 		       const int len,
 		       rpc_cookie_t * rpc_cookie, unsigned long *pmdk_state);
 
