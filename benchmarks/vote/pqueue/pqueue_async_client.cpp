@@ -22,9 +22,9 @@
 #include "priority_queue/priority_queue-client.h"
 
 /* IMPORTANT - set to large enough value */
-unsigned long pmemds_keys = 100;
-double alpha = 1.08;
-int nreqs = 20;
+const unsigned long pmemds_keys = 1000000;
+const double alpha = 1.08;
+const int nreqs = 20;
 
 /* pmem structure names */
 const uint16_t hashmap_st = 0;
@@ -87,15 +87,18 @@ int driver(void *arg)
 	prio_queue->create(creation_flag,nullptr);
 
 	// populate articles
-	for(int i = 0; i < keys; i++){
+	BOOST_LOG_TRIVIAL(info) << "Loading articles to hashmap/prio-queue";
+	for(int i = 0; i <= keys; i++){
 	 snprintf(article_name,16,"Article #%lu",key);
 	 hashMap->put(i,article_name,nullptr);
 	 prio_queue->insert(i,0,nullptr); // 0 votes initially
 	}
 
-	//for( int rcount = 0 ; ; rcount = ++rcount%nreqs){
-	for( int rcount = 0,i=0 ;i <20 ; i++, rcount = ++rcount%nreqs){
-		key = zipf(keys,alpha);
+	BOOST_LOG_TRIVIAL(info) << "run bench";
+	rand_val(1234);	
+	for( int rcount = 0 ; ; rcount = ++rcount%nreqs){
+	//for( int rcount = 0,i=0 ;i <20 ; i++, rcount = ++rcount%nreqs){
+		key = zipf(alpha,keys);
 		if(rcount){ // read request
 			pmlib->topk(nullptr);
 		}else{ // update request
