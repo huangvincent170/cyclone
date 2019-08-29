@@ -91,19 +91,15 @@ typedef void (*rpc_gc_callback_t)(rpc_cookie_t *cookie);
 //Checking operations commutativity
 typedef int (*op_commute_callback_t)(unsigned long cmask1, void *incoming, unsigned long cmask2, void *issued);
 
-#ifdef __PARTITION
 //Partitions routing
 typedef int (*op_partition_callback_t)(void *request);
-#endif
 
 // Callbacks structure
 typedef struct rpc_callbacks_st {
   rpc_callback_t rpc_callback;
   rpc_gc_callback_t gc_callback;
   op_commute_callback_t op_callback;
-#ifdef __PARTITION
-	op_partition_callback_t part_callback;
-#endif
+  op_partition_callback_t part_callback;
 } rpc_callbacks_t;
 
 // Init network stack

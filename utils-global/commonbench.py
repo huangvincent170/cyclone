@@ -142,6 +142,8 @@ class Common:
             cmd += '\"-DPMEM_HUGE\"'
         if args.is_commute == True:
             cmd += '\" -D__COMMUTE\"'
+        if args.is_partition == True:
+            cmd += '\" -D__PARTITION\"'
         sh(cmd)
         cd(home)
         
@@ -156,9 +158,13 @@ class Common:
         elif m == nvram:
             cmd += ' RTE_SSDK=' + rte_nvmsdk
         cmd +=  ' ' + self.get_server_cxx(w)
-        
+       
+        # libcyclone.hpp has some macro conditionals
+        cmd += ' CPPFLAGS='
         if args.is_commute == True:
-            cmd += ' CPPFLAGS=\"-D__COMMUTE\"' 
+            cmd += '\"-D__COMMUTE\"' 
+        if args.is_partition == True:
+            cmd += '\" -D__PARTITION\"' 
         sh(cmd)
         cd(home)
 

@@ -29,7 +29,11 @@ void callback(uint8_t thread_id, const unsigned char *data,
     pmlib->exec(thread_id, request,&response,&(cookie->ret_size));
     cookie->ret_value = (void *)response;
 }
-
+/*commute rules
+ * 1. update operation going in to different partitions commute
+ * 2. Read operations commute with each other irrespective of the partition
+ * 3. Others do not
+ */
 int commute_callback(unsigned long cmask1, void *arg1, unsigned long cmask2, void *arg2)
 {
 	pm_rpc_t *op1 = (pm_rpc_t *) arg1;
@@ -37,7 +41,9 @@ int commute_callback(unsigned long cmask1, void *arg1, unsigned long cmask2, voi
 
 	unsigned int op1_id = OP_ID(op1->meta);
 	unsigned int op2_id = OP_ID(op2->meta);
-	if(cmask1 != cmask2){
+	if((op1_id == PUT || op1_id == INSERT) &&
+			(op2_id == PUT || op2_id == INSERT) &&
+				(cmask1 != cmask2)){
 		return 1;
 	}
 	if(op1_id == GET_TOPK && op2_id == GET_TOPK){
@@ -50,15 +56,18 @@ int commute_callback(unsigned long cmask1, void *arg1, unsigned long cmask2, voi
  * commute scheduler uses return value to decide the the core.
  * Alternatively, the client can specify core_mask. But this
  * way, client is fairly transparent to the existence of partitioned data-structure
+ * 1. update operation's partitions is determined by modulo hash.
+ * 2. read operations go to 0 partition TBD -- make it round robin
  */
 int partition_callback(void *request){
 	pm_rpc_t *op = (pm_rpc_t *) request;
+	int partition = 0;
 	unsigned int op_id = OP_ID(op->meta);
-	if(op_id == PUT){
-		return 0;
-	}else{
-		return 0; //defualt partition
+	if(op_id == PUT || op_id == INSERT){
+		partition = op->key%executor_threads;	
+		return partition;
 	}
+	return partition; //defualt partition
 }
 
 void gc(rpc_cookie_t *cookie)
