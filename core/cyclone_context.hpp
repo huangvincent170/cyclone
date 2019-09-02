@@ -789,7 +789,7 @@ struct cyclone_monitor {
 				accept(available, 0);
 			}
 #ifdef __COMMUTE
-		   scheduler->schedule(app_callbacks.op_callback,app_callbacks.part_callback);
+		   scheduler->schedule(app_callbacks.op_callback);
 		   scheduler->gc();
 #endif
 

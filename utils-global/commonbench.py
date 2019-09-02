@@ -142,8 +142,6 @@ class Common:
             cmd += '\"-DPMEM_HUGE\"'
         if args.is_commute == True:
             cmd += '\" -D__COMMUTE\"'
-        if args.is_partition == True:
-            cmd += '\" -D__PARTITION\"'
         sh(cmd)
         cd(home)
         
@@ -163,8 +161,6 @@ class Common:
         cmd += ' CPPFLAGS='
         if args.is_commute == True:
             cmd += '\"-D__COMMUTE\"' 
-        if args.is_partition == True:
-            cmd += '\" -D__PARTITION\"' 
         sh(cmd)
         cd(home)
 

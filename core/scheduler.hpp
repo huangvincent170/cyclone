@@ -132,7 +132,7 @@ int add(int to_core, unsigned long me_quorum, rte_mbuf *m, rpc_t *rpc, wal_entry
  *  go through the buffered operations list and enqueue, ready operations
  *  in to exeuction threads 
  */
-int schedule(op_commute_callback_t is_commute, op_partition_callback_t my_partition){
+int schedule(op_commute_callback_t is_commute){
 	//BOOST_LOG_TRIVIAL(info) << "schdule attempt...";
 	node_t *list_node = next_schedule->next;
 	while(next_schedule != head){
