@@ -139,8 +139,7 @@ int schedule(op_commute_callback_t is_commute, op_partition_callback_t my_partit
 		while(list_node->next != NULL){ // tail node
 			void *next_op = (void *)(next_schedule->rpc+1);
 			void *list_op = (void *)(list_node->rpc+1);
-			if(!list_node->wal->marked && !is_commute(next_schedule->rpc->core_mask, next_op, 
-						list_node->rpc->core_mask, list_op)){
+			if(!list_node->wal->marked && !is_commute(next_op, list_op)){
 //	BOOST_LOG_TRIVIAL(info) << "scheduler return, non-commute, " 
 //					<< " makred for gc : " << list_node->wal->marked
 //					<< " buffer size : " << size;
@@ -153,16 +152,7 @@ int schedule(op_commute_callback_t is_commute, op_partition_callback_t my_partit
 		triple[0] = (void *)(unsigned long)next_schedule->me_quorum;
 		triple[1] = next_schedule->m;
 		triple[2] = next_schedule->rpc;
-#ifdef __PARTITION
-		uint8_t partition = 0;
-		if((partition = my_partition(next_schedule->rpc)) >= executor_threads){
-			BOOST_LOG_TRIVIAL(error) << "partition id is greater than available executors";
-			exit(-1);
-		}
-		if(rte_ring_mp_enqueue_bulk(to_cores[partition], triple, 3) == -ENOBUFS) {
-#else
 		if(rte_ring_mp_enqueue_bulk(to_cores[rb_counter++%executor_threads], triple, 3) == -ENOBUFS) {
-#endif
 			BOOST_LOG_TRIVIAL(fatal) << "raft->core comm ring is full (req stable)";
 			exit(-1);
 		}

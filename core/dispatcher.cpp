@@ -141,7 +141,7 @@ int exec_rpc_internal(rpc_t *rpc,
 		len        -= (num_quorums*sizeof(unsigned int) + sizeof(ic_rdv_t));
 	}
 	LT_START(trcekey_app_wr, rpc);
-	app_callbacks.rpc_callback(cookie->core_id, user_data,
+	app_callbacks.rpc_callback(user_data,
 			len,
 			cookie, &wal->pmdk_state);
 	LT_END(trcekey_app_wr, rpc);
@@ -168,7 +168,7 @@ int exec_rpc_internal_ro(rpc_t *rpc,
 		len       -= (num_quorums*sizeof(unsigned int) + sizeof(ic_rdv_t));
 	}
 	//LT_START(app_wr, rpc);
-	app_callbacks.rpc_callback(cookie->core_id,user_data,
+	app_callbacks.rpc_callback(user_data,
 			len,
 			cookie, &wal->pmdk_state);
 	//LT_END(app_wr, rpc);

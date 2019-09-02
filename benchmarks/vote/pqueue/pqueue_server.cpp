@@ -18,7 +18,25 @@
 static const std::string pmem_path = "/mnt/pmem1/pmemds";
 pmemds::PMLib *pmlib;
 
-void callback(uint8_t thread_id, const unsigned char *data,
+
+
+/*
+ * Figure out the proper partitions to operate on
+ */
+int partition(pm_rpc_t *op){
+	int partition;
+	unsigned int op_id = OP_ID(op->meta);
+	if(op_id == PUT || op_id == INSERT){
+		partition = op->key%executor_threads;	
+		return partition;
+	}
+	return INT_MAX; // not being used 
+}
+
+
+
+
+void callback(const unsigned char *data,
               const int len,
               rpc_cookie_t *cookie, unsigned long *pmdk_state)
 {
@@ -26,48 +44,30 @@ void callback(uint8_t thread_id, const unsigned char *data,
 	/* set mbuf/wal commit state as a thread local */
 	//TX_SET_BLIZZARD_MBUF_COMMIT_ADDR(pmdk_state);
     request = (pm_rpc_t *) data;
-    pmlib->exec(thread_id, request,&response,&(cookie->ret_size));
+    pmlib->exec(partition(request), request,&response,&(cookie->ret_size));
     cookie->ret_value = (void *)response;
 }
 /*commute rules
- * 1. update operation going in to different partitions commute
+ * 1. update operations going in to different partitions commute
  * 2. Read operations commute with each other irrespective of the partition
  * 3. Others do not
  */
-int commute_callback(unsigned long cmask1, void *arg1, unsigned long cmask2, void *arg2)
+int commute_callback(void  *arg1, void *arg2)
 {
 	pm_rpc_t *op1 = (pm_rpc_t *) arg1;
-	pm_rpc_t *op2 = (pm_rpc_t *) arg2;
+    pm_rpc_t *op2 = (pm_rpc_t *) arg2;
 
 	unsigned int op1_id = OP_ID(op1->meta);
 	unsigned int op2_id = OP_ID(op2->meta);
 	if((op1_id == PUT || op1_id == INSERT) &&
 			(op2_id == PUT || op2_id == INSERT) &&
-				(cmask1 != cmask2)){
+				(partition(op1) != partition(op2))){
 		return 1;
 	}
 	if(op1_id == GET_TOPK && op2_id == GET_TOPK){
 		return 1;
 	}
 	return 0;
-}
-
-/*
- * commute scheduler uses return value to decide the the core.
- * Alternatively, the client can specify core_mask. But this
- * way, client is fairly transparent to the existence of partitioned data-structure
- * 1. update operation's partitions is determined by modulo hash.
- * 2. read operations go to 0 partition TBD -- make it round robin
- */
-int partition_callback(void *request){
-	pm_rpc_t *op = (pm_rpc_t *) request;
-	int partition = 0;
-	unsigned int op_id = OP_ID(op->meta);
-	if(op_id == PUT || op_id == INSERT){
-		partition = op->key%executor_threads;	
-		return partition;
-	}
-	return partition; //defualt partition
 }
 
 void gc(rpc_cookie_t *cookie)
@@ -77,10 +77,8 @@ void gc(rpc_cookie_t *cookie)
 
 rpc_callbacks_t rpc_callbacks = { callback,
 								  gc,
-								  commute_callback,
-								  partition_callback
+								  commute_callback
 								};
-
 
 int main(int argc, char *argv[])
 {

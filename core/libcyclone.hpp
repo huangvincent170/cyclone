@@ -81,7 +81,7 @@ typedef struct rpc_cookie_st {
 ////// RPC Server side interface
 #include <stdint.h>
 typedef 
-void (*rpc_callback_t)(uint8_t thread_id,const unsigned char *data,
+void (*rpc_callback_t)(const unsigned char *data,
 		       const int len,
 		       rpc_cookie_t * rpc_cookie, unsigned long *pmdk_state);
 
@@ -89,17 +89,13 @@ void (*rpc_callback_t)(uint8_t thread_id,const unsigned char *data,
 typedef void (*rpc_gc_callback_t)(rpc_cookie_t *cookie);
 
 //Checking operations commutativity
-typedef int (*op_commute_callback_t)(unsigned long cmask1, void *incoming, unsigned long cmask2, void *issued);
-
-//Partitions routing
-typedef int (*op_partition_callback_t)(void *request);
+typedef int (*op_commute_callback_t)(void *incoming, void *issued);
 
 // Callbacks structure
 typedef struct rpc_callbacks_st {
   rpc_callback_t rpc_callback;
   rpc_gc_callback_t gc_callback;
   op_commute_callback_t op_callback;
-  op_partition_callback_t part_callback;
 } rpc_callbacks_t;
 
 // Init network stack
