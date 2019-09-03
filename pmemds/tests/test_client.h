@@ -40,7 +40,7 @@ namespace pmemdsclient {
 
     class ShardedTestClient : public PMClient {
     public:
-        ShardedTestClient(pmemds::PMLib *pmLib, uint8_t (*partition_cb)(void *request));
+        ShardedTestClient(pmemds::PMLib *pmLib, int (*partition_cb)(pm_rpc_t *request));
 
         ~ShardedTestClient() {};
 
@@ -49,12 +49,12 @@ namespace pmemdsclient {
         int sendmsg_async(pm_rpc_t *msg, unsigned long core_mask, void (*cb)(void *));
 
     private:
-        uint8_t (*partition)(void *request);
+        int (*partition)(pm_rpc_t *request);
         pmemds::PMLib *pmLib;
     };
 
 
-    inline ShardedTestClient::ShardedTestClient(pmemds::PMLib *pmLib, uint8_t (*partition_cb)(void *request)){
+    inline ShardedTestClient::ShardedTestClient(pmemds::PMLib *pmLib, int (*partition_cb)(pm_rpc_t *request)){
         this->pmLib = pmLib;
         this->partition = partition_cb;
     }
@@ -63,7 +63,7 @@ namespace pmemdsclient {
     inline int ShardedTestClient::sendmsg(pm_rpc_t *req, pm_rpc_t **response, unsigned long core_mask) {
         //*response = new pm_rpc_t();
         int resp_size;
-        uint8_t part = this->partition((void *)req);
+        uint8_t part = this->partition(req);
         pmLib->exec(part, req, response, &resp_size);
         return resp_size;
     }

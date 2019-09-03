@@ -4,6 +4,7 @@
 
 #include <string>
 #include <pmemds.h>
+#include <climits>
 
 #include "../include/pmemds-client.h"
 #include "../include/pmemds-common.h"
@@ -14,27 +15,35 @@
 #include "test_common.hpp"
 
 
+#define NPARTITIONS 4
+#define NARTICLES 10
+
 namespace {
 
-    uint8_t partition_callback(void *){
-        return 0;
+    int partition(pm_rpc_t *op){
+        int partition;
+        unsigned int op_id = OP_ID(op->meta);
+        if(op_id == PUT || op_id == INSERT || op_id == INCREASE_PRIO || op_id == DECREASE_PRIO){
+            partition = op->key%NPARTITIONS;
+            return partition;
+        }
+        return INT_MAX; // not being used
     }
 
 
-
-// The fixture for testing class Foo.
     class voteTest : public ::testing::Test {
     protected:
         const uint16_t art_st = 0;
         const uint16_t votes_st = 1;
+
         /* Code here will be called immediately after the constructor (right
            before each test). */
         void SetUp() override {
 
             /* server side data-structure creation */
-            pmLib = new pmemds::PMLib(pmem_path,1);
+            pmLib = new pmemds::PMLib(pmem_path, NPARTITIONS);
 
-            testClient = new pmemdsclient::ShardedTestClient(pmLib,partition_callback);
+            testClient = new pmemdsclient::ShardedTestClient(pmLib,partition);
             testClient->open("testApp");
 
             /* create art and vote structures */
@@ -44,7 +53,7 @@ namespace {
             votes->create(PM_CREAT);
             /* put some articles */
 
-            for(int i = 0; i < 20; i++){
+            for(int i = 0; i < NARTICLES; i++){
                 art->put(i, "Article #" + std::to_string(i));
                 votes->insert(i,0);
             }
@@ -81,11 +90,7 @@ namespace {
 
 
     TEST_F(voteTest, VoteIncrTest) {
-        ASSERT_EQ(votes->increase_prio(13,1),OK);
-        ASSERT_EQ(votes->increase_prio(14,2),OK);
-        ASSERT_EQ(votes->increase_prio(15,1),OK);
-        ASSERT_EQ(votes->increase_prio(16,3),OK);
-        ASSERT_EQ(votes->increase_prio(17,4),OK);
+        ASSERT_EQ(votes->increase_prio(1,1),OK);
         ASSERT_EQ(testClient->topk(),OK);
     }
 

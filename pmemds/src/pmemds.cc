@@ -62,12 +62,12 @@ void PMLib::vote_topk(pm_rpc_t *request, pm_rpc_t **response_ptr, int *resp_size
 			// fill the titles next
 			if(size != 0){
 				for(int j = 0 ; j < size; j++){
-					bool found = hm->find(result,vpayload[j].idx);
+					bool found = hm->find(result,vpayload[fill_index + j].idx);
 					if(!found){
 						LOG_ERROR("key not found");
 						return;
 					}
-					snprintf(vpayload[j].art,16, "%s",result->second.c_str());
+					snprintf(vpayload[fill_index + j].art,16, "%s",result->second.c_str());
 
 				}
                 fill_index += size;
