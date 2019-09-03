@@ -44,7 +44,11 @@ void callback(const unsigned char *data,
 	/* set mbuf/wal commit state as a thread local */
 	//TX_SET_BLIZZARD_MBUF_COMMIT_ADDR(pmdk_state);
     request = (pm_rpc_t *) data;
+#ifdef __COMMUTE
     pmlib->exec(partition(request), request,&response,&(cookie->ret_size));
+#else
+    pmlib->exec(0, request,&response,&(cookie->ret_size)); // single partition
+#endif
     cookie->ret_value = (void *)response;
 }
 /*commute rules
