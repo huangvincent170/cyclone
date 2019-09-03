@@ -28,7 +28,7 @@ static const int timeout_msec  = 1200; // Client - failure detect
 // Execution resources
 static const int executor_threads = 4;
 #else
-static const int executor_threads = 4;
+static const int executor_threads = 1;
 
 static const int GC_IN_USE	= 0;
 static const int GC_READY	= 1;

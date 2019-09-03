@@ -11,7 +11,7 @@
 #define MIN_HEAP 0
 #define MAX_HEAP 1
 
-#define K_VALUE  5  //top-k value
+#define NTOP_K  8  // k value in top-k
 
 struct pqelem_st{
     pqelem_st(unsigned long k, unsigned long p):key(k),priority(p){
@@ -30,7 +30,7 @@ namespace pmemds {
 
     class persistent_priority_queue {
     public:
-        persistent_priority_queue();
+        persistent_priority_queue(int npartitions); // we tune the min-heap size based on number of partitions
         ~persistent_priority_queue();
 
         int insert(unsigned long key, unsigned long priority);
@@ -43,6 +43,8 @@ namespace pmemds {
         void printq();
 
     private:
+		int minheap_size;	
+
         //TODO: without inline multiple definition? could not figure out why? Should work fine.
         void max_heapify( const unsigned long idx);
         unsigned long right_child(unsigned long idx);
@@ -51,19 +53,19 @@ namespace pmemds {
         void swap(std::vector<struct pqelem_st *> *elems, uint8_t heap_type, unsigned long idx1, unsigned long idx2);
 
         unsigned long gtol(unsigned long idx){ //global to local index
-            if(idx < K_VALUE) {
+            if(idx < minheap_size) {
                 return idx;
             }
-            return idx-K_VALUE;
+            return idx-minheap_size;
         };
         unsigned long mintog(unsigned long idx) { //min to global index
             return idx;
         };
         unsigned long maxtog(unsigned long idx) { //max to global index
-            return idx+K_VALUE;
+            return idx+minheap_size;
         };
         int is_minheap(unsigned long global_idx){
-            return global_idx < K_VALUE;
+            return global_idx < minheap_size;
         }
 
         void min_heapify(const unsigned long idx); // min heap maintain top K
@@ -207,7 +209,7 @@ namespace pmemds {
         struct pqelem_st *pqelem = new struct pqelem_st(key,priority);
 
         /// if min-heap is not filled, then fill it
-        if(min_elems->size() < K_VALUE){
+        if(min_elems->size() < minheap_size){
             min_elems->push_back(pqelem);
             unsigned long l_idx = min_elems->size()-1;
             keymap->insert(std::pair<unsigned long, unsigned long>(key,mintog(l_idx)));
@@ -327,7 +329,11 @@ namespace pmemds {
         std::swap(pq_vector->at(idx1),pq_vector->at(idx2));
     }
 
-    inline persistent_priority_queue::persistent_priority_queue(){
+    inline persistent_priority_queue::persistent_priority_queue(int npartitions){
+		if(NTOP_K % npartitions){
+			LOG_ERROR("number of partitions should be compatible with selected top-k value");
+		}
+		this->minheap_size = NTOP_K/npartitions;
         this->min_elems = new std::vector<struct pqelem_st *>();
         this->max_elems = new std::vector<struct pqelem_st *>();
         this->keymap = new std::unordered_map<unsigned long, unsigned long>();

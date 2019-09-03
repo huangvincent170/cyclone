@@ -26,7 +26,7 @@ pmemds::PMLib *pmlib;
 int partition(pm_rpc_t *op){
 	int partition;
 	unsigned int op_id = OP_ID(op->meta);
-	if(op_id == PUT || op_id == INSERT){
+	if(op_id == PUT || op_id == INSERT || op_id == INCREASE_PRIO || op_id == DECREASE_PRIO){
 		partition = op->key%executor_threads;	
 		return partition;
 	}
@@ -59,8 +59,9 @@ int commute_callback(void  *arg1, void *arg2)
 
 	unsigned int op1_id = OP_ID(op1->meta);
 	unsigned int op2_id = OP_ID(op2->meta);
-	if((op1_id == PUT || op1_id == INSERT) &&
-			(op2_id == PUT || op2_id == INSERT) &&
+	// hashmap inserts and queue inserts
+	if((op1_id == PUT || op1_id == INSERT || op1_id == INCREASE_PRIO || op1_id == DECREASE_PRIO) &&
+			(op2_id == PUT || op2_id == INSERT || op2_id == INCREASE_PRIO || op2_id == DECREASE_PRIO) &&
 				(partition(op1) != partition(op2))){
 		return 1;
 	}
