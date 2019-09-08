@@ -10,15 +10,18 @@ const unsigned long value_sz     = 16;
 
 /**  need atleast one char qualifier to represent vote app in rocksdb
      original norria benchmark uses vote_<articleId> and vote_vc<articleId> **/  
-typedef struct key_st{
-	char prefix[1];
+typedef struct votekey_st{
+	char prefix;
 	unsigned long art_id;
-} key_t;
+} votekey_t;
 
 typedef struct rockskv_st{
   unsigned long op;
-  key_t key;
-  char value[value_sz];
+  votekey_t key;
+  union{
+	char value[value_sz];
+	unsigned long prio;
+  };
 }rockskv_t;
 
 

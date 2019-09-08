@@ -56,11 +56,11 @@ const unsigned long vote_value = 0; // we initialize every article vote to 0
 void load(unsigned long keys)
 {
 	// article id -> name key
-	key_t art_key = {.prefix = 'a',
-									 .art_id = 0 };
+	votekey_t art_key = { .prefix = 'a',
+						   .art_id = 0 };
 	// ariticle id -> nvotes
-	key_t vc_key  = { .prefix = 'v',
-										.art_id = 0};
+	votekey_t vc_key  = { .prefix = 'v',
+							.art_id = 0};
 
   unsigned char value_base[value_sz];
   BOOST_LOG_TRIVIAL(info) << "Start loading.";
@@ -69,13 +69,13 @@ void load(unsigned long keys)
     rocksdb::WriteBatch batch;
     for(unsigned long j=i;j<i + BATCH_SIZE && j < keys;j++) {
 			art_key.art_id = j;				
-      rocksdb::Slice art_key((const char *)&art_key, sizeof(key_t));
-			snprintf(&value_base[0],value_sz,"Article #%lu",j);	
+			rocksdb::Slice art_key((const char *)&art_key, sizeof(votekey_t));
+			snprintf((char *)&value_base[0],value_sz,"Article #%lu",j);	
 			rocksdb::Slice art_val((const char *)&value_base[0], value_sz);
       batch.Put(art_key, art_val);
 
 			vc_key.art_id  = j;
-      rocksdb::Slice vc_key((const char *)&vc_key, sizeof(key_t));
+      rocksdb::Slice vc_key((const char *)&vc_key, sizeof(votekey_t));
 			rocksdb::Slice vc_val((const char *)&vote_value, sizeof(unsigned long));
       batch.Put(vc_key, vc_val);
     }

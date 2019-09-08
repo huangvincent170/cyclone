@@ -4,6 +4,7 @@ include ../../Makefile.inc
 all: server client
 
 server: rocksdb_server rocksdb_checkpoint rocksdb_loader
+#server: rocksdb_server
 client: rocksdb_async_client
 
 ROCKS_HOME?=/home/pfernando/rocksdb

@@ -111,9 +111,6 @@ typedef struct driver_args_st
 	int clients;
 	int partitions;
 	int buf_cap;
-	pmemdsclient::DPDKPMClient *dpdkClient;
-	pmemdsclient::HashMapEngine *hashMap;
-	pmemdsclient::PriorityQueueEngine *prio_queue;
 	void **handles;
 	void operator() ()
 	{
@@ -149,7 +146,7 @@ int driver(void *arg)
 
 	srand(rtc_clock::current_time());
 	rockskv_t *kv = (rockskv_t *)buffer;
-
+	struct cb_st *cb_ctxt;
 	// we populate articles in rocksdb loader
 	BOOST_LOG_TRIVIAL(info) << "run bench";
 	rand_val(1234);
@@ -158,36 +155,32 @@ int driver(void *arg)
 		if (timedout_msgs > 0){
 			__sync_synchronize();
 			pthread_mutex_lock(&vlock);
-			if (timeout_vector->size() > 0)
-			{
+			if (timeout_vector->size() > 0){
 				cb_ctxt = timeout_vector->at(0);
 				timeout_vector->erase(timeout_vector->begin());
 				timedout_msgs--;
 			}
 			pthread_mutex_unlock(&vlock);
-
 		}
-		else
-		{
-			kv->key = zipf(alpha, keys);
-			if (rcount) // read request
-			{
+		else{
+			kv->key.art_id = zipf(alpha, keys);
+			if (rcount){ // read request
 				rpc_flags = RPC_FLAG_RO;
 				kv->op    = OP_GET;
+				kv->key.prefix = 'a';
 			}
-			else   // update request
-			{
+			else{   // update request
 				rpc_flags = 0;
 				kv->op    = OP_INCR;
+				kv->key.prefix = 'v';
 			}
-			my_core  = kv->key % executor_threads;
+			my_core  = kv->key.art_id % executor_threads;
 			cb_ctxt = (struct cb_st *)rte_malloc("callback_ctxt", sizeof(struct cb_st), 0);
 			cb_ctxt->request_type = rpc_flags;
 		}
 
 		cb_ctxt->request_id = request_id++;
-		do
-		{
+		do{
 			ret = make_rpc_async(handles[0],
 			                     buffer,
 			                     sizeof(rockskv_t),
@@ -195,14 +188,12 @@ int driver(void *arg)
 			                     (void *)cb_ctxt,
 			                     1UL << my_core,
 			                     rpc_flags);
-			if (ret == EMAX_INFLIGHT)
-			{
+			if (ret == EMAX_INFLIGHT){
 				//sleep a bit
 				continue;
 			}
-		}
-		while (ret);
-
+		}while (ret);
+	}
 		return 0;
 	}
 
