@@ -1,5 +1,5 @@
 def launch_cmds_startup():
-    print("Configuring for rocksdb application")
+    print("Configuring for vote bench with rocksdb")
 
 
 def launch_cmds_server_gen(f, q, r, m, quorums, replicas, clients, ports):
@@ -7,14 +7,14 @@ def launch_cmds_server_gen(f, q, r, m, quorums, replicas, clients, ports):
     if os.environ.has_key('CYCLONE_PASS'):
         passwd=os.environ.get('CYCLONE_PASS')
     cmd= ' echo ' + passwd + ' | sudo -S '
-    cmd=cmd + 'rm -rf /mnt/pmem1/rocksdata\n'
+    cmd=cmd + 'rm -rf /mnt/pmem1/voterocksdata\n'
     f.write(cmd)
     cmd=' echo ' + passwd + ' | sudo -S '
-    cmd= cmd + 'rm -f /mnt/pmem1/rockswal/*\n'
+    cmd= cmd + 'rm -f /mnt/pmem1/voterockswal/*\n'
     f.write(cmd)
     cmd=' echo ' + passwd + ' | sudo -S '
     cmd=cmd + ' LD_LIBRARY_PATH=/usr/lib:/usr/local/lib '
-    cmd=cmd + '/home/pfernando/cyclone/cyclone.git/benchmarks/kvbench/rocksdb/rocksdb_checkpoint\n'
+    cmd=cmd + '/home/pfernando/cyclone/cyclone.git/benchmarks/vote/rocksdb/rocksdb_checkpoint\n'
     f.write(cmd)
     cmd=''
     if os.environ.has_key('RBT_SLEEP_USEC'):
@@ -22,7 +22,7 @@ def launch_cmds_server_gen(f, q, r, m, quorums, replicas, clients, ports):
     cmd=cmd + ' echo ' + passwd + ' | sudo -S '
     cmd=cmd + ' PMEM_IS_PMEM_FORCE=1 '
     cmd=cmd + ' LD_LIBRARY_PATH=/usr/lib:/usr/local/lib '
-    cmd=cmd + '/home/pfernando/cyclone/cyclone.git/benchmarks/kvbench/rocksdb/rocksdb_server '
+    cmd=cmd + '/home/pfernando/cyclone/cyclone.git/benchmarks/vote/rocksdb/rocksdb_server '
     cmd=cmd + str(r) + ' '
     cmd=cmd + str(m) + ' '
     cmd=cmd + str(clients) + ' '
@@ -46,10 +46,10 @@ def launch_cmds_client_gen(f, m, c, quorums, replicas, clients, machines, ports,
             c_stop = clients
         if c == 0 and m < replicas + client_machines:
             cmd=''
-            if os.environ.has_key('KV_FRAC_READ'):
-                cmd=cmd + 'KV_FRAC_READ=' + os.environ.get('KV_FRAC_READ') + ' '
-            if os.environ.has_key('KV_KEYS'):
-                cmd=cmd + 'KV_KEYS=' + os.environ.get('KV_KEYS') + ' '    
+            if os.environ.has_key('VOTE_FRAC_READ'):
+                cmd=cmd + 'VOTE_FRAC_READ=' + os.environ.get('VOTE_FRAC_READ') + ' '
+            if os.environ.has_key('VOTE_KEYS'):
+                cmd=cmd + 'VOTE_KEYS=' + os.environ.get('VOTE_KEYS') + ' '    
             if os.environ.has_key('ACTIVE'):
                 cmd=cmd + 'ACTIVE=' + os.environ.get('ACTIVE') + ' '    
             if os.environ.has_key('CYCLONE_PASS'):
@@ -57,7 +57,7 @@ def launch_cmds_client_gen(f, m, c, quorums, replicas, clients, machines, ports,
             cmd=cmd + ' echo ' + passwd + ' | sudo -S '
             cmd=cmd + ' LD_LIBRARY_PATH=/usr/lib:/usr/local/lib '
             #cmd=cmd + '/home/pfernando/cyclone/cyclone.git/test/rocksdb_client '
-            cmd=cmd + '/home/pfernando/cyclone/cyclone.git/benchmarks/kvbench/rocksdb/rocksdb_async_client '
+            cmd=cmd + '/home/pfernando/cyclone/cyclone.git/benchmarks/vote/rocksdb/rocksdb_async_client '
             cmd=cmd + str(c_start) + ' '
             cmd=cmd + str(c_stop) + ' '
             cmd=cmd + str(m) + ' '
