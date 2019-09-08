@@ -19,9 +19,8 @@
 
 #include "../../common/genzip.hpp"
 
-/* IMPORTANT - set to large enough value */
 const double alpha = 1.08;
-const int nreqs = 20;
+const int nreqs = 20;   /// TBD: make them commandline params using a common option parser
 
 
 unsigned long tx_wr_block_cnt = 0UL;
@@ -37,37 +36,31 @@ int driver(void *arg);
 #define TIMEOUT_VECTOR_THRESHOLD 32
 
 /* callback context */
-typedef struct cb_st
-{
+typedef struct cb_st {
 	uint8_t request_type;
 	unsigned long request_id;
 } cb_t;
 
 
-void async_callback(void *args, int code, unsigned long msg_latency)
-{
+void async_callback(void *args, int code, unsigned long msg_latency) {
 	struct cb_st *cb_ctxt = (struct cb_st *)args;
-	if (code == REP_SUCCESS)
-	{
-		//BOOST_LOG_TRIVIAL(info) << "received message " << cb_ctxt->request_id;
-		cb_ctxt->request_type == OP_PUT ? tx_wr_block_cnt++ : tx_ro_block_cnt++;
+	if (code == REP_SUCCESS) {
+		BOOST_LOG_TRIVIAL(info) << "received message " << cb_ctxt->request_id;
+		cb_ctxt->request_type == OP_INCR ? tx_wr_block_cnt++ : tx_ro_block_cnt++;
 		rte_free(cb_ctxt);
 	}
-	else if (timedout_msgs < TIMEOUT_VECTOR_THRESHOLD)
-	{
+	else if (timedout_msgs < TIMEOUT_VECTOR_THRESHOLD) {
 		__sync_synchronize();
-		//BOOST_LOG_TRIVIAL(info) << "timed-out message " << cb_ctxt->request_id;
+		BOOST_LOG_TRIVIAL(info) << "timed-out message " << cb_ctxt->request_id;
 		tx_failed_cnt++;
 		pthread_mutex_lock(&vlock);
 		timeout_vector->push_back(cb_ctxt);
 		timedout_msgs++;
-		//__sync_fetch_and_add(&timedout_msgs, 1);
 		pthread_mutex_unlock(&vlock);
 	}
 
 	total_latency += msg_latency;
-	if ((tx_wr_block_cnt + tx_ro_block_cnt) >= 5000)
-	{
+	if ((tx_wr_block_cnt + tx_ro_block_cnt) >= 5000) {
 		unsigned long total_elapsed_time = (rtc_clock::current_time() - tx_begin_time);
 		std::cout << "LOAD = "
 		          << ((double)1000000 * (tx_wr_block_cnt + tx_ro_block_cnt)) / total_elapsed_time
@@ -84,8 +77,7 @@ void async_callback(void *args, int code, unsigned long msg_latency)
 		total_latency  = 0;
 		tx_begin_time = rtc_clock::current_time();
 	}
-	else if (tx_failed_cnt >= 5000)
-	{
+	else if (tx_failed_cnt >= 5000) {
 		unsigned long total_elapsed_time = (rtc_clock::current_time() - tx_begin_time);
 		BOOST_LOG_TRIVIAL(info) << "Ecsessive message timing out "
 		                        << " timedout count "
@@ -102,8 +94,7 @@ void async_callback(void *args, int code, unsigned long msg_latency)
 	}
 }
 
-typedef struct driver_args_st
-{
+typedef struct driver_args_st {
 	int leader;
 	int me;
 	int mc;
@@ -118,8 +109,7 @@ typedef struct driver_args_st
 	}
 } driver_args_t;
 
-int driver(void *arg)
-{
+int driver(void *arg) {
 	unsigned long request_id = 0UL; // wrap around at MAX
 	driver_args_t *dargs = (driver_args_t *)arg;
 	int me = dargs->me;
@@ -130,21 +120,17 @@ int driver(void *arg)
 	void **handles = dargs->handles;
 	char *buffer = new char[DISP_MAX_MSGSIZE];
 
-	srand(time(NULL));
 	int ret;
 	int rpc_flags;
 	int my_core;
 
-	unsigned  long key;
-	char article_name[16]; // noria uses varchar[16] for its benchmark
+	char article_name[value_sz]; // noria uses varchar[16] for its benchmark
 	unsigned long keys = rocks_keys;
 
 	double frac_read = ((double)(nreqs - 1)) / nreqs;
-	BOOST_LOG_TRIVIAL(info) << "FRAC_READ = " << frac_read;
 	BOOST_LOG_TRIVIAL(info) << "KEYS = " << keys;
 	BOOST_LOG_TRIVIAL(info) << "ZIPFIAN (ALPHA) = " << alpha;
 
-	srand(rtc_clock::current_time());
 	rockskv_t *kv = (rockskv_t *)buffer;
 	struct cb_st *cb_ctxt;
 	// we populate articles in rocksdb loader
@@ -162,14 +148,14 @@ int driver(void *arg)
 			}
 			pthread_mutex_unlock(&vlock);
 		}
-		else{
+		else {
 			kv->key.art_id = zipf(alpha, keys);
 			if (rcount){ // read request
 				rpc_flags = RPC_FLAG_RO;
 				kv->op    = OP_GET;
 				kv->key.prefix = 'a';
 			}
-			else{   // update request
+			else {   // update request
 				rpc_flags = 0;
 				kv->op    = OP_INCR;
 				kv->key.prefix = 'v';
@@ -180,7 +166,7 @@ int driver(void *arg)
 		}
 
 		cb_ctxt->request_id = request_id++;
-		do{
+		do {
 			ret = make_rpc_async(handles[0],
 			                     buffer,
 			                     sizeof(rockskv_t),
@@ -192,15 +178,14 @@ int driver(void *arg)
 				//sleep a bit
 				continue;
 			}
-		}while (ret);
+		} while (ret);
 	}
 		return 0;
 	}
 
 	int main(int argc, const char *argv[])
 	{
-		if (argc != 11)
-		{
+		if (argc != 11) {
 			printf("Usage: %s client_id_start client_id_stop mc replicas clients partitions cluster_config quorum_config_prefix server_ports inflight_cap\n", argv[0]);
 			exit(-1);
 		}
@@ -212,16 +197,13 @@ int driver(void *arg)
 		cyclone_network_init(argv[7], 1, atoi(argv[3]), 2 + client_id_stop - client_id_start);
 		driver_args_t ** dargs_array =
 		    (driver_args_t **)malloc((client_id_stop - client_id_start) * sizeof(driver_args_t *));
-		for (int me = client_id_start; me < client_id_stop; me++)
-		{
+		for (int me = client_id_start; me < client_id_stop; me++) {
 			dargs = (driver_args_t *) malloc(sizeof(driver_args_t));
 			dargs_array[me - client_id_start] = dargs;
-			if (me == client_id_start)
-			{
+			if (me == client_id_start) {
 				dargs->leader = 1;
 			}
-			else
-			{
+			else {
 				dargs->leader = 0;
 			}
 			dargs->me = me;
@@ -232,10 +214,9 @@ int driver(void *arg)
 			dargs->buf_cap = atoi(argv[10]);
 			dargs->handles = new void *[dargs->partitions];
 			BOOST_LOG_TRIVIAL(info) << "no. of partitions: " << dargs->partitions;
-			char fname_server[50]/* IMPORTANT - set to large enough value */;
+			char fname_server[50];
 			char fname_client[50];
-			for (int i = 0; i < dargs->partitions; i++)
-			{
+			for (int i = 0; i < dargs->partitions; i++) {
 				sprintf(fname_server, "%s", argv[7]);
 				sprintf(fname_client, "%s%d.ini", argv[8], i); // only one raft instance running
 				dargs->handles[i] = cyclone_client_init(dargs->me,
@@ -248,8 +229,7 @@ int driver(void *arg)
 				                                        dargs->buf_cap);
 			}
 		}
-		for (int me = client_id_start; me < client_id_stop; me++)
-		{
+		for (int me = client_id_start; me < client_id_stop; me++) {
 			cyclone_launch_clients(dargs_array[me - client_id_start]->handles[0], driver, dargs_array[me - client_id_start], 1 +  me - client_id_start);
 		}
 		rte_eal_mp_wait_lcore();

@@ -60,7 +60,7 @@ void load(unsigned long keys)
 						   .art_id = 0 };
 	// ariticle id -> nvotes
 	votekey_t vc_key  = { .prefix = 'v',
-							.art_id = 0};
+							.art_id = 0 };
 
   unsigned char value_base[value_sz];
   BOOST_LOG_TRIVIAL(info) << "Start loading.";
