@@ -7,13 +7,16 @@ const unsigned long OP_DECR      = 3;
 
 const unsigned long value_sz     = 16;
 
+/// article and vote key's prefix
+const unsigned long ART		     = 44;
+const unsigned long VOTE		 = 55;
 
 /**  need atleast one char qualifier to represent vote app in rocksdb
      original norria benchmark uses vote_<articleId> and vote_vc<articleId> **/  
-typedef struct votekey_st{
-	char prefix;
+typedef struct votekey_st{ 
+	unsigned long  prefix;
 	unsigned long art_id;
-} votekey_t;
+} votekey_t; /* with data alignment even if i use smaller data type it takes 16 bytes of space */
 
 typedef struct rockskv_st{
   unsigned long op;

@@ -17,7 +17,6 @@
 
 // Rate measurement stuff
 rocksdb::DB* db = NULL;
-const int BATCH_SIZE = 100;
 
 void opendb(){
   rocksdb::Options options;

@@ -16,7 +16,6 @@
 #include "rocksdb.hpp"
 
 rocksdb::DB* db = NULL;
-
 void callback(const unsigned char *data, const int len,
 										rpc_cookie_t *cookie, unsigned long *pmdk_state)
 {
@@ -41,11 +40,15 @@ void callback(const unsigned char *data, const int len,
 		 * 1. lookup the vote count for given article id
 		 * 2. increase the vote count and write back
 		 */ 
-    rocksdb::Slice key((const char *)&rock->key, sizeof(votekey_t));
-		std::string vcvalue_str;
-		s = db->Get(rocksdb::ReadOptions(), key, &vcvalue_str);
-    if(s.IsNotFound()) {
-			BOOST_LOG_TRIVIAL(fatal) << s.ToString();
+	votekey_t vkey;
+	vkey.prefix = VOTE;
+	vkey.art_id = rock->key.art_id;
+    rocksdb::Slice key((const char *)&vkey, sizeof(votekey_t));
+	std::string vcvalue_str;
+		rocksdb::Status	st = db->Get(rocksdb::ReadOptions(), key, &vcvalue_str);
+    if(st.IsNotFound()) {
+			BOOST_LOG_TRIVIAL(fatal) << __LINE__ << s.ToString() << "rocksdb get : " 
+				<< vkey.prefix << vkey.art_id << " slice : " << key.ToString();
 			exit(-1);
     }
 		unsigned long *vc_value	= (unsigned long *)vcvalue_str.c_str();
@@ -54,7 +57,8 @@ void callback(const unsigned char *data, const int len,
     rocksdb::Slice value((const char *)vc_value, sizeof(unsigned long));
     s = db->Put(write_options, key, value);
     if (!s.ok()){
-			BOOST_LOG_TRIVIAL(fatal) << s.ToString();
+			BOOST_LOG_TRIVIAL(fatal) << __LINE__ << s.ToString() << "rocksdb put : " 
+				<< vkey.prefix << vkey.art_id;
 			exit(-1);
     }
     memcpy(cookie->ret_value, data, len); // do we really need this echo
@@ -66,23 +70,26 @@ void callback(const unsigned char *data, const int len,
 		 * 3. combine the results and send back
 		 */ 
 		votekey_t vkey;
-		vkey.prefix = 'v';
-		vkey.art_id    = rock->key.art_id;
+		vkey.prefix = VOTE;
+		vkey.art_id    = (unsigned long)rock->key.art_id;
+		BOOST_LOG_TRIVIAL(info) << "get request : " << vkey.prefix << vkey.art_id;
     rocksdb::Slice count_key((const char *)&vkey, sizeof(votekey_t));
 		std::string vote_count;
-    s = db->Get(rocksdb::ReadOptions(), count_key, &vote_count);
-    if(s.IsNotFound()) {
-			BOOST_LOG_TRIVIAL(fatal) << s.ToString();
+		rocksdb::Status st = db->Get(rocksdb::ReadOptions(), count_key, &vote_count);
+    if(st.IsNotFound()) {
+			BOOST_LOG_TRIVIAL(fatal) << __LINE__ << s.ToString() << "rocksdb get : " 
+				<< vkey.prefix << vkey.art_id;
 			exit(-1);
     }
 		unsigned long *vc_value	= (unsigned long *)vote_count.c_str();
 
-		vkey.prefix = 'a';
+		vkey.prefix = ART;
     rocksdb::Slice art_key((const char *)&vkey, sizeof(votekey_t));
 		std::string article_name;
     s = db->Get(rocksdb::ReadOptions(), art_key, &article_name);
     if(s.IsNotFound()) {
-			BOOST_LOG_TRIVIAL(fatal) << s.ToString();
+			BOOST_LOG_TRIVIAL(fatal) << __LINE__ << s.ToString() << "rocksdb get : " 
+				<< vkey.prefix << vkey.art_id;
 			exit(-1);
     }
 		BOOST_LOG_TRIVIAL(info) << article_name;

@@ -52,39 +52,63 @@ rocksdb::DB* db = NULL;
 const int BATCH_SIZE = 100;
 const unsigned long vote_value = 0; // we initialize every article vote to 0
 
+void  print_rocksdb_content(){
+ BOOST_LOG_TRIVIAL(info) << "Printing content.";
+ rocksdb::Iterator* it = db->NewIterator(rocksdb::ReadOptions());
+  for (it->SeekToFirst(); it->Valid(); it->Next()) {
+	  //votekey_t *vkey = (votekey_t *)it->key().ToString().c_str();
+	  votekey_t *vkey = (votekey_t *)it->key().data();
+	  if(vkey->prefix == ART){
+		std::cout << "key : " << vkey->prefix << vkey->art_id  <<
+					 " value : " << it->value().ToString()<< std::endl; 
+      }else if(vkey->prefix == VOTE){
+		unsigned long *val = (unsigned long *) it->value().data();
+		std::cout << "key : " << vkey->prefix << vkey->art_id << 
+					 " value : " << *val << std::endl; 
+	  }else{
+		std::cout << "unknown data type" << std::endl;
+	  }
+  }
+  assert(it->status().ok()); // Check for any errors found during the scan
+  delete it;
+}
+
+
 
 void load(unsigned long keys)
 {
 	// article id -> name key
-	votekey_t art_key = { .prefix = 'a',
-						   .art_id = 0 };
+	votekey_t art_key;
+	art_key.prefix = ART;
+	art_key.art_id = 0UL;
 	// ariticle id -> nvotes
-	votekey_t vc_key  = { .prefix = 'v',
-							.art_id = 0 };
+	votekey_t vc_key;
+	vc_key.prefix = VOTE;
+	vc_key.art_id = 0UL;
 
   unsigned char value_base[value_sz];
   BOOST_LOG_TRIVIAL(info) << "Start loading.";
+  std::cout <<"votekey_t size : " << sizeof(votekey_t) << std::endl;
   unsigned long ts_heartbeat = rtc_clock::current_time();
-  for(unsigned long i=0;i<keys;i+=BATCH_SIZE) {
+  for(unsigned long i=0UL;i<keys;i+=BATCH_SIZE) {
     rocksdb::WriteBatch batch;
     for(unsigned long j=i;j<i + BATCH_SIZE && j < keys;j++) {
 			art_key.art_id = j;				
-			rocksdb::Slice art_key((const char *)&art_key, sizeof(votekey_t));
+			rocksdb::Slice art_rockskey((const char *)&art_key, sizeof(votekey_t));
 			snprintf((char *)&value_base[0],value_sz,"Article #%lu",j);	
-			rocksdb::Slice art_val((const char *)&value_base[0], value_sz);
-      batch.Put(art_key, art_val);
+			rocksdb::Slice art_rocksval((const char *)&value_base[0], value_sz);
+			batch.Put(art_rockskey, art_rocksval);
 
 			vc_key.art_id  = j;
-      rocksdb::Slice vc_key((const char *)&vc_key, sizeof(votekey_t));
-			rocksdb::Slice vc_val((const char *)&vote_value, sizeof(unsigned long));
-      batch.Put(vc_key, vc_val);
+			rocksdb::Slice vc_rockskey((const char *)&vc_key, sizeof(votekey_t));
+			rocksdb::Slice vc_rocksval((const char *)&vote_value, sizeof(unsigned long));
+			batch.Put(vc_rockskey, vc_rocksval);
     }
     
-		rocksdb::WriteOptions write_options;
+	rocksdb::WriteOptions write_options;
     write_options.sync = false;
     write_options.disableWAL = true;
-    rocksdb::Status s = db->Write(write_options, 
-				  &batch);
+    rocksdb::Status s = db->Write(write_options, &batch);
     if (!s.ok()){
       BOOST_LOG_TRIVIAL(fatal) << s.ToString();
       exit(-1);
@@ -95,6 +119,7 @@ void load(unsigned long keys)
     }
   }
   BOOST_LOG_TRIVIAL(info) << "Completed loading.";
+  //print_rocksdb_content();
 }
 
 
