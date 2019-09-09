@@ -45,13 +45,13 @@ typedef struct cb_st {
 void async_callback(void *args, int code, unsigned long msg_latency) {
 	struct cb_st *cb_ctxt = (struct cb_st *)args;
 	if (code == REP_SUCCESS) {
-		BOOST_LOG_TRIVIAL(info) << "received message " << cb_ctxt->request_id;
+		//BOOST_LOG_TRIVIAL(info) << "received message " << cb_ctxt->request_id;
 		cb_ctxt->request_type == OP_INCR ? tx_wr_block_cnt++ : tx_ro_block_cnt++;
 		rte_free(cb_ctxt);
 	}
 	else if (timedout_msgs < TIMEOUT_VECTOR_THRESHOLD) {
 		__sync_synchronize();
-		BOOST_LOG_TRIVIAL(info) << "timed-out message " << cb_ctxt->request_id;
+		//BOOST_LOG_TRIVIAL(info) << "timed-out message " << cb_ctxt->request_id;
 		tx_failed_cnt++;
 		pthread_mutex_lock(&vlock);
 		timeout_vector->push_back(cb_ctxt);
@@ -159,6 +159,7 @@ int driver(void *arg) {
 				rpc_flags = 0;
 				kv->op    = OP_INCR;
 				kv->key.prefix = VOTE;
+				kv->prio = 1;
 			}
 			my_core  = kv->key.art_id % executor_threads;
 			cb_ctxt = (struct cb_st *)rte_malloc("callback_ctxt", sizeof(struct cb_st), 0);
