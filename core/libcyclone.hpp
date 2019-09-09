@@ -79,6 +79,7 @@ typedef struct rpc_cookie_st {
 } rpc_cookie_t;
 
 ////// RPC Server side interface
+#include <stdint.h>
 typedef 
 void (*rpc_callback_t)(const unsigned char *data,
 		       const int len,
@@ -88,7 +89,7 @@ void (*rpc_callback_t)(const unsigned char *data,
 typedef void (*rpc_gc_callback_t)(rpc_cookie_t *cookie);
 
 //Checking operations commutativity
-typedef int (*op_commute_callback_t)(unsigned long cmask1, void *incoming, unsigned long cmask2, void *issued);
+typedef int (*op_commute_callback_t)(void *incoming, void *issued);
 
 // Callbacks structure
 typedef struct rpc_callbacks_st {
@@ -152,18 +153,5 @@ static const int RPC_FLAG_RO            = 1; // Read-only RPC
 
 ////// RocksDB parameters
 const int rocksdb_num_threads           = 16;
-
-
-
-/////////////////// Flash log interfaces /////////////////////
-static const int flashlog_pagesize = (128*1024);
-static const int flashlog_hwm = 200;
-static const int flashlog_use_osync = 0;
-static const unsigned long flashlog_segsize   =  (1024*1024*1024);
-void *create_flash_log(const char *path);
-int log_append(void *log_, 
-	       const char *data, 
-	       int size,
-	       int raft_idx);
 
 #endif

@@ -51,10 +51,12 @@ class BTreeEngine : public PMEngine {
     BTreeEngine(const string& path, size_t size);          // default constructor
     ~BTreeEngine();                                        // default destructor
 
-    void exec(uint16_t op_name, uint8_t ds_type, std::string ds_id,
-                pm_rpc_t *req, pm_rpc_t *resp);
+    void exec(uint8_t thread_id, uint16_t op_name, uint8_t ds_type, std::string ds_id,
+                pm_rpc_t *req, pm_rpc_t **resp_ptr, int *resp_size);
 
-    string engine() final { return ENGINE; };
+    void* engine(uint8_t thread_id) {
+        return NULL;
+    };
     const string ENGINE = "btree";
     void Exists(const unsigned long key ,pm_rpc_t *resp);              // does key have a value?
 

@@ -7,8 +7,17 @@
 #ifndef __PMEMDS_H
 #define __PMEMDS_H
 
+#include <stdint.h>
 #include <string>
+#include <map>
+#include <libpmemobj++/make_persistent.hpp>
+#include <libpmemobj++/make_persistent_array.hpp>
+#include <libpmemobj++/persistent_ptr.hpp>
+#include <libpmemobj++/pool.hpp>
+#include <libpmemobj++/transaction.hpp>
+
 #include "pmemds-common.h"
+#include "pmemds_log.h"
 
 typedef void(PMEachCallback)(void* context,                // callback function for Each operation
                              int keybytes,
@@ -25,23 +34,11 @@ struct PMGetCallbackContext {
 	std::string* value;
 };
 
-#include <string>
-#include <map>
-#include <libpmemobj++/make_persistent.hpp>
-#include <libpmemobj++/make_persistent_array.hpp>
-#include <libpmemobj++/persistent_ptr.hpp>
-#include <libpmemobj++/pool.hpp>
-#include <libpmemobj++/transaction.hpp>
-
-#include "pmemds-common.h"
-#include "pmemds_log.h"
 
 using std::string;
 using std::to_string;
 
 namespace pmemds {
-
-
 
 class string_view {
 public:
@@ -125,29 +122,30 @@ class PMLib{
 		PMLib(const std::string path){
 			this->pmem_path = path;
 		}
+
+		PMLib(const std::string path,uint8_t npartitions){
+			this->pmem_path = path;
+			this->npartitions = npartitions;
+		}
+
 		int open(const string& app);
 		int close();
-		void exec(pm_rpc_t *req, pm_rpc_t *resp);
+		void exec(uint8_t thread_id, pm_rpc_t *req, pm_rpc_t **resp_ptr, int *resp_size);
 
 
 	private:
 		std::string pmem_path;
-
+		uint8_t npartitions;
 
         PMEngine* find_ds(uint16_t id);
-		int create_ds(uint8_t ds_type,uint16_t ds_id);
+		int create_ds(uint8_t ds_type,uint16_t ds_id,uint8_t npartitions);
         int remove_ds(uint8_t ds_type,uint16_t ds_id);
 		int close_ds(uint8_t ds_type,uint16_t ds_id);
 
-		/* vote benchmark specific operations */
-		void put_art(pm_rpc_t *req, pm_rpc_t *resp);
-		void get_art(pm_rpc_t *req, pm_rpc_t *resp);
-		void vote_up(pm_rpc_t *req, pm_rpc_t *resp);
-		void vote_down(pm_rpc_t *req, pm_rpc_t *resp);
+		/// vote benchmark specific
+		void vote_topk(pm_rpc_t *request, pm_rpc_t **response, int *resp_size);
 
-
-
-		std::map<uint16_t ,PMEngine*> *engine_map; //name to data-structure mapping
+		std::map<uint16_t ,PMEngine*> *engine_map; /// TBD: name to data-structure mapping. Make this an array
 
 };
 
@@ -161,10 +159,10 @@ public:
     PMEngine(){};
 	virtual ~PMEngine(){};
 
-	virtual void exec(uint16_t op_id,uint8_t ds_type, std::string ds_id,
-				  pm_rpc_t *req, pm_rpc_t *resp)=0;
+	virtual void exec(uint8_t thread_id, uint16_t op_id,uint8_t ds_type, std::string ds_id,
+				  pm_rpc_t *req, pm_rpc_t **resp, int *resp_size)=0;
 
-	virtual string engine() =0;                           // engine identifier
+	virtual void* engine(uint8_t thread_id) = 0;                           // engine identifier
 
 };
 }

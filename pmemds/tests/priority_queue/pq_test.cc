@@ -11,11 +11,7 @@ namespace {
         /* Code here will be called immediately after the constructor (right
            before each test). */
         void SetUp() override {
-            pq = new pmemds::persistent_priority_queue();
-            for(int i = 0; i < 10; i++) {
-                pq->insert(i,10);
-            }
-
+            pq = new pmemds::persistent_priority_queue(4);
         }
 
         /* Code here will be called immediately after each test (right
@@ -28,22 +24,72 @@ namespace {
 
     };
 
-    TEST_F(pqTest, readTest) {
-        unsigned long key, value;
-        ASSERT_EQ(pq->get_max(key,value),0);
-        ASSERT_EQ(key,0);
-        ASSERT_EQ(value,10);
+    TEST_F(pqTest, descendPrio) {
+        struct vote_payload_st array[MAX_VOTE_PAYLOAD];
+        int size;
 
+        for(int i = 0; i < 10; i++) {
+            pq->insert(i,10-i);
+        }
 
-        ASSERT_EQ(pq->get_max(key,value),0);
-        ASSERT_EQ(key,9);
-        ASSERT_EQ(value,10);
-
-        ASSERT_EQ(pq->get_max(key,value),0);
-        ASSERT_EQ(key,8);
-        ASSERT_EQ(value,10);
+        ASSERT_EQ(pq->read_topK(array,&size),0);
+        for(int i = 0; i < size; i++){
+            std::cout << std::to_string(array[i].idx) << " ";
+        }
+        std::cout << std::endl;
     }
 
+    TEST_F(pqTest, ascendPrio) {
+        struct vote_payload_st array[MAX_VOTE_PAYLOAD];
+        int size;
+
+        for(int i = 0; i < 10; i++) {
+            pq->insert(i,i);
+        }
+
+        ASSERT_EQ(pq->read_topK(array,&size),0);
+        for(int i = 0; i < size; i++){
+            std::cout << std::to_string(array[i].idx) << " ";
+        }
+        std::cout << std::endl;
+
+    }
+
+    TEST_F(pqTest, decreasePrio) {
+        struct vote_payload_st array[MAX_VOTE_PAYLOAD];
+        int size;
+
+        for(int i = 0; i < 10; i++) {
+            pq->insert(i,i);
+        }
+        pq->decrease_prio(8,6);
+        ASSERT_EQ(pq->read_topK(array,&size),0);
+        for(int i = 0; i < size; i++){
+            std::cout << std::to_string(array[i].idx) << " ";
+        }
+        std::cout << std::endl;
+
+    }
+
+
+    TEST_F(pqTest, increasePrio) {
+        struct vote_payload_st array[MAX_VOTE_PAYLOAD];
+        int size;
+
+        for(int i = 0; i < 10; i++) {
+            pq->insert(i,i);
+        }
+        pq->increase_prio(2,10);
+        ASSERT_EQ(pq->read_topK(array,&size),0);
+        for(int i = 0; i < size; i++){
+            std::cout << std::to_string(array[i].idx) << " ";
+        }
+        std::cout << std::endl;
+
+    }
+
+
+/*
 
     TEST_F(pqTest, incrTest){
         unsigned long key, value;
@@ -62,10 +108,6 @@ namespace {
         ASSERT_NE(value,5);
     }
 
-    /*TEST_F(pqTest,maxTest){
-        for(int i = 11; i < 20; i++){
-            votes->insert(i,i);
-        }
-    }*/
+   */
 
 }

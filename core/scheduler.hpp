@@ -6,8 +6,7 @@
 #define CYCLONE_SCHEDULER_QUEUE_HPP
 
 #include <rte_mbuf.h>
-#include <rte_malloc.h>
-
+#include <rte_malloc.h> 
 #include "libcyclone.hpp"
 #include "cyclone.hpp"
 #include "logging.hpp"
@@ -140,8 +139,7 @@ int schedule(op_commute_callback_t is_commute){
 		while(list_node->next != NULL){ // tail node
 			void *next_op = (void *)(next_schedule->rpc+1);
 			void *list_op = (void *)(list_node->rpc+1);
-			if(!list_node->wal->marked && !is_commute(next_schedule->rpc->core_mask, next_op, 
-						list_node->rpc->core_mask, list_op)){
+			if(!list_node->wal->marked && !is_commute(next_op, list_op)){
 //	BOOST_LOG_TRIVIAL(info) << "scheduler return, non-commute, " 
 //					<< " makred for gc : " << list_node->wal->marked
 //					<< " buffer size : " << size;
@@ -155,7 +153,6 @@ int schedule(op_commute_callback_t is_commute){
 		triple[1] = next_schedule->m;
 		triple[2] = next_schedule->rpc;
 		if(rte_ring_mp_enqueue_bulk(to_cores[rb_counter++%executor_threads], triple, 3) == -ENOBUFS) {
-			//if(rte_ring_mp_enqueue_bulk(to_cores[next_schedule->to_core], triple, 3) == -ENOBUFS) {
 			BOOST_LOG_TRIVIAL(fatal) << "raft->core comm ring is full (req stable)";
 			exit(-1);
 		}

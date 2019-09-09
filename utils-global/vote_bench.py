@@ -2,27 +2,11 @@
 import argparse
 from commonbench import *
 
-
-
-
-
 #workloads
-echo = 'echo'
-pmemkv = 'pmemkv'
-pmemkv_ncc = 'pmemkv_ncc'
-volatile_pmemkv = 'volatile_pmemkv'
-volatile_pmemkv_ncc = 'volatile_pmemkv_ncc'
-rocksdb = 'rocksdb'
-
+pqueue = 'pqueue'
 
 wl=[]
-wl.append(echo)
-
-wl.append(pmemkv)
-wl.append(pmemkv_ncc)
-wl.append(volatile_pmemkv)
-wl.append(volatile_pmemkv_ncc)
-wl.append(rocksdb)
+wl.append(pqueue)
 
 wl.append(empty)
 
@@ -39,6 +23,7 @@ parser.add_argument('-w', dest='workload', default=empty , help='workload name, 
 parser.add_argument('-m', dest='memtype', default=empty , help='memory type', choices=ml)
 parser.add_argument('-b', dest='bufsize', default=empty , help='inflight buffer size')
 parser.add_argument('-rep', dest='replicas', default=empty , help='number of replicas', choices=rl)
+parser.add_argument('-commute', dest='is_commute', action='store_true', default=False , help='concurrent execution')
 
 try:
     args = parser.parse_args()
@@ -47,27 +32,21 @@ except:
     dbg('Error parsing input')
     sys.exit(0)
 
-class KVBench(Common):
+class Vote(Common):
     #map some workload names to binary name
     def wl2binary(self,arg):
         switcher= {
-            'pmemkv_ncc' : 'pmemkv',
-            'volatile_pmemkv' : 'pmemkv',
-            'volatile_pmemkv_ncc' : 'pmemkv'
+            'pqueue_ncc' : 'pqueue',
         }
         return switcher.get(arg,arg)
 
     def bench(self):
-        return 'kvbench';
+        return 'vote';
 
     def get_bench_dir(self):
-        return 'benchmarks/kvbench/echo'
+        return 'ERROR'
 
     def get_server_cxx(self,wload):
-        if wload == volatile_pmemkv or wload == volatile_pmemkv_ncc:
-            return 'CPPFLAGS=' + '\"-DDRAM\"'
-        if wload == volatile_pmemkv_ncc or wload == pmemkv_ncc:
-            return 'PMEM_SLIB=' + ncc_pmem
         return '' #else
 
 if __name__ == '__main__':
@@ -80,20 +59,20 @@ if __name__ == '__main__':
     dc = args.deploy_configs
     clct = args.collect
 
-    kvb = KVBench();
+    vt = Vote();
 
 
     if args.clean is True:
-        kvb.clean(args)
+        vt.clean(args)
     if db == True:
-        kvb.deploy_bin(args)
+        vt.deploy_bin(args)
     if g == True:
-        kvb.generate(args)
+        vt.generate(args)
     if dc == True:
-        kvb.deploy_configs(args)
+        vt.deploy_configs(args)
     if strt == True:
-        kvb.start_cyclone(args)
+        vt.start_cyclone(args)
     if stop == True:
-        kvb.stop_cyclone(args)
+        vt.stop_cyclone(args)
     if clct == True:
-        kvb.gather_output(args)
+        vt.gather_output(args)

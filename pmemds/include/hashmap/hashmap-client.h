@@ -10,6 +10,7 @@ namespace pmemdsclient{
 
     public:
         HashMapEngine(PMClient *handle, const uint16_t ds_id, size_t size, unsigned long core_mask);
+        HashMapEngine(PMClient *handle, const uint16_t ds_id, size_t size, unsigned long core_mask, uint8_t npartitions);
         ~HashMapEngine();
 
 

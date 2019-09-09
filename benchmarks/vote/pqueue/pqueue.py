@@ -1,5 +1,5 @@
 def launch_cmds_startup():
-    print("Configuring for pmemds application")
+    print("Configuring for vote application")
 
 
 def launch_cmds_server_gen(f, q, r, m, quorums, replicas, clients, ports):
@@ -8,12 +8,14 @@ def launch_cmds_server_gen(f, q, r, m, quorums, replicas, clients, ports):
         passwd=os.environ.get('CYCLONE_PASS')
     cmd='echo ' + passwd + ' | sudo -S '
     cmd= cmd + 'rm -rf /mnt/pmem1/pmemds\n'
+    cmd= cmd + 'echo ' + passwd + ' | sudo -S '
+    cmd= cmd + 'mkdir -p /mnt/pmem1/pmemds\n'
     f.write(cmd)
     cmd=''
     cmd=cmd + 'echo ' + passwd + ' | sudo -S '
     cmd=cmd + ' PMEM_IS_PMEM_FORCE=1 '
     cmd=cmd + ' LD_LIBRARY_PATH=/usr/lib:/usr/local/lib '
-    cmd=cmd + '/home/pfernando/cyclone/cyclone.git/benchmarks/kvbench/pmemds/pmemds_server '
+    cmd=cmd + '/home/pfernando/cyclone/cyclone.git/benchmarks/vote/pqueue/pqueue_server '
     cmd=cmd + str(r) + ' '
     cmd=cmd + str(m) + ' '
     cmd=cmd + str(clients) + ' '
@@ -48,7 +50,7 @@ def launch_cmds_client_gen(f, m, c, quorums, replicas, clients, machines, ports,
             cmd=cmd + ' echo ' + passwd + ' | sudo -S '
             cmd=cmd + ' LD_LIBRARY_PATH=/usr/lib:/usr/local/lib:/usr/local/lib64 '    
             #cmd=cmd + '/home/pfernando/cyclone/cyclone.git/test/pmemkv_client '
-            cmd=cmd + '/home/pfernando/cyclone/cyclone.git/benchmarks/kvbench/pmemds/pmemds_async_client '
+            cmd=cmd + '/home/pfernando/cyclone/cyclone.git/benchmarks/vote/pqueue/pqueue_async_client '
             cmd=cmd + str(c_start) + ' '
             cmd=cmd + str(c_stop) + ' '
             cmd=cmd + str(m) + ' '
@@ -63,6 +65,6 @@ def killall_cmds_gen(f):
     passwd = 'dummy'
     if os.environ.has_key('CYCLONE_PASS'):
         passwd=os.environ.get('CYCLONE_PASS')
-    f.write('echo ' + passwd + ' | sudo -S pkill pmemds_server\n')
-    f.write('echo ' + passwd + '| sudo -S pkill pmemds_client\n')
-    f.write('echo ' + passwd + '| sudo -S pkill pmemds_async\n')
+    f.write('echo ' + passwd + ' | sudo -S pkill pqueue_server\n')
+    f.write('echo ' + passwd + '| sudo -S pkill  pqueue_client\n')
+    f.write('echo ' + passwd + '| sudo -S pkill  pqueue_async\n')

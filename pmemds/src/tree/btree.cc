@@ -66,8 +66,13 @@ BTreeEngine::~BTreeEngine() { //TODO: support deleting ds altogether
     LOG("Closed ok");
 }
 
-    void BTreeEngine::exec(uint16_t op_name, uint8_t ds_type, std::string ds_id,
-                           pm_rpc_t *req, pm_rpc_t *resp) {
+    void BTreeEngine::exec(uint8_t thread_id, uint16_t op_name, uint8_t ds_type, std::string ds_id,
+                           pm_rpc_t *req, pm_rpc_t **resp_ptr, int *resp_size) {
+
+        pm_rpc_t *resp = (pm_rpc_t *)SAFECALLOC(sizeof(pm_rpc_t));
+        *resp_ptr = resp;
+        *resp_size = sizeof(pm_rpc_t);
+
         std::string in_val;
         switch (op_name){
             case GET:

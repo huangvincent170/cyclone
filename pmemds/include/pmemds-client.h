@@ -23,6 +23,10 @@ namespace pmemdsclient {
         int open(const std::string &appname,  void (*cb)(void *));
         int close(void (*cb)(void *));
 
+        /// vote benchmark specific routines. Move them out of this class later
+        int topk();
+        int topk(void (*cb)(void *));
+
 
 
         virtual int sendmsg(pm_rpc_t *msg, pm_rpc_t **response, unsigned long core_mask)=0;
@@ -36,8 +40,10 @@ namespace pmemdsclient {
     protected:
         PMClient *client;
         uint16_t ds_id;
+        uint8_t type_id;
         size_t size;
         unsigned long core_mask;
+        uint8_t npartitions;
 
     public:
 
