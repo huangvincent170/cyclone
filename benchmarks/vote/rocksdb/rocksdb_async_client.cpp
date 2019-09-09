@@ -153,12 +153,12 @@ int driver(void *arg) {
 			if (rcount){ // read request
 				rpc_flags = RPC_FLAG_RO;
 				kv->op    = OP_GET;
-				kv->key.prefix = 'a';
+				kv->key.prefix = ART;
 			}
 			else {   // update request
 				rpc_flags = 0;
 				kv->op    = OP_INCR;
-				kv->key.prefix = 'v';
+				kv->key.prefix = VOTE;
 			}
 			my_core  = kv->key.art_id % executor_threads;
 			cb_ctxt = (struct cb_st *)rte_malloc("callback_ctxt", sizeof(struct cb_st), 0);
