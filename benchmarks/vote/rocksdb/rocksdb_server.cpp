@@ -52,7 +52,7 @@ void callback(const unsigned char *data, const int len,
 			exit(-1);
     }
 		unsigned long *vc_value	= (unsigned long *)vcvalue_str.c_str();
-		BOOST_LOG_TRIVIAL(info) << "vote value : " << *vc_value;
+		//BOOST_LOG_TRIVIAL(info) << "vote value : " << vkey.art_id << " " << *vc_value;
 		*vc_value = *vc_value + rock->prio;
     rocksdb::Slice value((const char *)vc_value, sizeof(unsigned long));
     s = db->Put(write_options, key, value);
@@ -72,7 +72,7 @@ void callback(const unsigned char *data, const int len,
 		votekey_t vkey;
 		vkey.prefix = VOTE;
 		vkey.art_id    = (unsigned long)rock->key.art_id;
-		BOOST_LOG_TRIVIAL(info) << "get request : " << vkey.prefix << vkey.art_id;
+		//BOOST_LOG_TRIVIAL(info) << "get request : " << vkey.prefix << vkey.art_id;
     rocksdb::Slice count_key((const char *)&vkey, sizeof(votekey_t));
 		std::string vote_count;
 		rocksdb::Status st = db->Get(rocksdb::ReadOptions(), count_key, &vote_count);
@@ -92,8 +92,8 @@ void callback(const unsigned char *data, const int len,
 				<< vkey.prefix << vkey.art_id;
 			exit(-1);
     }
-		BOOST_LOG_TRIVIAL(info) << article_name;
-		BOOST_LOG_TRIVIAL(info) << *vc_value;
+		//BOOST_LOG_TRIVIAL(info) << article_name;
+		//BOOST_LOG_TRIVIAL(info) << *vc_value;
 		/// TBD - append vc in to return string
 		rockskv_t *rock_back = (rockskv_t *)cookie->ret_value;
     rock_back->key = rock->key;
