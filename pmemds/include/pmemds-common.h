@@ -33,7 +33,15 @@ enum opnames{
     INSERT,
     INCREASE_PRIO,
     DECREASE_PRIO,
-    GET_TOPK
+    GET_TOPK,
+
+    /* adjvector/graph structure specific */
+    ADD_EDGE,
+    REMOVE_EDGE,
+    ADD_NODE,
+    REMOVE_NODE,
+    VERTEX_OUTDEGREE,
+    INCIDENT_TRIANGLES
 };
 
 //supported data-structures
@@ -42,6 +50,7 @@ enum dstypes{
     CONCURRENT_HASHMAP,
     SHARDED_HASHMAP,
     SHARDED_PRIORITY_QUEUE,
+    ADJACENCY_VECTOR,
     VECTOR,
 };
 
@@ -82,7 +91,10 @@ typedef struct pm_rpc_st{
         unsigned long key;
         char ckey[8];
     };
-    char value[MAX_VAL_LENGTH];
+    union {
+        char value[MAX_VAL_LENGTH];
+        unsigned long key2;
+    };
 }pm_rpc_t;
 
 
