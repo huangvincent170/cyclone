@@ -25,7 +25,7 @@ namespace {
             /* server side data-structure creation */
             pmLib = new pmemds::PMLib(pmem_path);
 
-            testClient = new pmemdsclient::TestClient(pmLib,&request,&response);
+            testClient = new pmemdsclient::TestClient(pmLib);
             testClient->open("testApp"); // TODO: move to pmlib
         }
 

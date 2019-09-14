@@ -42,7 +42,28 @@ set(TEST_FILES
 # ---[ TEST SUITE
 add_executable(test_suite ${TEST_FILES})
 
-target_link_libraries(test_suite gtest_main pmemds-test pmemds  boost_system pmemobj pmem)
+# ---[ by default shared libs gets linked. we force static libs
+function(find_static_library LIB_NAME PATH OUT)
+    set(CMAKE_FIND_LIBRARY_SUFFIXES ".a")
+    find_library(
+            FOUND_${LIB_NAME}_STATIC
+            ${LIB_NAME}
+            ${PATH}
+    )
+    if (FOUND_${LIB_NAME}_STATIC)
+        get_filename_component(ABS_FILE ${FOUND_${LIB_NAME}_STATIC} ABSOLUTE)
+    else()
+        message(SEND_ERROR "Unable to find library ${LIB_NAME}")
+    endif()
+    set(${OUT} ${ABS_FILE} PARENT_SCOPE)
+endfunction()
+
+# -- find static versions of our libs. We don't want to add these paths to LD_LIBRARY_PATHS
+find_static_library(pmem  ${PMDK_LIB} PMEM)
+find_static_library(pmemobj ${PMDK_LIB} PMEMOBJ)
+
+
+target_link_libraries(test_suite gtest_main pmemds-test pmemds  boost_system ${PMEMOBJ} ${PMEM} dl)
 add_test(NAME TestSuite COMMAND test_suite)
 
 # --[ Add "make check" target

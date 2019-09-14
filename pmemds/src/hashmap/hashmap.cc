@@ -8,7 +8,6 @@
 #define DO_LOG 0
 #define LOG(msg) if (DO_LOG) std::cout << "[hashmap] " << msg << "\n"
 
-using pmem::obj::make_persistent_atomic;
 using pmem::obj::transaction;
 using pmem::detail::conditional_add_to_tx;
 
