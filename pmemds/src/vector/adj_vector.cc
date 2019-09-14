@@ -5,13 +5,13 @@
 #define DO_LOG 0
 #define LOG(msg) if (DO_LOG) std::cout << "[adjvector] " << msg << "\n"
 
-namespace pmemds{
+namespace pmemds {
 
     AdjVectorEngine::AdjVectorEngine(const string &path, size_t size) {
-        if((access(path.c_str(),F_OK) !=0) && (size > 0)){
+        if ((access(path.c_str(), F_OK) != 0) && (size > 0)) {
             LOG("Creating filesystem pool, path=" << path << ", size=" << to_string(size));
             pmpool = pmem::obj::pool<RootData>::create(path.c_str(), LAYOUT, size, S_IRWXU);
-        }else {
+        } else {
             LOG("Opening pool, path=" << path);
             pmpool = pmem::obj::pool<RootData>::open(path.c_str(), LAYOUT);
         }
@@ -20,7 +20,7 @@ namespace pmemds{
 
     }
 
-    AdjVectorEngine::~AdjVectorEngine(){
+    AdjVectorEngine::~AdjVectorEngine() {
         LOG("Closing");
         pmpool.close();
         LOG("Closed ok");
@@ -29,23 +29,23 @@ namespace pmemds{
 
     void AdjVectorEngine::exec(uint8_t thread_id, uint16_t op_name, uint8_t ds_type, std::string ds_id, pm_rpc_t *req,
                                pm_rpc_t **resp_ptr, int *resp_size) {
-        pm_rpc_t *resp = (pm_rpc_t *)SAFECALLOC(sizeof(pm_rpc_t));
+        pm_rpc_t *resp = (pm_rpc_t *) SAFECALLOC(sizeof(pm_rpc_t));
         *resp_ptr = resp;
         *resp_size = sizeof(pm_rpc_t);
 
-        switch (op_name){
+        switch (op_name) {
             case ADD_NODE:
 
                 break;
             case ADD_EDGE:
-                add_edge(req->key,req->key2,resp);
+                add_edge(req->key, req->key2, resp);
                 break;
             case VERTEX_OUTDEGREE:
-                vertex_outdegree(req->key,resp);
+                vertex_outdegree(req->key, resp);
                 break;
             default:
                 LOG_ERROR("unknown operation");
-                SET_STATUS(resp->meta,INVALID_OP);
+                SET_STATUS(resp->meta, INVALID_OP);
         }
     }
 
@@ -53,37 +53,37 @@ namespace pmemds{
     /* add en edge in to the graph structure. We create src/dest nodes if they do not exist */
     void AdjVectorEngine::add_edge(unsigned long from_node, unsigned long to_node, pm_rpc_t *resp) {
 
-        if(from_node > MAX_NODES || to_node > MAX_NODES){
+        if (from_node > MAX_NODES || to_node > MAX_NODES) {
             LOG("graph is out of valid node range");
             exit(1);
         }
         // check if src and dest exists
-        vector_t_ptr src_vpptr =  list_array[from_node];
-        if(src_vpptr == nullptr){ //create source
-          list_array[from_node]  = pmem::obj::make_persistent<vector_t>();
+        vector_t_ptr src_vpptr = list_array[from_node];
+        if (src_vpptr == nullptr) { //create source
+            list_array[from_node] = pmem::obj::make_persistent<vector_t>();
         }
 
-        vector_t_ptr dest_vpptr =  list_array[to_node];
-        if(dest_vpptr == nullptr){
-          list_array[to_node]  = pmem::obj::make_persistent<vector_t>();
+        vector_t_ptr dest_vpptr = list_array[to_node];
+        if (dest_vpptr == nullptr) {
+            list_array[to_node] = pmem::obj::make_persistent<vector_t>();
         }
-        vector_t *pvector =  list_array[from_node].get();
+        vector_t *pvector = list_array[from_node].get();
 
 
         gnode_t *gnode = new gnode_t();
         gnode->node_id = to_node;
-        pvector-> push_back(*gnode);
+        pvector->push_back(*gnode);
 
-        SET_STATUS(resp->meta,OK);
+        SET_STATUS(resp->meta, OK);
     }
 
 
     void AdjVectorEngine::vertex_outdegree(unsigned long node_id, pm_rpc_t *resp) {
-        if(node_id > MAX_NODES){
+        if (node_id > MAX_NODES) {
             LOG("graph is out of valid node range");
             exit(1);
         }
-        vector_t  *pvector = list_array[node_id].get();
+        vector_t *pvector = list_array[node_id].get();
         int out_degree = pvector->size();
         SET_STATUS(resp->meta, OK);
         resp->key = out_degree;
@@ -114,7 +114,7 @@ namespace pmemds{
         //TODO
     }
 
-    void AdjVectorEngine::remove_edge(unsigned long from_node, unsigned long to_node, pm_rpc_t *resp){
+    void AdjVectorEngine::remove_edge(unsigned long from_node, unsigned long to_node, pm_rpc_t *resp) {
 
     }
 
