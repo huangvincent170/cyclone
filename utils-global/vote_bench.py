@@ -3,10 +3,12 @@ import argparse
 from commonbench import *
 
 #workloads
-pqueue = 'pqueue'
+pqueue  = 'pqueue'
+rocksdb = 'rocksdb'
 
 wl=[]
 wl.append(pqueue)
+wl.append(rocksdb)
 
 wl.append(empty)
 

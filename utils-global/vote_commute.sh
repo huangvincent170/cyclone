@@ -1,11 +1,12 @@
 #!/bin/bash
 #declare -a wl=("hashmap")
 declare -a wl=("pqueue")
-declare -a bf=(1)
+declare -a bf=(1 2 3 4 6 7 8 9 10 12 14)
+#declare -a bf=(6)
 
 declare -a mt=("nvram")
 
-declare -r rl=(1)
+declare -r rl=(3)
 
 for replicas in "${rl[@]}"
 do

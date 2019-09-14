@@ -1,7 +1,8 @@
 #!/bin/bash
-#declare -a wl=("hashmap")
-declare -a wl=("pqueue")
-declare -a bf=(1)
+#declare -a wl=("pqueue")
+declare -a wl=("rocksdb")
+#declare -a bf=(1 2 3 4 6 7 8 9 10 12 14)
+declare -a bf=(1 5 6 7)
 
 declare -a mt=("nvram")
 
