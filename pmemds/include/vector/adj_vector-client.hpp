@@ -33,7 +33,7 @@ namespace pmemdsclient {
         int add_edge(unsigned long from_node, unsigned long to_node);
         int remove_edge(unsigned long from_node, unsigned long to_node);
         int incident_triangles(unsigned long node_id);
-        void vertex_outdegree(unsigned long node_id);
+        int vertex_outdegree(unsigned long node_id);
 
         //async member functions
         int add_node(unsigned long node_id,void (*cb)(void *));

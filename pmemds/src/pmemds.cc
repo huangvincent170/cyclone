@@ -3,6 +3,7 @@
 #include "tree/btree.h"
 #include "hashmap/hashmap.h"
 #include "priority_queue/priority_queue.h"
+#include "vector/adj_vector.h"
 
 const unsigned long ds_pool_size = 1024*1024*1024*1;
 
@@ -189,6 +190,9 @@ int PMLib::create_ds(uint8_t ds_type, uint16_t ds_id, uint8_t npartitions){
         case SHARDED_PRIORITY_QUEUE:
             engine = new ShardedPriorityQueueEngine(path,ds_pool_size,npartitions);
             break;
+	    case ADJACENCY_VECTOR:
+	        engine = new AdjVectorEngine(path,ds_pool_size);
+	        break;
 		default:
 			LOG_ERROR("Invalid DS type");
 			exit(-1);

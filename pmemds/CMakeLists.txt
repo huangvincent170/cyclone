@@ -29,27 +29,31 @@ include(tbb)
 list(APPEND PKG_CONFIG_REQUIRES tbb)
 #link dirs
 #link_directories(/home/pradeep/blizzard/pmdk/src/nondebug)
-link_directories(../pmdk/src/nondebug)
+link_directories(${PMDK_LIB})
 
 
 set(SERVERLIB_SOURCE_FILES
         src/pmemds.cc
         src/tree/btree.cc
         src/hashmap/hashmap.cc
-        src/priority_queue/priority_queue.cc)
+        src/priority_queue/priority_queue.cc
+        src/vector/adj_vector.cc)
 
 set(CLIENTLIB_SOURCE_FILES
         src/pmemds-client.cc
         src/dpdk_client.cc
         src/tree/btree-client.cc
         src/hashmap/hashmap-client.cc
-        src/priority_queue/priority_queue-client.cc)
+        src/priority_queue/priority_queue-client.cc
+        src/vector/adj_vector-client.cc)
+
 
 set(CLIENTLIB_TEST_SOURCE_FILES
         src/pmemds-client.cc
         src/tree/btree-client.cc
         src/hashmap/hashmap-client.cc
-        src/priority_queue/priority_queue-client.cc)
+        src/priority_queue/priority_queue-client.cc
+        src/vector/adj_vector-client.cc)
 
 add_library(pmemds STATIC ${SERVERLIB_SOURCE_FILES})
 target_link_libraries(pmemds PRIVATE ${TBB_LIBRARIES})

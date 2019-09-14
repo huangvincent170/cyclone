@@ -3,6 +3,7 @@
 
 #include "../include/pmemds-client.h"
 #include "../include/vector/adj_vector-client.hpp"
+#include "test_common.hpp"
 #include "test_client.h"
 #include "gtest/gtest.h"
 #include "bench.h"
@@ -18,8 +19,7 @@ namespace {
         /* Code here will be called immediately after the constructor (right
            before each test). */
         void SetUp() override {
-            //const std::string pmem_path = "/dev/shm/pmemds_test";
-            const std::string pmem_path = "/mnt/pmem1/pmemds_test";
+            setup_pmem(pmem_path);
             /* server side data-structure creation */
             pmLib = new pmemds::PMLib(pmem_path);
 
@@ -51,6 +51,7 @@ namespace {
         ASSERT_EQ(graph->close(), OK);
         ASSERT_EQ(graph->remove(), OK);
     }
+
 
 }
 

@@ -32,11 +32,21 @@ endif ()
 include_directories(${CMAKE_SOURCE_DIR}/src/include
         ${CMAKE_BINARY_DIR}/bin)
 
+# -- [ we use boost for some utility work.
+find_package(Boost 1.65.1 REQUIRED COMPONENTS system filesystem)
+if(Boost_FOUND)
+    message("boost found")
+    include_directories(${Boost_INCLUDE_DIRS})
+endif()
+set(Boost_USE_STATIC_LIBS  ON)
+
+
 set(TEST_FILES
-        vote_test.cc
-        priority_queue/pq_test.cc
-        pmemds_test.cc
-        pmemds_hashmap.cc
+        #vote_test.cc
+        #priority_queue/pq_test.cc
+        #pmemds_test.cc
+        #pmemds_hashmap.cc
+        pmemds_adj_vector.cc
         test_main.cc)
 
 # ---[ TEST SUITE
@@ -63,7 +73,7 @@ find_static_library(pmem  ${PMDK_LIB} PMEM)
 find_static_library(pmemobj ${PMDK_LIB} PMEMOBJ)
 
 
-target_link_libraries(test_suite gtest_main pmemds-test pmemds  boost_system ${PMEMOBJ} ${PMEM} dl)
+target_link_libraries(test_suite gtest_main pmemds-test pmemds Boost::filesystem ${PMEMOBJ} ${PMEM} dl)
 add_test(NAME TestSuite COMMAND test_suite)
 
 # --[ Add "make check" target

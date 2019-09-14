@@ -40,7 +40,7 @@ namespace pmemds{
             case ADD_EDGE:
                 add_edge(req->key,req->key2,resp);
                 break;
-            case VERTEX_DEGREE:
+            case VERTEX_OUTDEGREE:
                 vertex_outdegree(req->key,resp);
                 break;
             default:

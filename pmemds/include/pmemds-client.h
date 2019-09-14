@@ -53,7 +53,7 @@ namespace pmemdsclient {
 
         virtual int remove()= 0;
 
-				virtual int create(uint8_t flags, void (*cb)(void *)) { return -1; };
+        virtual int create(uint8_t flags, void (*cb)(void *)) { return -1; };
 
         virtual int close(void (*cb)(void *)) { return -1; };
 
