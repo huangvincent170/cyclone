@@ -34,7 +34,8 @@ We only describe important directories. Some of the directories are not used any
 ## Dependencies.
 
 ### Software
-
+* pkg-config
+* Cmake
 * Intel DPDK software stack.
 Install DPDK network stack on server/client machines using DPDK installation [guide](http://core.dpdk.org/doc/quick-start/).
 
