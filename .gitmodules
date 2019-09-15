@@ -1,10 +1,3 @@
-[submodule "pmemkv-tools"]
-	path = pmemkv-tools
-	url = https://github.com/RobDickinson/pmemkv-tools.git
-
-[submodule "pmemkv"]
-	path = pmemkv
-	url = https://github.com/pmem/pmemkv.git
 [submodule "pmdk"]
 	path = pmdk
 	url = https://github.com/pmem/pmdk.git
