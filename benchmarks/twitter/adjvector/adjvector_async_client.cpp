@@ -18,6 +18,12 @@
 #include "vector/adjvector-client.h"
 
 
+
+#define TWITTER_DATA_FILE "../../data/twitter/twitter_rv_15066953.net"
+
+/* right now we statically allocate node list */
+#define MAX_GRAPH_NODES 10000
+
 /* pmem structure names */
 const uint16_t adjvector_st = 0;
 
@@ -60,9 +66,17 @@ int driver(void *arg)
 	int rpc_flags;
 	int my_core;
 
+	double coin;
+	double frac_read = 0.5;
 	//twitter bench specific
 	unsigned long fromnode_id, tonode_id,node_id;
-
+	File *fp;
+	fp = fopen(TWITTER_DATA_FILE);
+	if(fp == NULL){
+		BOOST_LOG_TRIVIAL(info) << "could not open twitter data file"'
+		exit(-1);
+	}
+	
 	unsigned  long key;
 	char value_buffer[64];
 	srand(rtc_clock::current_time());
@@ -72,13 +86,20 @@ int driver(void *arg)
 	adjv->create(creation_flag,nullptr);
 	//for(int i=0 ;i<10000 ;i++ ){
 	for( ; ; ){
-		BOOST_LOG_TRIVIAL(info) << "add_edge from -> to : " << fromnode_id << tonode_id;
-		adjv->add_edge(fromnode_id,tonode_id, nullptr);
-		BOOST_LOG_TRIVIAL(info) << "vertex_outdegree :" << node_id;
-		adjv->vertex_outdegree(node_id, nullptr);
+		coin = ((double)rand())/RAND_MAX;
+		if(coin > frac_read){ // update
+			fscanf(fp,"%lu %lu", &tonode_id, &fromnode_id);			
+			BOOST_LOG_TRIVIAL(info) << "add_edge from -> to : " << fromnode_id << tonode_id;
+			adjv->add_edge(fromnode_id,tonode_id, nullptr);
+		}else {
+			unsigned long node_id = rand() % MAX_GRAPH_NODES;
+			BOOST_LOG_TRIVIAL(info) << "vertex_outdegree :" << node_id;
+			adjv->vertex_outdegree(node_id, nullptr);
+		}
 	}
 	adjv->close(nullptr);
 	pmlib->close(nullptr);
+	fclose(fp);
 	return 0;
 }
 
