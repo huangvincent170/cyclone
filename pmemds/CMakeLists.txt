@@ -37,7 +37,7 @@ set(SERVERLIB_SOURCE_FILES
         src/tree/btree.cc
         src/hashmap/hashmap.cc
         src/priority_queue/priority_queue.cc
-        src/vector/adj_vector.cc)
+        src/vector/adjvector.cc)
 
 set(CLIENTLIB_SOURCE_FILES
         src/pmemds-client.cc
@@ -45,7 +45,7 @@ set(CLIENTLIB_SOURCE_FILES
         src/tree/btree-client.cc
         src/hashmap/hashmap-client.cc
         src/priority_queue/priority_queue-client.cc
-        src/vector/adj_vector-client.cc)
+        src/vector/adjvector-client.cc)
 
 
 set(CLIENTLIB_TEST_SOURCE_FILES
@@ -53,7 +53,7 @@ set(CLIENTLIB_TEST_SOURCE_FILES
         src/tree/btree-client.cc
         src/hashmap/hashmap-client.cc
         src/priority_queue/priority_queue-client.cc
-        src/vector/adj_vector-client.cc)
+        src/vector/adjvector-client.cc)
 
 add_library(pmemds STATIC ${SERVERLIB_SOURCE_FILES})
 target_link_libraries(pmemds PRIVATE ${TBB_LIBRARIES})

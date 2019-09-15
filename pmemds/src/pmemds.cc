@@ -3,7 +3,7 @@
 #include "tree/btree.h"
 #include "hashmap/hashmap.h"
 #include "priority_queue/priority_queue.h"
-#include "vector/adj_vector.h"
+#include "vector/adjvector.h"
 
 const unsigned long ds_pool_size = 1024*1024*1024*1;
 
