@@ -63,6 +63,5 @@ def killall_cmds_gen(f):
     passwd = 'dummy'
     if os.environ.has_key('CYCLONE_PASS'):
         passwd=os.environ.get('CYCLONE_PASS')
-    f.write('echo ' + passwd + ' | sudo -S pkill adjvector_server\n')
-    f.write('echo ' + passwd + '| sudo -S pkill adjvector_client\n')
-    f.write('echo ' + passwd + '| sudo -S pkill adjvector_async\n')
+    f.write('echo ' + passwd + ' | sudo -S pkill -f adjvector_server\n')
+    f.write('echo ' + passwd + ' | sudo -S pkill -f adjvector_async\n')
