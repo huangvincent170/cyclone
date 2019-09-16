@@ -19,7 +19,7 @@
 
 
 
-#define TWITTER_DATA_FILE "../../data/twitter/twitter_rv_15066953.net"
+#define TWITTER_DATA_FILE "/home/pfernando/cyclone/cyclone.git/benchmarks/data/twitter/twitter_rv_15066953.net"
 
 /* right now we statically allocate node list */
 #define MAX_GRAPH_NODES 10000
@@ -86,19 +86,25 @@ int driver(void *arg)
 	adjv->create(creation_flag,nullptr);
 
 	for(int i=0 ;i<100000 ;i++ ){ // pre-loading some values
-		fscanf(fp,"%lu %lu", &tonode_id, &fromnode_id);			
-		BOOST_LOG_TRIVIAL(info) << "add_edge from -> to : " << fromnode_id << tonode_id;
+		if(fscanf(fp,"%lu %lu", &tonode_id, &fromnode_id) != 2){
+			BOOST_LOG_TRIVIAL(info) << "error reading file values, exiting";
+			exit(-1);
+		}			
+		BOOST_LOG_TRIVIAL(info) << "preload, add_edge from -> to : " << fromnode_id  << " -> "<< tonode_id;
 		adjv->add_edge(fromnode_id,tonode_id, nullptr);
 	}
 	for( ; ; ){
 		coin = ((double)rand())/RAND_MAX;
 		if(coin > frac_read){ // update
-			fscanf(fp,"%lu %lu", &tonode_id, &fromnode_id);			
-			BOOST_LOG_TRIVIAL(info) << "add_edge from -> to : " << fromnode_id << tonode_id;
+			if(fscanf(fp,"%lu %lu", &tonode_id, &fromnode_id) != 2){			
+				BOOST_LOG_TRIVIAL(info) << "error reading file values, exiting";
+				exit(-1);
+			}
+			BOOST_LOG_TRIVIAL(info) << "add_edge from -> to : " << fromnode_id << " -> " << tonode_id;
 			adjv->add_edge(fromnode_id,tonode_id, nullptr);
 		}else {
 			unsigned long node_id = rand() % MAX_GRAPH_NODES;
-			BOOST_LOG_TRIVIAL(info) << "vertex_outdegree :" << node_id;
+			BOOST_LOG_TRIVIAL(info) << "vertex_outdegree of :" << node_id;
 			adjv->vertex_outdegree(node_id, nullptr);
 		}
 	}
