@@ -58,7 +58,6 @@ int driver(void *arg)
 	int clients = dargs->clients;
 	int partitions = dargs->partitions;
 	void **handles = dargs->handles;
-	// char *buffer = new char[DISP_MAX_MSGSIZE];
 	pmemdsclient::DPDKPMClient *pmlib = dargs->dpdkClient;
 	pmemdsclient::AdjVectorEngine *adjv = dargs->adjVector;
 	srand(time(NULL));

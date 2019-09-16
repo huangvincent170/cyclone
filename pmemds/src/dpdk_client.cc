@@ -81,7 +81,9 @@ namespace pmemdsclient{
         cb_ctxt->callback = cb;
         int rpc_flags = 0;
         int ret;
+	int emax_inflight_count; // notify us if the async call stuck in the loop
         do{
+	    emax_inflight_count = 0;
             ret = make_rpc_async(this->dpdk_client,
                                  msg,
                                  sizeof(pm_rpc_t),
@@ -90,6 +92,10 @@ namespace pmemdsclient{
                                  core_mask,
                                  rpc_flags);
             if(ret == EMAX_INFLIGHT){
+		emax_inflight_count++;
+		if(emax_inflight_count > 100000){
+		    LOG_DEBUG("async send stuck in a loop");
+		}
                 //sleep a bit
                 continue;
             }

@@ -41,7 +41,7 @@ namespace pmemdsclient {
         int add_edge(unsigned long from_node, unsigned long to_node,void (*cb)(void *));
         int remove_edge(unsigned long from_node, unsigned long to_node,void (*cb)(void *));
         int incident_triangles(unsigned long node_id,void (*cb)(void *));
-        unsigned long vertex_outdegree(unsigned long node_id,void (*cb)(void *));
+        int vertex_outdegree(unsigned long node_id,void (*cb)(void *));
 
     private:
         std::string ds_name;

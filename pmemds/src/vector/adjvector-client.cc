@@ -21,7 +21,6 @@ namespace pmemdsclient{
 
 	int AdjVectorEngine::add_edge(unsigned long fromnode_id,
 			unsigned long tonode_id, void (*cb)(void *)){
-        pm_rpc_t *response;
         pm_rpc_t payload = {0,0,"\0"};
         SET_DS_ID(payload.meta, this->ds_id);
         SET_OP_ID(payload.meta,ADD_EDGE);
@@ -52,8 +51,7 @@ namespace pmemdsclient{
     }
 
 
-    unsigned long AdjVectorEngine::vertex_outdegree(unsigned long node_id, void (*cb)(void *)){
-        pm_rpc_t *response;
+    int AdjVectorEngine::vertex_outdegree(unsigned long node_id, void (*cb)(void *)){
         pm_rpc_t payload = {0,0,"\0"};
         SET_DS_ID(payload.meta, this->ds_id);
         SET_OP_ID(payload.meta,VERTEX_OUTDEGREE);
@@ -62,8 +60,8 @@ namespace pmemdsclient{
         if (client->sendmsg_async(&payload, this->core_mask, cb) != 0) {
             LOG_ERROR("vertex_outdegree async call");
         }
-        return response->key;
-	}
+        return OK;
+    }
 
 
     AdjVectorEngine::AdjVectorEngine(PMClient *handle, const uint16_t ds_id, size_t size, unsigned long core_mask){
@@ -91,7 +89,6 @@ namespace pmemdsclient{
     }
 
     int AdjVectorEngine::create(uint8_t flags, void (*cb)(void *)) {
-        pm_rpc_t *response;
         pm_rpc_t payload = {0, 0, "\0"};
         SET_OP_ID(payload.meta, CREATE_DS);
         SET_TYPE_ID(payload.meta, this->type_id);
@@ -119,7 +116,6 @@ namespace pmemdsclient{
     }
 
     int AdjVectorEngine::close(void (*cb)(void *)) {
-        pm_rpc_t *response;
         pm_rpc_t payload = {0, 0, "\0"};
         SET_OP_ID(payload.meta, CLOSE_DS);
         SET_TYPE_ID(payload.meta, this->type_id);
