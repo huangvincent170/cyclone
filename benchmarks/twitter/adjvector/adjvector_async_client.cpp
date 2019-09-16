@@ -90,7 +90,7 @@ int driver(void *arg)
 			BOOST_LOG_TRIVIAL(info) << "error reading file values, exiting";
 			exit(-1);
 		}			
-		BOOST_LOG_TRIVIAL(info) << "preload, add_edge from -> to : " << fromnode_id  << " -> "<< tonode_id;
+		//BOOST_LOG_TRIVIAL(info) << "preload, add_edge from -> to : " << fromnode_id  << " -> "<< tonode_id;
 		adjv->add_edge(fromnode_id,tonode_id, nullptr);
 	}
 	for( ; ; ){
@@ -100,11 +100,11 @@ int driver(void *arg)
 				BOOST_LOG_TRIVIAL(info) << "error reading file values, exiting";
 				exit(-1);
 			}
-			BOOST_LOG_TRIVIAL(info) << "add_edge from -> to : " << fromnode_id << " -> " << tonode_id;
+			//BOOST_LOG_TRIVIAL(info) << "add_edge from -> to : " << fromnode_id << " -> " << tonode_id;
 			adjv->add_edge(fromnode_id,tonode_id, nullptr);
 		}else {
 			unsigned long node_id = rand() % MAX_GRAPH_NODES;
-			BOOST_LOG_TRIVIAL(info) << "vertex_outdegree of :" << node_id;
+			//BOOST_LOG_TRIVIAL(info) << "vertex_outdegree of :" << node_id;
 			adjv->vertex_outdegree(node_id, nullptr);
 		}
 	}
