@@ -53,38 +53,45 @@ namespace pmemds {
     /* add en edge in to the graph structure. We create src/dest nodes if they do not exist */
     void AdjVectorEngine::add_edge(unsigned long from_node, unsigned long to_node, pm_rpc_t *resp) {
 
-        if (from_node > MAX_NODES || to_node > MAX_NODES) {
+        if (from_node > (MAX_NODES-1) || to_node > (MAX_NODES-1)) {
             LOG("graph is out of valid node range");
-            exit(1);
+            SET_STATUS(resp->meta, FAILED);
+            return;
         }
         // check if src and dest exists
         vector_t_ptr src_vpptr = list_array[from_node];
+
+        pmem::obj::transaction::manual tx(pmpool);
+
         if (src_vpptr == nullptr) { //create source
             list_array[from_node] = pmem::obj::make_persistent<vector_t>();
         }
-
         vector_t_ptr dest_vpptr = list_array[to_node];
         if (dest_vpptr == nullptr) {
             list_array[to_node] = pmem::obj::make_persistent<vector_t>();
         }
         vector_t *pvector = list_array[from_node].get();
+        pmem::obj::persistent_ptr<gnode_t> gnode_ptr = pmem::obj::make_persistent<gnode_t>();
 
+        gnode_ptr->node_id = to_node;
+        pvector->push_back(gnode_ptr);
+        pmem::obj::transaction::commit();
 
-        gnode_t *gnode = new gnode_t();
-        gnode->node_id = to_node;
-        pvector->push_back(*gnode);
 
         SET_STATUS(resp->meta, OK);
     }
 
 
     void AdjVectorEngine::vertex_outdegree(unsigned long node_id, pm_rpc_t *resp) {
-        if (node_id > MAX_NODES) {
+        if (node_id > (MAX_NODES-1)) {
             LOG("graph is out of valid node range");
             exit(1);
         }
+        int out_degree = 0; // default return
         vector_t *pvector = list_array[node_id].get();
-        int out_degree = pvector->size();
+        if(pvector != nullptr) {
+            out_degree = pvector->size();
+        }
         SET_STATUS(resp->meta, OK);
         resp->key = out_degree;
     }
@@ -93,7 +100,7 @@ namespace pmemds {
     void AdjVectorEngine::recover() {
 
         auto root_data = pmpool.root();
-        if (!root_data->size) {
+        if (root_data->size) {
             //TODO : initialize during restart
         } else {
             pmem::obj::transaction::manual tx(pmpool);

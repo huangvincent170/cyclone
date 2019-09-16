@@ -9,7 +9,7 @@
  * Implments graph data-structure interface using persistent vector
  */
 
-#define MAX_NODES 1000000
+#define MAX_NODES 15066954
 
 
 
@@ -57,8 +57,8 @@ namespace pmemds {
         void vertex_outdegree(unsigned long node_id, pm_rpc_t *resp);
 
     private:
-        unsigned long max_nodes;        // constant array
-        using vector_t = pmem::obj::experimental::vector<gnode_t>;
+        using gnode_t_ptr = pmem::obj::persistent_ptr<gnode_t>;
+        using vector_t = pmem::obj::experimental::vector<gnode_t_ptr>;
         using vector_t_ptr = pmem::obj::persistent_ptr <vector_t>;
         struct RootData {
             pmem::obj::p<unsigned long> size;

@@ -24,7 +24,7 @@ namespace pmemdsclient{
 		return 0;//TODO
 	}
 
-    int AdjVectorEngine::vertex_outdegree(unsigned long node_id) {
+    unsigned long AdjVectorEngine::vertex_outdegree(unsigned long node_id) {
         pm_rpc_t *response;
         pm_rpc_t payload = {0,0,"\0"};
         SET_DS_ID(payload.meta, this->ds_id);
@@ -32,17 +32,17 @@ namespace pmemdsclient{
         SET_TYPE_ID(payload.meta,this->type_id);
         payload.key = node_id;
         if(!client->sendmsg(&payload,&response,this->core_mask)){
-            LOG_ERROR("hashmap put");
+            LOG_ERROR("vertex_outdegree fail");
         }
         if(STATUS(response->meta) != OK){
             LOG_ERROR("hashmap put");
             return FAILED;
         }
-        return OK;
+        return response->key;
     }
 
 
-	int AdjVectorEngine::vertex_outdegree(unsigned long node_id, void (*cb)(void *)){
+    unsigned long AdjVectorEngine::vertex_outdegree(unsigned long node_id, void (*cb)(void *)){
 		return 0;//TODO:
 	}
 
