@@ -70,10 +70,10 @@ int driver(void *arg)
 	double frac_read = 0.5;
 	//twitter bench specific
 	unsigned long fromnode_id, tonode_id,node_id;
-	File *fp;
-	fp = fopen(TWITTER_DATA_FILE);
+	FILE *fp;
+	fp = fopen(TWITTER_DATA_FILE, "r");
 	if(fp == NULL){
-		BOOST_LOG_TRIVIAL(info) << "could not open twitter data file"'
+		BOOST_LOG_TRIVIAL(info) << "could not open twitter data file";
 		exit(-1);
 	}
 	
@@ -84,7 +84,12 @@ int driver(void *arg)
 	pmlib->open("twitterApp",nullptr);
 	uint8_t creation_flag = 0;
 	adjv->create(creation_flag,nullptr);
-	//for(int i=0 ;i<10000 ;i++ ){
+
+	for(int i=0 ;i<100000 ;i++ ){ // pre-loading some values
+		fscanf(fp,"%lu %lu", &tonode_id, &fromnode_id);			
+		BOOST_LOG_TRIVIAL(info) << "add_edge from -> to : " << fromnode_id << tonode_id;
+		adjv->add_edge(fromnode_id,tonode_id, nullptr);
+	}
 	for( ; ; ){
 		coin = ((double)rand())/RAND_MAX;
 		if(coin > frac_read){ // update
