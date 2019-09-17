@@ -214,17 +214,17 @@ class Common:
         cmd += gen_dir + ' ' + deploy_dir
         sh(cmd)
 
-    def start_cyclone(self,args):
+    def start_cyclone_server(self,args):
         #server deploy
         cmd = './deploy_services.sh '
         cmd += gen_dir + ' ' + deploy_dir
         sh(cmd)
-
+        
+    def start_cyclone_client(self,args):
         #client deploy
         cmd = './deploy_clients.sh '
         cmd += gen_dir + ' ' + deploy_dir
         sh(cmd)
-
 
     def gather_output(self,args):
 

@@ -35,17 +35,23 @@ int commute_callback(void *arg1, void *arg2) {
     /* this is the signle partition data-structure. So we ignore partitions */
 	unsigned int op1_id = OP_ID(op1->meta);
 	unsigned int op2_id = OP_ID(op2->meta);
-	/// read operations always commute
+	
+	/* read operations always commute. Short circuit rule */
 	if(op1_id == VERTEX_OUTDEGREE && op2_id == VERTEX_OUTDEGREE){
 		return 1;
 	}
+	
 	/* if the operations are in to different nodes, then they commute.
 	 * 1. provide strong consistent reads vetex_outdegree
 	 * 2. relaxed reads for incident triangles and hop
 	 */ 
-	if(op1->key != op2->key){
-		return 1;
-	}	
+	if( (op1_id == VERTEX_OUTDEGREE || op1_id == ADD_EDGE) && 
+			(op2_id == VERTEX_OUTDEGREE || op2_id == ADD_EDGE)){
+		if(op1->key != op2->key){
+			return 1;
+		}	
+	}
+	// default : no-commute
 	return 0;
 }
 
