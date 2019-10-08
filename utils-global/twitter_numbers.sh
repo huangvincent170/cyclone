@@ -1,8 +1,8 @@
 #!/bin/bash
 #declare -a wl=("hashmap")
 declare -a wl=("adjvector")
-#declare -a bf=(1 2 3 4 5 6 7 8 9 10 12 14)
-declare -a bf=(1)
+declare -a bf=(8)
+#declare -a bf=(1)
 
 declare -a mt=("nvram")
 
