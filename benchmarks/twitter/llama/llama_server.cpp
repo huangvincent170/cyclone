@@ -13,205 +13,172 @@
 #include "../core/libcyclone.hpp"
 #include "../core/logging.hpp"
 #include "../core/clock.hpp"
-#include "rocksdb.hpp"
+#include "llama.hpp"
 
-// Rate measurement stuff
-static unsigned long *marks;
-static unsigned long *completions;
-rocksdb::DB* db = NULL;
-static void *logs[executor_threads];
+typedef ll_mlcsr_ro_graph benchmarkable_graph_t;
+#define benchmarkable_graph(g)  ((g).ro_graph())
 
-typedef struct batch_barrier_st {
-  volatile unsigned long batch_barrier[2];
-  volatile int batch_barrier_sense;
-} batch_barrier_t;
+std::string input_file = "/home/pradeep/blizzard-dev/cyclone/benchmarks/data/twitter/twitter_rv_15066953.net";
+std::string database_directory = "/mnt/pmem1/llama_db";
+int preload_batch= 100*1000;
 
-static batch_barrier_t barriers[executor_threads];
+/* batching related structure */
+typedef struct edge_st{
+	unsigned long from;
+	unsigned long to;
+}edge_t;
+const int LLAMA_INSGEST_BATCH_SIZE = 1000;
+// edge_t edge_buffer[LLAMA_INGEST_BATCH_SIZE];
 
-static void barrier(batch_barrier_t *barrier,
-		    int thread_id, 
-		    unsigned long mask, 
-		    bool leader)
-{
-  int sense = barrier->batch_barrier_sense;
-  __sync_fetch_and_or(&barrier->batch_barrier[sense], 1UL << thread_id);
-  if(leader) {
-    while(barrier->batch_barrier[sense] != mask);
-    barrier->batch_barrier_sense  = 1 - barrier->batch_barrier_sense;
-    barrier->batch_barrier[sense] = 0;
-  }
-  else {
-    while(barrier->batch_barrier[sense] != 0);
-  }
+int batch_counter = 0;
+
+ll_loader_config loader_config;
+int num_threads = 4;
+
+ll_writable_graph& graph;
+ll_file_loaders loaders;
+ll_file_loader* loader;
+ll_concat_data_source combined_data_source;
+ll_data_source* d;
+benchmarkable_graph_t& G;
+ll_t_outdegree<benchmarkable_graph_t>* benchmark;
+
+
+
+
+template <class Graph>
+class ll_t_outdegree : public ll_benchmark<Graph> {
+	FILE* _out;
+	public:
+
+	ll_t_outdegree() : ll_benchmark<Graph>("") {
+		_out = stdout;
+	}
+
+	virtual ~ll_t_outdegree(void) {
+	}
+
+	unsigned long outdegree(node_t nodeId){
+		Graph& G = *this->_graph;
+		return G.out_degree(nodeId);
+	}
+
+	virtual double run(void){
+		// making compiler happy
+		return NAN;
+	}
+
+};
+
+bool load_batch_via_writable_graph(ll_writable_graph& graph,
+		ll_data_source& data_source, const ll_loader_config& loader_config,
+		size_t batch_size) {
+
+
+	bool loaded = data_source.pull(&graph, batch_size);
+	if (!loaded) return false;
+	graph.checkpoint(&loader_config);
+	return true;
 }
 
+
 void callback(const unsigned char *data,
-	      const int len,
-	      rpc_cookie_t *cookie, unsigned long *pmdk_state)
+		const int len,
+		rpc_cookie_t *cookie, unsigned long *pmdk_state)
 {
-  cookie->ret_value  = malloc(len);
-  cookie->ret_size   = len;
-  rockskv_t *rock = (rockskv_t *)data;
-  if(rock->op == OP_PUT) {
-    rocksdb::WriteOptions write_options;
-    if(use_rocksdbwal) {
-      write_options.sync       = true;
-      write_options.disableWAL = false;
-    }
-    else {
-      write_options.sync       = false;
-      write_options.disableWAL = true;
-    }
-    if(len == sizeof(rockskv_t)) { // single put
-      rocksdb::Slice key((const char *)&rock->key, 8);
-      rocksdb::Slice value((const char *)&rock->value[0], value_sz);
-      rocksdb::Status s = db->Put(write_options, 
-				  key,
-				  value);
-      if (!s.ok()){
-	BOOST_LOG_TRIVIAL(fatal) << s.ToString();
-	exit(-1);
-      }
-    }
-    else {
-      int leader = __builtin_ffsl(cookie->core_mask) - 1;
-      if(leader == cookie->core_id) { // Multi put
-		  assert(0);
-	rocksdb::WriteBatch batch;
-	int bytes  = len;
-	const unsigned char *buffer = data;
-	while(bytes) {
-	  if(bytes == len) {
-	    rocksdb::Slice key((const char *)&rock->key, 8);
-	    rocksdb::Slice value((const char *)&rock->value[0], value_sz);
-	    batch.Put(key, value);
-	    buffer = buffer + sizeof(rockskv_t);
-	    bytes -= sizeof(rockskv_t);
-	  }
-	  else {
-	    rock_kv_pair_t *kv = (rock_kv_pair_t *)buffer;
-	    rocksdb::Slice key((const char *)&kv->key, 8);
-	    rocksdb::Slice value((const char *)&kv->value[0], value_sz);
-	    batch.Put(key, value);
-	    buffer = buffer + sizeof(rock_kv_pair_t);
-	    bytes -= sizeof(rock_kv_pair_t);
-	  }
+	cookie->ret_value  = malloc(sizeof(llama_res_t));
+	cookie->ret_size   = sizeof(llama_res_t);
+	llama_res_t *res = (llama_res_t *) cookie->ret_value;
+
+	llama_req_t *req = (llama_req_t *)data;
+
+	if(req->op == OP_ADD_EDGE){
+		batch_counter++;
+		if(batch_counter % LLAMA_INGEST_BATCH_SIZE){
+			if (!load_batch_via_writable_graph(graph, combined_data_source,
+						loader_config, LLAMA_INGEST_BATCH_SIZE)) break;
+			batch_counter = 0;
+		}
+		res->state = 1UL;
+	}else if(req->op == OP_OUT_DEGREE){
+		res->outdegree = benchmark->outdegree(node_id);
+		res->state = 1UL; // we hard code the return status for now
 	}
-	rocksdb::Status s = db->Write(write_options, 
-				      &batch);
-	if (!s.ok()){
-	  BOOST_LOG_TRIVIAL(fatal) << s.ToString();
-	  exit(-1);
-	}
-	barrier(&barriers[leader], cookie->core_id, cookie->core_mask, true);
-      }
-      else {
-	barrier(&barriers[leader], cookie->core_id, cookie->core_mask, false);
-      }
-    }
-    memcpy(cookie->ret_value, data, len);
-  }
-  else {
-    rockskv_t *rock_back = (rockskv_t *)cookie->ret_value;
-    rocksdb::Slice key((const char *)&rock->key, 8);
-    std::string value;
-    rocksdb::Status s = db->Get(rocksdb::ReadOptions(),
-				key,
-				&value);
-    if(s.IsNotFound()) {
-      rock_back->key = ULONG_MAX;
-    }
-    else {
-      rock_back->key = rock->key;
-      memcpy(rock_back->value, value.c_str(), value_sz);
-    }
-  }
-  /*
-  if((++completions[cookie->core_id]) >= 1000000) {
-    BOOST_LOG_TRIVIAL(info) << "Completion rate = "
-			    << ((double)completions[cookie->core_id])
-      /(rtc_clock::current_time() - marks[cookie->core_id]);
-    completions[cookie->core_id] = 0;
-    marks[cookie->core_id] = rtc_clock::current_time();
-  }
-  */
 }
 
 int commute_callback(unsigned long cmask1, void *op1, unsigned long cmask2, void *op2)
 {
-  return 0; // not used 
+	return 0; // not used
 }
 
 void gc(rpc_cookie_t *cookie)
 {
-  free(cookie->ret_value);
+	free(cookie->ret_value);
 }
 
 rpc_callbacks_t rpc_callbacks =  {
-  callback,
-  gc,
-  commute_callback
+	callback,
+	gc,
+	commute_callback
 };
 
+/* opening and pre-loading the db */
+void open_llama(){
+	// Open the database
+	ll_database database(database_directory.c_str());
+	database.set_num_threads(num_threads);
+	graph = *database.graph();
+
+	// Load the graph
+	loader = loaders.loader_for(first_input);
+	if (loader == NULL) {
+		fprintf(stderr, "Error: Unsupported input file type\n");
+		return 1;
+	}
+
+	d = loader->create_data_source(input_file.c_str());
+	combined_data_source.add(d);
+
+	G = benchmarkable_graph(graph);
+	benchmark = new ll_t_outdegree<benchmarkable_graph_t>();
+	benchmark->initialize(&G);
+
+	//pre-loading
+	if (!load_batch_via_writable_graph(graph, combined_data_source,loader_config, preload_batch)){
+		printf("error pre-loading\n");
+		exit(-1);
+	}
+}
 
 
-void opendb(){
-  rocksdb::Options options;
-  int num_threads=rocksdb_num_threads;
-  options.create_if_missing = true;
-  options.write_buffer_size = 1024 * 1024 * 256;
-  options.target_file_size_base = 1024 * 1024 * 512;
-  options.IncreaseParallelism(num_threads);
-  options.max_background_compactions = num_threads;
-  options.max_background_flushes = num_threads;
-  options.max_write_buffer_number = num_threads;
-  options.wal_dir = log_dir;
-  //options.env->set_affinity(num_quorums + executor_threads, 
-  //			    num_quorums + executor_threads + num_threads);
-  rocksdb::Status s = rocksdb::DB::Open(options, data_dir, &db);
-  if (!s.ok()){
-    BOOST_LOG_TRIVIAL(fatal) << s.ToString().c_str();
-    exit(-1);
-  }
+void preload_llama(){
+
+}
+void close_llama(){
+
 }
 
 int main(int argc, char *argv[])
 {
-  if(argc != 7) {
-    printf("Usage1: %s replica_id replica_mc clients cluster_config quorum_config ports\n", argv[0]);
-    exit(-1);
-  }
-  marks       = (unsigned long *)malloc(executor_threads*sizeof(unsigned long));
-  completions = (unsigned long *)malloc(executor_threads*sizeof(unsigned long));
-  memset(marks, 0, executor_threads*sizeof(unsigned long));
-  memset(completions, 0, executor_threads*sizeof(unsigned long));
-  for(int i=0;i<executor_threads;i++) {
-    barriers[i].batch_barrier[0] = 0;
-    barriers[i].batch_barrier[1] = 0;
-    barriers[i].batch_barrier_sense = 0;
-  }
-  int server_id = atoi(argv[1]);
-  cyclone_network_init(argv[4],
-		       atoi(argv[6]),
-		       atoi(argv[2]),
-		       atoi(argv[6]) + num_queues*num_quorums + executor_threads);
-  
+	if(argc != 7) {
+		printf("Usage1: %s replica_id replica_mc clients cluster_config quorum_config ports\n", argv[0]);
+		exit(-1);
+	}
 
-/*  char log_path[50];
-  for(int i=0;i<executor_threads;i++) {
-    sprintf(log_path, "%s/flash_log%d", log_dir, i);
-    logs[i] = create_flash_log(log_path);
-  }
-*/ 
-  opendb();
-  
-  
-  dispatcher_start(argv[4], 
-		   argv[5], 
-		   &rpc_callbacks,
-		   server_id, 
-		   atoi(argv[2]), 
-		   atoi(argv[3]));
+	int server_id = atoi(argv[1]);
+	cyclone_network_init(argv[4],
+			atoi(argv[6]),
+			atoi(argv[2]),
+			atoi(argv[6]) + num_queues*num_quorums + executor_threads);
+
+	init_llama();
+
+	dispatcher_start(argv[4],
+			argv[5],
+			&rpc_callbacks,
+			server_id,
+			atoi(argv[2]),
+			atoi(argv[3]));
 }
 
 

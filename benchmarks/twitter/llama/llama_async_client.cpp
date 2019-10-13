@@ -16,11 +16,9 @@
 
 #include "llama.hpp"
 
-#define TWITTER_DATA_FILE "/home/pfernando/cyclone/cyclone.git/benchmarks/data/twitter/twitter_rv_15066953.net"
 
 
-unsigned long tx_wr_block_cnt = 0UL;
-unsigned long tx_ro_block_cnt = 0UL;
+unsigned long tx_cnt = 0UL;
 unsigned long total_latency = 0UL;
 unsigned long tx_begin_time = 0UL;
 
@@ -40,7 +38,7 @@ void async_callback(void *args, int code, unsigned long msg_latency)
     struct cb_st *cb_ctxt = (struct cb_st *)args;
     if(code == REP_SUCCESS){
         //BOOST_LOG_TRIVIAL(info) << "received message " << cb_ctxt->request_id;
-        cb_ctxt->request_type == OP_PUT ? tx_wr_block_cnt++ : tx_ro_block_cnt++;
+		tx_cnt++;
         rte_free(cb_ctxt);
     }else{
         BOOST_LOG_TRIVIAL(info) << "timed-out message " << cb_ctxt->request_id;
@@ -48,20 +46,17 @@ void async_callback(void *args, int code, unsigned long msg_latency)
     }
 
     total_latency += msg_latency;
-    if ((tx_wr_block_cnt + tx_ro_block_cnt) >= 5000)
+    if (tx_cnt >= 5000)
     {
         unsigned long total_elapsed_time = (rtc_clock::current_time() - tx_begin_time);
 		std::cout << "LOAD = "
-            << ((double)1000000 * (tx_wr_block_cnt + tx_ro_block_cnt)) / total_elapsed_time
+            << ((double)1000000 * tx_cnt) / total_elapsed_time
             << " tx/sec "
             << "LATENCY = "
-            << ((double)total_latency) / (tx_wr_block_cnt + tx_ro_block_cnt)
+            << ((double)total_latency) / tx_cnt
             << " us "
-            << "wr/rd = "
-            <<((double)tx_wr_block_cnt/tx_ro_block_cnt)
 			<<std::endl;
-        tx_wr_block_cnt   = 0;
-        tx_ro_block_cnt   = 0;
+        tx_cnt   = 0;
         total_latency  = 0;
         tx_begin_time = rtc_clock::current_time();
     }
@@ -99,11 +94,12 @@ int driver(void *arg)
 	int rpc_flags;
 	int my_core;
 
-	llama_t *llma = (llama_t *)buffer;
+	llama_req_t *req = (llama_req_t *)buffer;
 
 	double coin;
 	unsigned long keys = llama_keys;
 	double frac_read = 0.5;
+	
 	BOOST_LOG_TRIVIAL(info) << "KEYS = " << keys;
 	BOOST_LOG_TRIVIAL(info) << "FRAC_READ = " << frac_read;
 
@@ -116,53 +112,28 @@ int driver(void *arg)
     }
 
 	struct cb_st *cb_ctxt;
-	
-	for(int i=0 ;i<100000 ;i++ ){ // pre-loading some values
-        if(fscanf(fp,"%lu %lu", &tonode_id, &fromnode_id) != 2){
-            BOOST_LOG_TRIVIAL(info) << "error reading file values, exiting";
-            exit(-1);
-        }
-		rpc_flags = 0;
-		llma->op    = OP_ADD_EDGE;
-        //BOOST_LOG_TRIVIAL(info) << "preload, add_edge from -> to : " << 
-		//fromnode_id  << " -> "<< tonode_id;
-		cb_ctxt = (struct cb_st *)rte_malloc("callback_ctxt", sizeof(struct cb_st), 0);
-		cb_ctxt->request_type = rpc_flags;
-		cb_ctxt->request_id = request_id++;
-		do{
-            ret = make_rpc_async(handles[0],
-                    buffer,
-                    sizeof(llama_t),
-                    async_callback,
-                    (void *)cb_ctxt,
-                    1UL << my_core,
-                    rpc_flags);
-            if(ret == EMAX_INFLIGHT){
-                continue;
-            }
-        }while(ret);
-    }
-
 	srand(rtc_clock::current_time());
 	for( ; ; ){
 			double coin = ((double)rand())/RAND_MAX;
 			if(coin > frac_read) {
-				if(fscanf(fp,"%lu %lu", &tonode_id, &fromnode_id) != 2){
+				/* if(fscanf(fp,"%lu %lu", &tonode_id, &fromnode_id) != 2){
 					BOOST_LOG_TRIVIAL(info) << "error reading file values, exiting";
 					exit(-1);
-				}
+				} */
 
 				rpc_flags = 0;
-				llma->op    = OP_ADD_EDGE;
+				req->op    = OP_ADD_EDGE;
+				req->data1 = tonode_id;
+				req->data2 = fromnode_id;
 			}
 			else {
 				unsigned long node_id = rand() % MAX_GRAPH_NODES;
 				rpc_flags = RPC_FLAG_RO;
-				llma->op    = OP_OUTDEGREE;
+				req->op    = OP_OUTDEGREE;
+				req->data1 = node_id;
 			}
 
 			my_core = executor_threads-1;
-			
 			cb_ctxt = (struct cb_st *)rte_malloc("callback_ctxt", sizeof(struct cb_st), 0);
 			cb_ctxt->request_type = rpc_flags;
 		
