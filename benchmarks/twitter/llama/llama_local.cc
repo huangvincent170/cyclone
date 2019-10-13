@@ -1,6 +1,7 @@
 #include <sys/time.h>
 #include <sys/resource.h>
 
+#include <iostream>
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdint.h>
@@ -10,14 +11,20 @@
 #include <algorithm>
 #include <omp.h>
 #include <libgen.h>
-
+#include <inttypes.h>
 #include <llama.h>
 #include "tools/property_stats.h"
 #include "tools/dump.h"
 
+#include "clock.hpp"
 
 std::string input_file = "/home/pradeep/blizzard-dev/cyclone/benchmarks/data/twitter/twitter_rv_15066953.net";
-std::string database_directory = "/home/pradeep/installations/llama/bin/llama_db";
+std::string database_directory = "llama_db";
+#define MAX_GRAPH_NODES 10000
+
+//stats
+unsigned long tx_begin_time = 0UL;
+unsigned long tx_cnt = 0UL;
 
 typedef ll_mlcsr_ro_graph benchmarkable_graph_t;
 #define benchmarkable_graph(g)  ((g).ro_graph())
@@ -34,8 +41,9 @@ class ll_t_outdegree : public ll_benchmark<Graph> {
   virtual ~ll_t_outdegree(void) {
   }
 
-  unsigned long outdegree(unsigned long node_id){
-	return 1;
+  unsigned long outdegree(node_t nodeId){
+	Graph& G = *this->_graph;
+	return G.out_degree(nodeId);
   }
 
   virtual double run(void){
@@ -74,7 +82,12 @@ int main(int argc, char** argv)
   bool verbose = false;
 
   ll_loader_config loader_config;
-  int num_threads = 1;
+  int num_threads = 4;
+
+  double coin;
+  double frac_read = 0.9;
+
+
 
   const char* first_input = input_file.c_str();
   const char* file_type = ll_file_extension(first_input);
@@ -106,19 +119,43 @@ int main(int argc, char** argv)
   benchmarkable_graph_t& G = benchmarkable_graph(graph);
   ll_t_outdegree<benchmarkable_graph_t>* benchmark = new ll_t_outdegree<benchmarkable_graph_t>();
 
-  int streaming_batch = 1;
+  int preload_batch= 100*1000;
+  int writing_batch = 1000;
   //int streaming_window = 10;
-  double return_d = 0;
 
   benchmark->initialize(&G);
-  for(int i =0; i < 10; i++){
-	if (!load_batch_via_writable_graph(graph, combined_data_source,
-		  loader_config, streaming_batch)) break;
 
-	double return_d = benchmark->outdegree(9);
-	//return_d = run_benchmark(G, benchmark);
+  //pre-loading
+  if (!load_batch_via_writable_graph(graph, combined_data_source,loader_config, preload_batch)){
+	printf("error pre-loading\n");
+	exit(-1);
   }
-  double r_d_adj = benchmark->finalize();
 
-return 0;
+  printf("Starting real-run\n");
+  for(int i =0; i < 11000; i++){
+	coin = ((double)rand())/RAND_MAX;
+	if(coin > frac_read){ // update
+	  if (!load_batch_via_writable_graph(graph, combined_data_source,
+			loader_config, writing_batch)) break;
+	tx_cnt+=writing_batch;
+	}else{
+	  node_t node_id = rand() % MAX_GRAPH_NODES;
+	  unsigned long od = benchmark->outdegree(node_id);
+	  //printf("outdegree of node, %" PRId64 ": %ld \n",node_id, od);
+	  //return_d = run_benchmark(G, benchmark);
+	  tx_cnt++;
+	}
+	if (tx_cnt >= 5000)
+	{
+	  unsigned long total_elapsed_time = (rtc_clock::current_time() - tx_begin_time);
+	  std::cout << "LOAD = "
+		<< ((double)1000000 * (tx_cnt)) / total_elapsed_time
+		<< " tx/sec " <<std::endl;
+	  tx_cnt   = 0;
+	  tx_begin_time = rtc_clock::current_time();
+	}
+  }
+  benchmark->finalize();
+
+  return 0;
 }
