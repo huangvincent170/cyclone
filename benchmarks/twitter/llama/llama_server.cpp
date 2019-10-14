@@ -16,9 +16,10 @@
 #include "../core/logging.hpp"
 #include "../core/clock.hpp"
 
+#include "llama.hpp"
 
 typedef ll_mlcsr_ro_graph benchmarkable_graph_t;
-#define benchmarkable_graph(g)  ((g).ro_graph())
+#define benchmarkable_graph(g)  ((g)->ro_graph())
 
 std::string input_file = "/home/pradeep/blizzard-dev/cyclone/benchmarks/data/twitter/twitter_rv_15066953.net";
 std::string database_directory = "/mnt/pmem1/llama_db";
@@ -55,9 +56,8 @@ class ll_t_outdegree : public ll_benchmark<Graph> {
 
 };
 
-const int LLAMA_INSGEST_BATCH_SIZE = 1000;
+const int LLAMA_INGEST_BATCH_SIZE = 1000;
 // edge_t edge_buffer[LLAMA_INGEST_BATCH_SIZE];
-
 int batch_counter = 0;
 
 ll_loader_config loader_config;
@@ -98,20 +98,18 @@ void callback(const unsigned char *data,
 	if(req->op == OP_ADD_EDGE){
 		batch_counter++;
 		if(batch_counter % LLAMA_INGEST_BATCH_SIZE){
-			if (!load_batch_via_writable_graph(graph, combined_data_source,
-						loader_config, LLAMA_INGEST_BATCH_SIZE)) break;
+			if (!load_batch_via_writable_graph(*graph, combined_data_source,
+						loader_config, LLAMA_INGEST_BATCH_SIZE)){
+				fprintf(stderr, "Error: reading twitter data\n");
+				exit(-1);
+			}
 			batch_counter = 0;
 		}
 		res->state = 1UL;
-	}else if(req->op == OP_OUT_DEGREE){
-		res->outdegree = benchmark->outdegree(node_id);
+	}else if(req->op == OP_OUTDEGREE){
+		res->outdegree = benchmark->outdegree(req->data1);
 		res->state = 1UL; // we hard code the return status for now
 	}
-}
-
-int commute_callback(unsigned long cmask1, void *op1, unsigned long cmask2, void *op2)
-{
-	return 0; // not used
 }
 
 void gc(rpc_cookie_t *cookie)
@@ -122,33 +120,42 @@ void gc(rpc_cookie_t *cookie)
 rpc_callbacks_t rpc_callbacks =  {
 	callback,
 	gc,
-	commute_callback
+	NULL
 };
 
 /* opening and pre-loading the db */
 void open_llama(){
+	const char* first_input = input_file.c_str();
+	const char* file_type = ll_file_extension(first_input);
+
+	if (strcmp(ll_file_extension(input_file.c_str()), file_type)!=0) {
+		fprintf(stderr, "Error: All imput files must have the same "
+				"file extension.\n");
+		exit(-1);
+	}
+
 	// Open the database
 	ll_database database(database_directory.c_str());
 	database.set_num_threads(num_threads);
-	graph = *database.graph();
+	graph = database.graph();
 
 	// Load the graph
 	loader = loaders.loader_for(first_input);
 	if (loader == NULL) {
 		fprintf(stderr, "Error: Unsupported input file type\n");
-		return 1;
+		exit(-1);
 	}
 
 	d = loader->create_data_source(input_file.c_str());
 	combined_data_source.add(d);
-	G = benchmarkable_graph(graph);
+	G = &(benchmarkable_graph(graph));
 	benchmark = new ll_t_outdegree<benchmarkable_graph_t>();
-	benchmark->initialize(&G);
+	benchmark->initialize(G);
 }
 
 
 void preload_llama(){
-	if (!load_batch_via_writable_graph(graph, combined_data_source,
+	if (!load_batch_via_writable_graph(*graph, combined_data_source,
 				loader_config, preload_batch)){
 		printf("error pre-loading\n");
 		exit(-1);
