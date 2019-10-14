@@ -97,20 +97,19 @@ int driver(void *arg)
 	llama_req_t *req = (llama_req_t *)buffer;
 
 	double coin;
-	unsigned long keys = llama_keys;
 	double frac_read = 0.5;
 	
-	BOOST_LOG_TRIVIAL(info) << "KEYS = " << keys;
+	BOOST_LOG_TRIVIAL(info) << "MAX_NODES = " << max_llama_nodes;
 	BOOST_LOG_TRIVIAL(info) << "FRAC_READ = " << frac_read;
 
     unsigned long fromnode_id, tonode_id,node_id;
-    FILE *fp;
+    /* FILE *fp;
     fp = fopen(TWITTER_DATA_FILE, "r");
     if(fp == NULL){
         BOOST_LOG_TRIVIAL(info) << "could not open twitter data file";
         exit(-1);
-    }
-
+    } */
+	
 	struct cb_st *cb_ctxt;
 	srand(rtc_clock::current_time());
 	for( ; ; ){
@@ -127,7 +126,7 @@ int driver(void *arg)
 				req->data2 = fromnode_id;
 			}
 			else {
-				unsigned long node_id = rand() % MAX_GRAPH_NODES;
+				unsigned long node_id = rand() % max_llama_nodes; // TODO: use adaptive max value
 				rpc_flags = RPC_FLAG_RO;
 				req->op    = OP_OUTDEGREE;
 				req->data1 = node_id;
@@ -141,7 +140,7 @@ int driver(void *arg)
 		do{
             ret = make_rpc_async(handles[0],
                     buffer,
-                    sizeof(llama_t),
+                    sizeof(llama_req_t),
                     async_callback,
                     (void *)cb_ctxt,
                     1UL << my_core,
@@ -166,7 +165,6 @@ int main(int argc, const char *argv[]) {
 	int client_id_stop  = atoi(argv[2]);
 	driver_args_t *dargs;
 	void **prev_handles;
-	timeout_vector = new std::vector<struct cb_st *>();
 	cyclone_network_init(argv[7], 1, atoi(argv[3]), 
 			2 + client_id_stop - client_id_start); // 2 - sync and async queues
 	driver_args_t ** dargs_array =

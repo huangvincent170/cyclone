@@ -7,7 +7,6 @@ const unsigned long OP_DEL_EDGE       = 3;
 const unsigned long OP_DEL_VERTEX     = 4;
 const unsigned long OP_OUTDEGREE      = 5;
 
-const unsigned long value_sz     = 8;
 
 typedef struct llama_req_st{
   unsigned long op;
@@ -20,5 +19,6 @@ typedef struct llama_res_st{
 	unsigned long outdegree;
 }llama_res_t;
 
-const char *mmap_dir = "/mnt/pmem1/llamadata";
+const unsigned long max_llama_nodes = 1000000;
+const char *llama_db = "/mnt/pmem1/llama_db";
 #endif

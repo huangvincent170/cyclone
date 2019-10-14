@@ -1,19 +1,21 @@
+
 #include <assert.h>
 #include <errno.h>
 #include <string.h>
 #include <stdlib.h>
 #include <stdio.h>
 #include <unistd.h>
+#include <omp.h>
+#include <libgen.h>
+#include <llama.h>
+#include <benchmark.h>
+#include <inttypes.h>
 #include <time.h>
-
-#include <rocksdb/db.h>
-#include <rocksdb/options.h>
-#include <rocksdb/write_batch.h>
 
 #include "../core/libcyclone.hpp"
 #include "../core/logging.hpp"
 #include "../core/clock.hpp"
-#include "llama.hpp"
+
 
 typedef ll_mlcsr_ro_graph benchmarkable_graph_t;
 #define benchmarkable_graph(g)  ((g).ro_graph())
@@ -23,27 +25,10 @@ std::string database_directory = "/mnt/pmem1/llama_db";
 int preload_batch= 100*1000;
 
 /* batching related structure */
-typedef struct edge_st{
+typedef struct b_edge_st{
 	unsigned long from;
 	unsigned long to;
-}edge_t;
-const int LLAMA_INSGEST_BATCH_SIZE = 1000;
-// edge_t edge_buffer[LLAMA_INGEST_BATCH_SIZE];
-
-int batch_counter = 0;
-
-ll_loader_config loader_config;
-int num_threads = 4;
-
-ll_writable_graph& graph;
-ll_file_loaders loaders;
-ll_file_loader* loader;
-ll_concat_data_source combined_data_source;
-ll_data_source* d;
-benchmarkable_graph_t& G;
-ll_t_outdegree<benchmarkable_graph_t>* benchmark;
-
-
+}b_edge_t;
 
 
 template <class Graph>
@@ -69,6 +54,24 @@ class ll_t_outdegree : public ll_benchmark<Graph> {
 	}
 
 };
+
+const int LLAMA_INSGEST_BATCH_SIZE = 1000;
+// edge_t edge_buffer[LLAMA_INGEST_BATCH_SIZE];
+
+int batch_counter = 0;
+
+ll_loader_config loader_config;
+int num_threads = 4;
+
+ll_writable_graph *graph;
+ll_file_loaders loaders;
+ll_file_loader *loader;
+ll_concat_data_source combined_data_source;
+ll_data_source *d;
+benchmarkable_graph_t *G;
+ll_t_outdegree<benchmarkable_graph_t> *benchmark;
+
+
 
 bool load_batch_via_writable_graph(ll_writable_graph& graph,
 		ll_data_source& data_source, const ll_loader_config& loader_config,
@@ -138,21 +141,18 @@ void open_llama(){
 
 	d = loader->create_data_source(input_file.c_str());
 	combined_data_source.add(d);
-
 	G = benchmarkable_graph(graph);
 	benchmark = new ll_t_outdegree<benchmarkable_graph_t>();
 	benchmark->initialize(&G);
-
-	//pre-loading
-	if (!load_batch_via_writable_graph(graph, combined_data_source,loader_config, preload_batch)){
-		printf("error pre-loading\n");
-		exit(-1);
-	}
 }
 
 
 void preload_llama(){
-
+	if (!load_batch_via_writable_graph(graph, combined_data_source,
+				loader_config, preload_batch)){
+		printf("error pre-loading\n");
+		exit(-1);
+	}
 }
 void close_llama(){
 
@@ -171,7 +171,8 @@ int main(int argc, char *argv[])
 			atoi(argv[2]),
 			atoi(argv[6]) + num_queues*num_quorums + executor_threads);
 
-	init_llama();
+	open_llama();
+	preload_llama();
 
 	dispatcher_start(argv[4],
 			argv[5],
