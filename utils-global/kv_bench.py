@@ -66,7 +66,7 @@ class KVBench(Common):
 
     def get_server_cxx(self,wload):
         if wload == volatile_pmemkv or wload == volatile_pmemkv_ncc:
-            return 'CPPFLAGS=' + '\"-DDRAM\"'
+            return '\"-DDRAM\"'
         if wload == volatile_pmemkv_ncc or wload == pmemkv_ncc:
             return 'PMEM_SLIB=' + ncc_pmem
         if wload == pmemds:

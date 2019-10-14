@@ -4,9 +4,13 @@ from commonbench import *
 
 #workloads
 adjvector = 'adjvector'
+llama_mem = 'llama_mem'
+llama_persist = 'llama_persist'
 
 wl=[]
 wl.append(adjvector)
+wl.append(llama_mem)
+wl.append(llama_persist)
 
 wl.append(empty)
 
@@ -33,13 +37,15 @@ except:
     dbg('Error parsing input')
     sys.exit(0)
 
-class Vote(Common):
+class Twitter(Common):
     #map some workload names to binary name
-    def wl2binary(self,arg):
+    def wl2binary(self,wload):
         switcher= {
             'adjvector_ncc' : 'adjvector',
+            'llama_mem' :'llama',
+            'llama_persist' :'llama'
         }
-        return switcher.get(arg,arg)
+        return switcher.get(wload,wload) # second arg is the default return
 
     def bench(self):
         return 'twitter';
@@ -48,6 +54,10 @@ class Vote(Common):
         return 'ERROR'
 
     def get_server_cxx(self,wload):
+        if wload == llama_mem:
+            return '\"-DLL_MEMORY_ONLY\"'
+        elif wload == llama_persist:
+            return '\"-DLL_PERSISTENCE\"'
         return '' #else
 
 if __name__ == '__main__':
@@ -61,22 +71,22 @@ if __name__ == '__main__':
     dc = args.deploy_configs
     clct = args.collect
 
-    vt = Vote();
+    tw = Twitter();
 
 
     if args.clean is True:
-        vt.clean(args)
+        tw.clean(args)
     if db == True:
-        vt.deploy_bin(args)
+        tw.deploy_bin(args)
     if g == True:
-        vt.generate(args)
+        tw.generate(args)
     if dc == True:
-        vt.deploy_configs(args)
+        tw.deploy_configs(args)
     if strt_serv == True:
-        vt.start_cyclone_server(args)
+        tw.start_cyclone_server(args)
     if strt_clnt == True:
-        vt.start_cyclone_client(args)
+        tw.start_cyclone_client(args)
     if stop == True:
-        vt.stop_cyclone(args)
+        tw.stop_cyclone(args)
     if clct == True:
-        vt.gather_output(args)
+        tw.gather_output(args)

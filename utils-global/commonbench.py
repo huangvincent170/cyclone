@@ -155,12 +155,13 @@ class Common:
             cmd += ' RTE_SSDK=' + rte_sdk
         elif m == nvram:
             cmd += ' RTE_SSDK=' + rte_nvmsdk
-        cmd +=  ' ' + self.get_server_cxx(w)
        
         # libcyclone.hpp has some macro conditionals
         cmd += ' CPPFLAGS='
         if args.is_commute == True:
             cmd += '\"-D__COMMUTE\"' 
+        cmd +=  '\" \"' + self.get_server_cxx(w)
+        
         sh(cmd)
         cd(home)
 

@@ -2,10 +2,8 @@ include ../../Makefile.inc
 
 LLAMA_HOME?=/home/pfernando/llama
 
-LLAMA_CXXFLAGS= -fopenmp -DLL_PERSISTENCE -I. \
-	-I$(LLAMA_HOME)/llama/include -I$(LLAMA_HOME)/benchmark/benchmarks
-#LLAMA_CXXFLAGS     := -Wall -fopenmp -std=c++0x -DLL_MEMORY_ONLY -I. \
-	-I${LLAMA_HOME}/llama/include -I${LLAMA_HOME}/benchmark -I../../../core
+# other options : -DLL_MEMORY_ONLY -DLL_PERSISTENCE
+LLAMA_CXXFLAGS= -fopenmp -I. -I$(LLAMA_HOME)/llama/include -I$(LLAMA_HOME)/benchmark/benchmarks
 
 LLAMA_LIBS= -lboost_system
 
