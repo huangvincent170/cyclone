@@ -15,11 +15,9 @@
 #include <benchmark.h>
 #include <inttypes.h>
 
-//#include "tools/property_stats.h"
-//#include "tools/dump.h"
 #include "clock.hpp"
 
-std::string input_file = "/home/pradeep/blizzard-dev/cyclone/benchmarks/data/twitter/twitter_rv_15066953.net";
+std::string input_file = "/home/pfernando/deploy-cyclone/benchmarks/data/twitter/twitter_rv_15066953.net";
 std::string database_directory = "llama_db";
 #define MAX_GRAPH_NODES 10000
 
@@ -28,7 +26,7 @@ unsigned long tx_begin_time = 0UL;
 unsigned long tx_cnt = 0UL;
 
 typedef ll_mlcsr_ro_graph benchmarkable_graph_t;
-#define benchmarkable_graph(g)  ((g).ro_graph())
+#define benchmarkable_graph(g)  ((g)->ro_graph())
 
 template <class Graph>
 class ll_t_outdegree : public ll_benchmark<Graph> {
@@ -74,71 +72,85 @@ bool load_batch_via_writable_graph(ll_writable_graph& graph,
   graph.checkpoint(&loader_config);
   return true;
 }
+  
+ll_loader_config loader_config;
 
+ll_writable_graph *graph;
+ll_file_loaders loaders;
+ll_file_loader *loader;
+ll_concat_data_source combined_data_source;
+ll_data_source *d; 
+benchmarkable_graph_t *G; 
+ll_t_outdegree<benchmarkable_graph_t> *benchmark;
 
+const int preload_batch= 100*1000;
+const int num_threads = 4;
+const int run_batch = 1000;
 
-
-int main(int argc, char** argv)
-{
-  bool verbose = false;
-
-  ll_loader_config loader_config;
-  int num_threads = 4;
-
-  double coin;
-  double frac_read = 0.9;
-
-
-
+void open_llama(){
   const char* first_input = input_file.c_str();
   const char* file_type = ll_file_extension(first_input);
 
   if (strcmp(ll_file_extension(input_file.c_str()), file_type)!=0) {
 	fprintf(stderr, "Error: All imput files must have the same "
 		"file extension.\n");
-	return 1;
+	exit(-1);
   }
 
 
   // Open the database
   ll_database database(database_directory.c_str());
-  if (num_threads > 0) database.set_num_threads(num_threads);
-  ll_writable_graph& graph = *database.graph();
+  database.set_num_threads(num_threads);
+  graph = database.graph();
 
   // Load the graph
-  ll_file_loaders loaders;
-  ll_file_loader* loader = loaders.loader_for(first_input);
+  loader = loaders.loader_for(first_input);
   if (loader == NULL) {
 	fprintf(stderr, "Error: Unsupported input file type\n");
-	return 1;
-  }
-
-  ll_concat_data_source combined_data_source;
-  ll_data_source* d = loader->create_data_source(input_file.c_str());
-  combined_data_source.add(d);
-
-  benchmarkable_graph_t& G = benchmarkable_graph(graph);
-  ll_t_outdegree<benchmarkable_graph_t>* benchmark = new ll_t_outdegree<benchmarkable_graph_t>();
-
-  int preload_batch= 100*1000;
-  int writing_batch = 1000;
-  //int streaming_window = 10;
-
-  benchmark->initialize(&G);
-
-  //pre-loading
-  if (!load_batch_via_writable_graph(graph, combined_data_source,loader_config, preload_batch)){
-	printf("error pre-loading\n");
 	exit(-1);
   }
 
+  d = loader->create_data_source(input_file.c_str());
+  combined_data_source.add(d);
+
+  G = &(benchmarkable_graph(graph));
+  benchmark = new ll_t_outdegree<benchmarkable_graph_t>();
+  benchmark->initialize(G);
+
+
+}
+
+void preload_llama(){
+    if (!load_batch_via_writable_graph(*graph, combined_data_source,
+                loader_config, preload_batch)){
+        printf("error pre-loading\n");
+        exit(-1);
+    }
+}
+
+
+void close_llama(){
+  benchmark->finalize();
+}
+
+
+int main(int argc, char** argv)
+{
+
+
+  double coin;
+  double frac_read = 0.9;
+
+  open_llama();
+  preload_llama();
+
   printf("Starting real-run\n");
-  for(int i =0; i < 11000; i++){
+  for(int i =0; i < 10; i++){
 	coin = ((double)rand())/RAND_MAX;
 	if(coin > frac_read){ // update
-	  if (!load_batch_via_writable_graph(graph, combined_data_source,
-			loader_config, writing_batch)) break;
-	tx_cnt+=writing_batch;
+	  if (!load_batch_via_writable_graph(*graph, combined_data_source,
+			loader_config, run_batch)) break;
+	tx_cnt+=run_batch;
 	}else{
 	  node_t node_id = rand() % MAX_GRAPH_NODES;
 	  unsigned long od = benchmark->outdegree(node_id);
@@ -156,7 +168,7 @@ int main(int argc, char** argv)
 	  tx_begin_time = rtc_clock::current_time();
 	}
   }
-  benchmark->finalize();
-
+	
+  close_llama();
   return 0;
 }

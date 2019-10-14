@@ -14,7 +14,7 @@ client: llama_async_client
 local: llama_local
 
 llama_local:llama_local.cpp
-	$(CXX) $(CXXFLAGS) $(LLAMA_CXXFLAGS) llama_local.cpp $(LLAMA_LIBS) -o $@
+	$(CXX) $(CXXFLAGS) $(LLAMA_CXXFLAGS) -DLL_MEMORY_ONLY llama_local.cpp $(LLAMA_LIBS) -o $@
 
 llama_server:llama_server.cpp
 	$(CXX) $(CXXFLAGS) $(LLAMA_CXXFLAGS) llama_server.cpp $(LLAMA_LIBS) $(SERVER_LIBS) -o $@
@@ -25,4 +25,4 @@ llama_async_client:llama_async_client.cpp
 .PHONY:clean
 
 clean:
-	rm -f $(DIR)/llama_local llama_async_client llama_server
+	rm -f llama_local llama_async_client llama_server
