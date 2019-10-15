@@ -21,7 +21,7 @@
 typedef ll_mlcsr_ro_graph benchmarkable_graph_t;
 #define benchmarkable_graph(g)  ((g)->ro_graph())
 
-std::string input_file = "/home/pradeep/blizzard-dev/cyclone/benchmarks/data/twitter/twitter_rv_15066953.net";
+std::string input_file = "/home/pfernando/deploy-cyclone/benchmarks/data/twitter/twitter_rv_15066953.net";
 std::string database_directory = "/mnt/pmem1/llama_db";
 int preload_batch= 100*1000;
 
@@ -61,8 +61,7 @@ const int LLAMA_INGEST_BATCH_SIZE = 1000;
 int batch_counter = 0;
 
 ll_loader_config loader_config;
-int num_threads = 4;
-
+ll_database *database;
 ll_writable_graph *graph;
 ll_file_loaders loaders;
 ll_file_loader *loader;
@@ -71,6 +70,7 @@ ll_data_source *d;
 benchmarkable_graph_t *G;
 ll_t_outdegree<benchmarkable_graph_t> *benchmark;
 
+int num_threads = 4;
 
 
 bool load_batch_via_writable_graph(ll_writable_graph& graph,
@@ -135,9 +135,9 @@ void open_llama(){
 	}
 
 	// Open the database
-	ll_database database(database_directory.c_str());
-	database.set_num_threads(num_threads);
-	graph = database.graph();
+	database = new  ll_database(database_directory.c_str());
+	database->set_num_threads(num_threads);
+	graph = database->graph();
 
 	// Load the graph
 	loader = loaders.loader_for(first_input);
@@ -160,9 +160,12 @@ void preload_llama(){
 		printf("error pre-loading\n");
 		exit(-1);
 	}
+	BOOST_LOG_TRIVIAL(info) << "pre-loaded data in to twitter graph..";
 }
 void close_llama(){
-
+	benchmark->finalize();
+	delete benchmark;
+	delete database;
 }
 
 int main(int argc, char *argv[])
