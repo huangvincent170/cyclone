@@ -22,6 +22,7 @@ unsigned long tx_cnt = 0UL;
 unsigned long total_latency = 0UL;
 unsigned long tx_begin_time = 0UL;
 
+double frac_read = 0.99;
 
 int driver(void *arg);
 
@@ -46,7 +47,7 @@ void async_callback(void *args, int code, unsigned long msg_latency)
     }
 
     total_latency += msg_latency;
-    if (tx_cnt >= 5000)
+    if (tx_cnt >= 10000)
     {
         unsigned long total_elapsed_time = (rtc_clock::current_time() - tx_begin_time);
 		std::cout << "LOAD = "
@@ -97,7 +98,6 @@ int driver(void *arg)
 	llama_req_t *req = (llama_req_t *)buffer;
 
 	double coin;
-	double frac_read = 0.5;
 	
 	BOOST_LOG_TRIVIAL(info) << "MAX_NODES = " << max_llama_nodes;
 	BOOST_LOG_TRIVIAL(info) << "FRAC_READ = " << frac_read;
@@ -127,8 +127,8 @@ int driver(void *arg)
 			}
 			else {
 				unsigned long node_id = rand() % max_llama_nodes; // TODO: use adaptive max value
-				rpc_flags = RPC_FLAG_RO;
 				req->op    = OP_OUTDEGREE;
+				rpc_flags = RPC_FLAG_RO;
 				req->data1 = node_id;
 			}
 

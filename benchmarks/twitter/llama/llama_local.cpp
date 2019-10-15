@@ -74,7 +74,7 @@ bool load_batch_via_writable_graph(ll_writable_graph& graph,
 }
   
 ll_loader_config loader_config;
-
+ll_database *database;
 ll_writable_graph *graph;
 ll_file_loaders loaders;
 ll_file_loader *loader;
@@ -83,9 +83,10 @@ ll_data_source *d;
 benchmarkable_graph_t *G; 
 ll_t_outdegree<benchmarkable_graph_t> *benchmark;
 
+const double frac_read = 0.5;
 const int preload_batch= 100*1000;
 const int num_threads = 4;
-const int run_batch = 1000;
+const int run_batch = 10;
 
 void open_llama(){
   const char* first_input = input_file.c_str();
@@ -99,9 +100,9 @@ void open_llama(){
 
 
   // Open the database
-  ll_database database(database_directory.c_str());
-  database.set_num_threads(num_threads);
-  graph = database.graph();
+  database = new ll_database(database_directory.c_str());
+  database->set_num_threads(num_threads);
+  graph = database->graph();
 
   // Load the graph
   loader = loaders.loader_for(first_input);
@@ -139,13 +140,12 @@ int main(int argc, char** argv)
 
 
   double coin;
-  double frac_read = 0.9;
 
   open_llama();
   preload_llama();
 
   printf("Starting real-run\n");
-  for(int i =0; i < 10; i++){
+  for(; ;){
 	coin = ((double)rand())/RAND_MAX;
 	if(coin > frac_read){ // update
 	  if (!load_batch_via_writable_graph(*graph, combined_data_source,

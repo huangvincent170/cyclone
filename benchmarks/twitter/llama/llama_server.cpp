@@ -23,7 +23,8 @@ typedef ll_mlcsr_ro_graph benchmarkable_graph_t;
 
 std::string input_file = "/home/pfernando/deploy-cyclone/benchmarks/data/twitter/twitter_rv_15066953.net";
 std::string database_directory = "/mnt/pmem1/llama_db";
-int preload_batch= 100*1000;
+const int preload_batch= 100*1000;
+const int write_batch = 100;
 
 /* batching related structure */
 typedef struct b_edge_st{
@@ -56,9 +57,6 @@ class ll_t_outdegree : public ll_benchmark<Graph> {
 
 };
 
-const int LLAMA_INGEST_BATCH_SIZE = 1000;
-// edge_t edge_buffer[LLAMA_INGEST_BATCH_SIZE];
-int batch_counter = 0;
 
 ll_loader_config loader_config;
 ll_database *database;
@@ -71,16 +69,18 @@ benchmarkable_graph_t *G;
 ll_t_outdegree<benchmarkable_graph_t> *benchmark;
 
 int num_threads = 4;
+// edge_t edge_buffer[LLAMA_INGEST_BATCH_SIZE];
+int batch_counter = 0;
 
 
-bool load_batch_via_writable_graph(ll_writable_graph& graph,
+bool load_batch_via_writable_graph(ll_writable_graph *graph,
 		ll_data_source& data_source, const ll_loader_config& loader_config,
 		size_t batch_size) {
 
 
-	bool loaded = data_source.pull(&graph, batch_size);
+	bool loaded = data_source.pull(graph, batch_size);
 	if (!loaded) return false;
-	graph.checkpoint(&loader_config);
+	graph->checkpoint(&loader_config);
 	return true;
 }
 
@@ -97,9 +97,9 @@ void callback(const unsigned char *data,
 
 	if(req->op == OP_ADD_EDGE){
 		batch_counter++;
-		if(!batch_counter % LLAMA_INGEST_BATCH_SIZE){
-			if (!load_batch_via_writable_graph(*graph, combined_data_source,
-						loader_config, LLAMA_INGEST_BATCH_SIZE)){
+		if(! (batch_counter % write_batch)){
+			if (!load_batch_via_writable_graph(graph, combined_data_source,
+						loader_config, write_batch)){
 				fprintf(stderr, "Error: reading twitter data\n");
 				exit(-1);
 			}
@@ -155,7 +155,7 @@ void open_llama(){
 
 
 void preload_llama(){
-	if (!load_batch_via_writable_graph(*graph, combined_data_source,
+	if (!load_batch_via_writable_graph(graph, combined_data_source,
 				loader_config, preload_batch)){
 		printf("error pre-loading\n");
 		exit(-1);
