@@ -97,7 +97,7 @@ void callback(const unsigned char *data,
 
 	if(req->op == OP_ADD_EDGE){
 		batch_counter++;
-		if(batch_counter % LLAMA_INGEST_BATCH_SIZE){
+		if(!batch_counter % LLAMA_INGEST_BATCH_SIZE){
 			if (!load_batch_via_writable_graph(*graph, combined_data_source,
 						loader_config, LLAMA_INGEST_BATCH_SIZE)){
 				fprintf(stderr, "Error: reading twitter data\n");
