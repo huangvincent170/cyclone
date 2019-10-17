@@ -1,0 +1,22 @@
+set $dir=tempdir
+set $bytes=1g
+set $cached=false
+set $filesize=2g
+set $iosize=%(iosize)s
+set $iters=1
+set $nthreads=1
+
+define file name=bigfile1,path=$dir,size=$filesize,prealloc,reuse,cached=$cached
+
+define process name=filereader,instances=1
+{
+  thread name=filereaderthread,memsize=10m,instances=$nthreads
+  {
+    flowop read name=write-file,filesetname=bigfile1,random,iosize=$iosize,iters=$iters
+    flowop finishonbytes name=finish,value=$bytes
+  }
+}
+
+echo  "FileMicro-ReadRand Version 2.2 personality successfully loaded"
+
+run 20
