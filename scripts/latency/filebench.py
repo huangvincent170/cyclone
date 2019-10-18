@@ -60,20 +60,6 @@ def sh(cmd):
         print 'invalid cmd', cmd
         sys.exit(0)
 
-
-def tonum(str):
-    ch = str.strip()[-1]
-    num = long(str[:-1])
-    if (ch == 'k'):
-        return num * 1024
-    elif (ch == 'm'):
-        return num * 1024 ** 2
-    elif (ch == 'g'):
-        return num * 1024 ** 3
-    else:
-        return num
-
-
 def fb(wl,dataobj):
     __t = wl + '.template'
     __out = wl + '.f'
