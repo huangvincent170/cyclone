@@ -18,19 +18,18 @@ db_file=/mnt/pmem1/pmemkv
 COMMON_EXEC="PMEM_IS_PMEM_FORCE=1 ./pmemkv-tools/pmemkv_bench
 --db=/mnt/pmem1/pmemkv
 --db_size_in_gb=2
---key_size=8
---value_size=8"
+--key_size=16
+--value_size=16"
 
-mkdir -p results/filebench
 for rw in "${rwmix[@]}"
 do
 	rm /mnt/pmem1/pmemkv
 	
 	eval $COMMON_EXEC "--benchmarks=fillseq,readrandomwriterandom --readwritepercent=$rw"
 
-	mkdir -p results/randomrw
+	mkdir -p results/pmemkv/randomrw
 	for th in "${nthreads[@]}"
 	do
-		eval $COMMON_EXEC "--benchmarks=readrandomwriterandom --readwritepercent=$rw --threads=$th" > results/randomrw/pmemkv_${rw}_${th}.out 
+		eval $COMMON_EXEC "--benchmarks=readrandomwriterandom --readwritepercent=$rw --threads=$th" > results/pmemkv/randomrw/pmemkv_${rw}_${th}.out 
 	done
 done
