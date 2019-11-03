@@ -16,7 +16,8 @@ namespace pmemds{
             LOG_ERROR("npartitions, should be less than MAX_PARTITIONS");
         }
         for(int i = 0; i < npartitions; i++) {
-            this->my_pq[i] = new persistent_priority_queue(npartitions); // make these persistent
+            std::string ppath = path + '_' + std::to_string(i);
+            this->my_pq[i] = new persistent_priority_queue(ppath, size); // make these persistent
         }
     }
 

@@ -11,7 +11,8 @@ namespace {
         /* Code here will be called immediately after the constructor (right
            before each test). */
         void SetUp() override {
-            pq = new pmemds::persistent_priority_queue(4);
+            const std::string pmem_path = "/dev/shm/pmemds_test";
+            pq = new pmemds::persistent_priority_queue(pmem_path,1024*1024*1024);
         }
 
         /* Code here will be called immediately after each test (right
