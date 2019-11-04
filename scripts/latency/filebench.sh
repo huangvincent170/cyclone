@@ -8,7 +8,7 @@ for w in "${wl[@]}"
 do
 	for i in "${iosize[@]}"
 	do
-		./filebench.py -io 64 -w micro_rread > results/filebench/${w}_${i}.out
+		./filebench.py -io ${i} -w micro_rread > results/filebench/${w}_${i}.out
 
 	done
 done
