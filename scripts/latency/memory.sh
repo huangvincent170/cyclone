@@ -5,7 +5,7 @@ mkdir -p results/mlc
 # checkout aep sweep scripts from pradeepfn/mlc git repo. (private for license reasons)
 
 #PMEM
-#sudo ./mlc/aep_perf_sweep.sh -m ./Linux/mlc -p /mnt/pmem1 > results/mlc/PMEM.out
+sudo ./mlc/aep_perf_sweep.sh -m ./Linux/mlc -p /mnt/pmem1
 
 #DRAM: 
-sudo ./mlc/dram_perf_sweep.sh -m ./Linux/mlc > results/mlc/DRAM.out
+#sudo ./mlc/dram_perf_sweep.sh -m ./Linux/mlc > results/mlc/DRAM.out
