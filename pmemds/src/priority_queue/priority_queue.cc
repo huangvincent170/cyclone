@@ -15,8 +15,12 @@ namespace pmemds{
         if(npartitions > MAX_PARTITIONS){
             LOG_ERROR("npartitions, should be less than MAX_PARTITIONS");
         }
+        if((NTOP_K%npartitions)){
+            LOG_ERROR("top-k and npartition mismatch");
+        }
         for(int i = 0; i < npartitions; i++) {
-            this->my_pq[i] = new persistent_priority_queue(npartitions); // make these persistent
+            std::string ppath = path + '_' + std::to_string(i);
+            this->my_pq[i] = new persistent_priority_queue(ppath, size,(NTOP_K/npartitions)); // make these persistent
         }
     }
 

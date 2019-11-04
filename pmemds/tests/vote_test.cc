@@ -39,7 +39,7 @@ namespace {
         /* Code here will be called immediately after the constructor (right
            before each test). */
         void SetUp() override {
-
+            setup_pmem(pmem_path);
             /* server side data-structure creation */
             pmLib = new pmemds::PMLib(pmem_path, NPARTITIONS);
 

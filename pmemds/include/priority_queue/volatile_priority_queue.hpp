@@ -1,23 +1,16 @@
-#ifndef __PERSISTENT_PRIORITY_QUEUE_H
-#define __PERSISTENT_PRIORITY_QUEUE_H
+#ifndef __VOLATILE_PRIORITY_QUEUE_H
+#define __VOLATILE_PRIORITY_QUEUE_H
 
 #include <iostream>
-#include <unistd.h>
-
-
-#include <libpmemobj++/make_persistent.hpp>
-#include <libpmemobj++/mutex.hpp>
-#include <libpmemobj++/p.hpp>
-#include <libpmemobj++/persistent_ptr.hpp>
-#include <libpmemobj++/transaction.hpp>
-
-#include "libpmemobj++/experimental/concurrent_hash_map.hpp"
-#include "libpmemobj++/experimental/vector.hpp"
+#include <vector>
+#include <unordered_map>
 
 #include "../pmemds.h"
 
+
 #define MIN_HEAP 0
 #define MAX_HEAP 1
+
 #define NTOP_K  8  // k value in top-k
 
 struct pqelem_st{
@@ -37,7 +30,7 @@ namespace pmemds {
 
     class persistent_priority_queue {
     public:
-        persistent_priority_queue(const string &path, size_t size, int k_value); // we tune the min-heap size based on number of partitions
+        persistent_priority_queue(int npartitions); // we tune the min-heap size based on number of partitions
         ~persistent_priority_queue();
 
         int insert(unsigned long key, unsigned long priority);
@@ -46,46 +39,6 @@ namespace pmemds {
         int increase_prio(const unsigned long key, unsigned long delta_prio);
         int decrease_prio(const unsigned long key, unsigned long delta_prio);
         int read_topK(struct vote_payload_st *array, int *size);
-
-        using map_t = pmem::obj::experimental::concurrent_hash_map<unsigned long, unsigned long>;
-        using vector_t = pmem::obj::experimental::vector<struct pqelem_st *>;
-        struct RootData {
-            pmem::obj::persistent_ptr<map_t> map_ptr;
-            pmem::obj::persistent_ptr<vector_t> minheap_ptr;
-            pmem::obj::persistent_ptr<vector_t> maxheap_ptr;
-
-        };
-        using pool_t = pmem::obj::pool<RootData>;
-
-        pool_t pmpool;
-
-        vector_t *min_elems; // we maintain top K in a min heap.
-        vector_t *max_elems; // rest of the data in max heap
-        map_t *keymap; // key to global_index mapping auxiliary structure
-
-        void Recover(){
-            auto root_data = pmpool.root();
-            if(root_data->map_ptr && root_data->minheap_ptr && root_data->maxheap_ptr){
-                min_elems = root_data->minheap_ptr.get();
-                max_elems = root_data->maxheap_ptr.get();
-                keymap = root_data->map_ptr.get();
-
-                keymap->initialize();
-
-            }else{
-                pmem::obj::transaction::manual tx(pmpool);
-                root_data->minheap_ptr = pmem::obj::make_persistent<vector_t>();
-                root_data->maxheap_ptr = pmem::obj::make_persistent<vector_t>();
-                root_data->map_ptr = pmem::obj::make_persistent<map_t>();
-                pmem::obj::transaction::commit();
-
-                keymap = root_data->map_ptr.get();
-                min_elems = root_data->minheap_ptr.get();
-                max_elems = root_data->maxheap_ptr.get();
-
-                keymap->initialize(true);
-            }
-        }
 
         void printq();
 
@@ -97,7 +50,7 @@ namespace pmemds {
         unsigned long right_child(unsigned long idx);
         unsigned long left_child(unsigned long idx);
         unsigned long parent_of(unsigned long idx);
-        void swap(vector_t *elems, uint8_t heap_type, unsigned long idx1, unsigned long idx2);
+        void swap(std::vector<struct pqelem_st *> *elems, uint8_t heap_type, unsigned long idx1, unsigned long idx2);
 
         unsigned long gtol(unsigned long idx){ //global to local index
             if(idx < minheap_size) {
@@ -111,12 +64,15 @@ namespace pmemds {
         unsigned long maxtog(unsigned long idx) { //max to global index
             return idx+minheap_size;
         };
-
         int is_minheap(unsigned long global_idx){
             return global_idx < minheap_size;
-        };
+        }
 
         void min_heapify(const unsigned long idx); // min heap maintain top K
+
+        std::vector<struct pqelem_st *> *min_elems; // we maintain top K in a min heap.
+        std::vector<struct pqelem_st *> *max_elems; // rest of the data in max heap
+        std::unordered_map<unsigned long,unsigned long> *keymap; // key to global_index mapping auxiliary structure
 
     };
 
@@ -135,16 +91,12 @@ namespace pmemds {
 
 
     inline int persistent_priority_queue::increase_prio(const unsigned long key, unsigned long delta_prio) {
-        map_t::accessor acc;
-        bool found;
-        unsigned long g_idx;
-        found = keymap->find(acc,key);
-        if(!found){
+        std::unordered_map<unsigned long,unsigned long>::iterator  it = keymap->find(key);
+        if(it == keymap->end()){
             LOG_ERROR("key not found");
             return -1;
         }
-        g_idx = acc->second;
-        acc.release();
+        unsigned long g_idx = it->second;
 
         if(is_minheap(g_idx)){ // the data is in min-heap
             /*
@@ -172,24 +124,20 @@ namespace pmemds {
                 struct pqelem_st *temp = max_elems->at(0);
 
                 max_elems->at(0) = min_elems->at(0);
-                found = keymap->find(acc,min_elems->at(0)->key);
-                if(!found){
+                std::unordered_map<unsigned long,unsigned long>::iterator  it = keymap->find(min_elems->at(0)->key);
+                if(it == keymap->end()){
                     LOG_ERROR("key not found");
                     return -1;
                 }
-                acc->second = maxtog(0);
-                acc.release();
+                it->second = maxtog(0);
 
                 min_elems->at(0) = temp;
-
-                found = keymap->find(acc,temp->key);
-                if(!found){
+                it = keymap->find(temp->key);
+                if(it == keymap->end()){
                     LOG_ERROR("key not found");
                     return -1;
                 }
-                acc->second = mintog(0);
-                acc.release();
-
+                it->second = mintog(0);
                 min_heapify(0);
                 return 0;
             }
@@ -200,16 +148,13 @@ namespace pmemds {
     }
 
     inline int persistent_priority_queue::decrease_prio(const unsigned long key, unsigned long delta_prio) {
-        map_t::accessor acc;
-        bool found;
         // heap itself indexed by the priority, hence first have to lookup the
-        found = keymap->find(acc,key);
-        if(!found){
+        std::unordered_map<unsigned long,unsigned long>::iterator  it = keymap->find(key);
+        if(it == keymap->end()){
             LOG_ERROR("key not found");
             return -1;
         }
-        unsigned long g_idx = acc->second;
-        acc.release();
+        unsigned long g_idx = it->second;
         if(!is_minheap(g_idx)){
             /*
              * 1. element in max-heap. Decrease priority. It will not affect the min-heap
@@ -237,23 +182,20 @@ namespace pmemds {
                 struct pqelem_st *temp = min_elems->at(0);
 
                 min_elems->at(0) = max_elems->at(0);
-                found = keymap->find(acc,max_elems->at(0)->key);
-                if(!found){
+                std::unordered_map<unsigned long,unsigned long>::iterator  it = keymap->find(max_elems->at(0)->key);
+                if(it == keymap->end()){
                     LOG_ERROR("key not found");
                     return -1;
                 }
-                acc->second = mintog(0);
-                acc.release();
+                it->second = mintog(0);
 
                 max_elems->at(0) = temp;
-                found = keymap->find(acc,temp->key);
-                if(!found){
+                it = keymap->find(temp->key);
+                if(it == keymap->end()){
                     LOG_ERROR("key not found");
                     return -1;
                 }
-                acc->second = maxtog(0);
-                acc.release();
-
+                it->second = maxtog(0);
                 max_heapify(0);
                 return 0;
             }
@@ -262,22 +204,15 @@ namespace pmemds {
         }
     }
 
-     inline int persistent_priority_queue::insert(unsigned long key, unsigned long priority) {
-        map_t::accessor acc;
-        bool found;
+    inline int persistent_priority_queue::insert(unsigned long key, unsigned long priority) {
+        std::unordered_map<unsigned long,unsigned long>::iterator  it;
         struct pqelem_st *pqelem = new struct pqelem_st(key,priority);
 
         /// if min-heap is not filled, then fill it
         if(min_elems->size() < minheap_size){
             min_elems->push_back(pqelem);
             unsigned long l_idx = min_elems->size()-1;
-            bool result = keymap->insert(acc, map_t::value_type(key,mintog(l_idx)));
-            if(!result){
-                pmem::obj::transaction::manual tx(pmpool);
-                acc->second = mintog(l_idx);
-                pmem::obj::transaction::commit();
-            }
-            acc.release();
+            keymap->insert(std::pair<unsigned long, unsigned long>(key,mintog(l_idx)));
             while(l_idx > 0 && min_elems->at(l_idx)->priority < min_elems->at(parent_of(l_idx))->priority){
                 swap(min_elems,MIN_HEAP,l_idx,parent_of(l_idx));
                 l_idx = parent_of(l_idx);
@@ -289,13 +224,7 @@ namespace pmemds {
         if(min_elems->at(0)->priority > priority) {
             max_elems->push_back(pqelem);
             unsigned long l_idx = max_elems->size() - 1;
-            bool result = keymap->insert(acc,map_t::value_type(key, maxtog(l_idx)));
-            if(!result){
-                pmem::obj::transaction::manual tx(pmpool);
-                acc->second = mintog(l_idx);
-                pmem::obj::transaction::commit();
-            }
-            acc.release();
+            keymap->insert(std::pair<unsigned long, unsigned long>(key, maxtog(l_idx)));
             while (l_idx > 0 && max_elems->at(l_idx)->priority > max_elems->at(parent_of(l_idx))->priority) {
                 swap(max_elems, MAX_HEAP, l_idx, parent_of(l_idx));
                 l_idx = parent_of(l_idx);
@@ -310,25 +239,19 @@ namespace pmemds {
 
         max_elems->push_back(minimum);
         unsigned long l_idx  = max_elems->size() - 1;
-        found = keymap->find(acc,minimum->key);
-        if(!found){
+        it = keymap->find(minimum->key);
+        if(it == keymap->end()){
             LOG_ERROR("key not found");
             return -1;
         }
-        acc->second = maxtog(l_idx);
-        acc.release();
+        it->second = maxtog(l_idx);
+
         while (l_idx > 0 && max_elems->at(l_idx)->priority > max_elems->at(parent_of(l_idx))->priority) {
             swap(max_elems, MAX_HEAP, l_idx, parent_of(l_idx));
             l_idx = parent_of(l_idx);
         }
         /// insert to vacated min-root
-        bool result = keymap->insert(acc,map_t::value_type(key, mintog(0)));
-        if(!result){
-            pmem::obj::transaction::manual tx(pmpool);
-            acc->second = mintog(0);
-            pmem::obj::transaction::commit();
-        }
-        acc.release();
+        keymap->insert(std::pair<unsigned long, unsigned long>(key, mintog(0)));
         min_elems->at(0) = pqelem;
         min_heapify(0);
         return 0;
@@ -384,53 +307,49 @@ namespace pmemds {
     }
 
     /*swap elements in a given vector. indexes are local */
-    inline void persistent_priority_queue::swap(vector_t *pq_vector,uint8_t heap_type, const unsigned long idx1,const unsigned long idx2) {
-        map_t::accessor acc;
-        bool found;
+    inline void persistent_priority_queue::swap(std::vector<struct pqelem_st *> *pq_vector,uint8_t heap_type, const unsigned long idx1,const unsigned long idx2) {
+        std::vector<unsigned long>::iterator it1,it2;
 
         struct pqelem_st *elem1 = pq_vector->at(idx1);
         struct pqelem_st *elem2 = pq_vector->at(idx2);
 
-        found = keymap->find(acc,elem1->key);
-        if(!found){
+        auto one = keymap->find(elem1->key);
+        if(one == keymap->end()){
             LOG_ERROR("key one not found");
             return;
         }
-        acc->second = (heap_type == MIN_HEAP)?  mintog(idx2):maxtog(idx2);
-        acc.release();
-        found = keymap->find(acc,elem2->key);
-        if(!found){
+        auto two = keymap->find(elem2->key);
+        if(two == keymap->end()){
             LOG_ERROR("key two not found");
             return;
         }
-        acc->second = (heap_type == MIN_HEAP)?  mintog(idx1):maxtog(idx1);
-        acc.release();
-
-        //acc1->second = (heap_type == MIN_HEAP)?  mintog(idx2):maxtog(idx2);
-        //acc2->second = (heap_type == MIN_HEAP)?  mintog(idx1):maxtog(idx1);
+        one->second = (heap_type == MIN_HEAP)?  mintog(idx2):maxtog(idx2);
+        two->second = (heap_type == MIN_HEAP)?  mintog(idx1):maxtog(idx1);
 
         std::swap(pq_vector->at(idx1),pq_vector->at(idx2));
     }
 
-    inline persistent_priority_queue::persistent_priority_queue(const string &path, size_t size, int k_value){
-
-        this->minheap_size = k_value;
-        if ((access(path.c_str(), F_OK) != 0) && (size > 0)) {
-            std::cout << "Creating filesystem pool, path=" << path << ", size=" << to_string(size);
-            pmpool = pmem::obj::pool<RootData>::create(path.c_str(), LAYOUT, size, S_IRWXU);
-        } else {
-            std::cout << "Opening pool, path=" << path;
-            pmpool = pmem::obj::pool<RootData>::open(path.c_str(), LAYOUT);
-        }
-        Recover();
+    inline persistent_priority_queue::persistent_priority_queue(int npartitions){
+		if(NTOP_K % npartitions){
+			LOG_ERROR("number of partitions should be compatible with selected top-k value");
+		}
+		this->minheap_size = NTOP_K/npartitions;
+        this->min_elems = new std::vector<struct pqelem_st *>();
+        this->max_elems = new std::vector<struct pqelem_st *>();
+        this->keymap = new std::unordered_map<unsigned long, unsigned long>();
     }
 
     inline persistent_priority_queue::~persistent_priority_queue() {
-        this->pmpool.close();
+        std::vector<struct pqelem_st *>::iterator it;
+        for(it = max_elems->begin(); it != max_elems->end(); it++){
+            delete(*it);
+        }
+        delete(max_elems);
+        delete(keymap);
     }
 
     inline void persistent_priority_queue::printq() {
-        vector_t ::iterator it;
+        std::vector<struct pqelem_st *>::iterator it;
         for(it = max_elems->begin(); it != max_elems->end(); it++){
             std::cout << (*it)->key << " : " << (*it)->priority << std::endl;
         }

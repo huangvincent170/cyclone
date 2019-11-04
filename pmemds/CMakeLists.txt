@@ -5,7 +5,13 @@ set(CMAKE_CXX_STANDARD 11)
 #set(CMAKE_CXX_FLAGS "-O3 -fPIC -Wall")
 set(CMAKE_CXX_FLAGS "-g -fPIC -Wall")
 add_definitions(-DDPDK_STACK
-   -march=native -DRTE_MACHINE_CPUFLAG_SSE -DRTE_MACHINE_CPUFLAG_SSE2 -DRTE_MACHINE_CPUFLAG_SSE3 -DRTE_MACHINE_CPUFLAG_SSSE3 -DRTE_MACHINE_CPUFLAG_SSE4_1 -DRTE_MACHINE_CPUFLAG_SSE4_2 -DRTE_MACHINE_CPUFLAG_AES -DRTE_MACHINE_CPUFLAG_PCLMULQDQ -DRTE_MACHINE_CPUFLAG_AVX)
+        -march=native -DRTE_MACHINE_CPUFLAG_SSE
+        -DRTE_MACHINE_CPUFLAG_SSE2 -DRTE_MACHINE_CPUFLAG_SSE3
+        -DRTE_MACHINE_CPUFLAG_SSSE3 -DRTE_MACHINE_CPUFLAG_SSE4_1
+        -DRTE_MACHINE_CPUFLAG_SSE4_2 -DRTE_MACHINE_CPUFLAG_AES
+        -DRTE_MACHINE_CPUFLAG_PCLMULQDQ -DRTE_MACHINE_CPUFLAG_AVX)
+
+add_definitions(-DLIBPMEMOBJ_CPP_USE_TBB_RW_MUTEX)
 
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${CMAKE_SOURCE_DIR}/cmake)
 
@@ -37,7 +43,8 @@ set(SERVERLIB_SOURCE_FILES
         src/tree/btree.cc
         src/hashmap/hashmap.cc
         src/priority_queue/priority_queue.cc
-        src/vector/adjvector.cc)
+        src/vector/adjvector.cc
+        )
 
 set(CLIENTLIB_SOURCE_FILES
         src/pmemds-client.cc
@@ -53,7 +60,8 @@ set(CLIENTLIB_TEST_SOURCE_FILES
         src/tree/btree-client.cc
         src/hashmap/hashmap-client.cc
         src/priority_queue/priority_queue-client.cc
-        src/vector/adjvector-client.cc)
+        src/vector/adjvector-client.cc
+        )
 
 add_library(pmemds STATIC ${SERVERLIB_SOURCE_FILES})
 target_link_libraries(pmemds PRIVATE ${TBB_LIBRARIES})
