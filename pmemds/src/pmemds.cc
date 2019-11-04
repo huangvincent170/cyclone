@@ -5,7 +5,9 @@
 #include "priority_queue/priority_queue.h"
 #include "vector/adjvector.h"
 
-const unsigned long ds_pool_size = 1024*1024*1024*1;
+//const unsigned long ds_pool_size = 1024*1024*1024*1;
+const unsigned long ds_pool_size = 8388608;
+
 
 namespace pmemds{
 
@@ -52,7 +54,7 @@ void PMLib::vote_topk(pm_rpc_t *request, pm_rpc_t **response_ptr, int *resp_size
 	ShardedHashMapEngine * hashmap_engine = reinterpret_cast<ShardedHashMapEngine *>(hm_temp);
 	ShardedPriorityQueueEngine * pq_engine = reinterpret_cast<ShardedPriorityQueueEngine *>(pq_temp);
 
-		using hashmap_t = pmem::obj::experimental::concurrent_hash_map<unsigned long, pstring<16>>;
+		using hashmap_t = pmem::obj::concurrent_hash_map<unsigned long, pstring<16>>;
 
 		int fill_index = 0;
 		int size;

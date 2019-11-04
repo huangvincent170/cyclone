@@ -5,7 +5,7 @@
 #include "../polymorphic_string.h"
 #include "pstring.h"
 #define LIBPMEMOBJ_CPP_USE_TBB_RW_MUTEX 1
-#include "libpmemobj++/experimental/concurrent_hash_map.hpp"
+#include "libpmemobj++/container/concurrent_hash_map.hpp"
 
 using pmem::obj::pool;
 using pmem::obj::persistent_ptr;
@@ -74,7 +74,7 @@ private:
         void remove(string_view key, pm_rpc_t *resp);              // remove value for key
     private:
         using string_t = pmemds::polymorphic_string;
-        using map_t = pmem::obj::experimental::concurrent_hash_map<string_t, string_t, string_hasher>;
+        using map_t = pmem::obj::concurrent_hash_map<string_t, string_t, string_hasher>;
 
         struct RootData {
             pmem::obj::persistent_ptr<map_t> map_ptr;
@@ -113,7 +113,7 @@ private:
         void remove(uint8_t thread_id, unsigned long key, pm_rpc_t *resp);              // remove value for key
     private:
         //using string_t = pmemds::polymorphic_string;
-        using map_t = pmem::obj::experimental::concurrent_hash_map<unsigned long, pstring<16> >;
+        using map_t = pmem::obj::concurrent_hash_map<unsigned long, pstring<16> >;
 
         struct RootData {
             pmem::obj::persistent_ptr<map_t> map_ptr[MAX_PARTITIONS];

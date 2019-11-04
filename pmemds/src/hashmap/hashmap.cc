@@ -109,13 +109,13 @@ namespace pmemds {
         auto root_data = pmpool.root();
         if (root_data->map_ptr) {
             container = root_data->map_ptr.get();
-            container->initialize();
+            container->runtime_initialize();
         } else {
             pmem::obj::transaction::manual tx(pmpool);
             root_data->map_ptr = pmem::obj::make_persistent<map_t>();
             pmem::obj::transaction::commit();
             container = root_data->map_ptr.get();
-            container->initialize(true);
+            container->runtime_initialize(true);
         }
 
     }
@@ -219,7 +219,7 @@ namespace pmemds {
         if (root_data->map_ptr[0]) { // TBD : revisit this, now we have to check weather partition array initialized correct
            for(int i=0; i < npartitions; i++) {
                container[i] = root_data->map_ptr[i].get();
-               container[i]->initialize();
+               container[i]->runtime_initialize();
            }
         } else {
             for(int i=0; i < npartitions; i++) {
@@ -227,7 +227,7 @@ namespace pmemds {
                 root_data->map_ptr[i] = pmem::obj::make_persistent<map_t>();
                 pmem::obj::transaction::commit();
                 container[i] = root_data->map_ptr[i].get();
-                container[i]->initialize(true);
+                container[i]->runtime_initialize(true);
             }
         }
 

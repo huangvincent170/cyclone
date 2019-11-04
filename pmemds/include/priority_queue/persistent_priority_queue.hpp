@@ -11,8 +11,8 @@
 #include <libpmemobj++/persistent_ptr.hpp>
 #include <libpmemobj++/transaction.hpp>
 
-#include "libpmemobj++/experimental/concurrent_hash_map.hpp"
-#include "libpmemobj++/experimental/vector.hpp"
+#include "libpmemobj++/container/concurrent_hash_map.hpp"
+#include "libpmemobj++/container/vector.hpp"
 
 #include "../pmemds.h"
 
@@ -47,8 +47,8 @@ namespace pmemds {
         int decrease_prio(const unsigned long key, unsigned long delta_prio);
         int read_topK(struct vote_payload_st *array, int *size);
 
-        using map_t = pmem::obj::experimental::concurrent_hash_map<unsigned long, unsigned long>;
-        using vector_t = pmem::obj::experimental::vector<struct pqelem_st *>;
+        using map_t = pmem::obj::concurrent_hash_map<unsigned long, unsigned long>;
+        using vector_t = pmem::obj::vector<struct pqelem_st *>;
         struct RootData {
             pmem::obj::persistent_ptr<map_t> map_ptr;
             pmem::obj::persistent_ptr<vector_t> minheap_ptr;
@@ -70,7 +70,7 @@ namespace pmemds {
                 max_elems = root_data->maxheap_ptr.get();
                 keymap = root_data->map_ptr.get();
 
-                keymap->initialize();
+                keymap->runtime_initialize();
 
             }else{
                 pmem::obj::transaction::manual tx(pmpool);
@@ -83,7 +83,7 @@ namespace pmemds {
                 min_elems = root_data->minheap_ptr.get();
                 max_elems = root_data->maxheap_ptr.get();
 
-                keymap->initialize(true);
+                keymap->runtime_initialize(true);
             }
         }
 

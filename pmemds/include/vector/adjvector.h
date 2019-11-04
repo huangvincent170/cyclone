@@ -2,7 +2,7 @@
 #define PMEMDS_ADJ_VECTOR_H
 
 #include "pmemds.h"
-#include "libpmemobj++/experimental/vector.hpp"
+#include "libpmemobj++/container/vector.hpp"
 
 
 /*
@@ -17,7 +17,7 @@ typedef struct gnode_st{ // graph node structure
     unsigned long node_id;
 }gnode_t;
 
-using vector_t = pmem::obj::experimental::vector<gnode_t>;
+using vector_t = pmem::obj::vector<gnode_t>;
 using vector_t_ptr = pmem::obj::persistent_ptr <vector_t>;
 
 typedef struct vector_array_st{
@@ -58,7 +58,7 @@ namespace pmemds {
 
     private:
         using gnode_t_ptr = pmem::obj::persistent_ptr<gnode_t>;
-        using vector_t = pmem::obj::experimental::vector<gnode_t_ptr>;
+        using vector_t = pmem::obj::vector<gnode_t_ptr>;
         using vector_t_ptr = pmem::obj::persistent_ptr <vector_t>;
         struct RootData {
             pmem::obj::p<unsigned long> size;
