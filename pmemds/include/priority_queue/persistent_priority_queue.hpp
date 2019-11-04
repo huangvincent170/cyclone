@@ -152,8 +152,10 @@ namespace pmemds {
              * 2. min-heapify
              */
             unsigned long l_index = gtol(g_idx);
+            pmem::obj::transaction::manual tx(pmpool);
             min_elems->at(l_index)->priority += delta_prio;
             min_heapify(l_index);
+            pmem::obj::transaction::commit();
             return 0;
         }else{
             /* 1. element in max-heap. increase priority. Move the element upward.
@@ -162,6 +164,8 @@ namespace pmemds {
              * 4. min-heaps' new root requires min-heapify.
              */
             unsigned long l_idx = gtol(g_idx);
+
+            pmem::obj::transaction::manual tx(pmpool);
             max_elems->at(l_idx)->priority += delta_prio;
             while(l_idx > 0 && max_elems->at(l_idx)->priority > max_elems->at(parent_of(l_idx))->priority){
                 swap( max_elems,MAX_HEAP,l_idx,parent_of(l_idx)); /// TBD
@@ -191,6 +195,8 @@ namespace pmemds {
                 acc.release();
 
                 min_heapify(0);
+                pmem::obj::transaction::commit();
+
                 return 0;
             }
 
@@ -216,8 +222,12 @@ namespace pmemds {
              * 2. max-heapify at the updated element.
              */
             unsigned long l_index = gtol(g_idx);
+
+            pmem::obj::transaction::manual tx(pmpool);
             max_elems->at(l_index)->priority -= delta_prio; /// TBD: guard against zero prio
             max_heapify(l_index);
+            pmem::obj::transaction::commit();
+
             return 0;
 
         }else{
@@ -227,6 +237,8 @@ namespace pmemds {
              * 4. replace max-heap root and call max-heapify on it.
              */
             unsigned long l_idx = gtol(g_idx);
+
+            pmem::obj::transaction::manual tx(pmpool);
             min_elems->at(l_idx)->priority -= delta_prio;
             while(l_idx > 0 && min_elems->at(l_idx)->priority < min_elems->at(parent_of(l_idx))->priority){
                 swap( min_elems,MIN_HEAP,l_idx,parent_of(l_idx));
@@ -253,8 +265,10 @@ namespace pmemds {
                 }
                 acc->second = maxtog(0);
                 acc.release();
-
                 max_heapify(0);
+
+                pmem::obj::transaction::commit();
+
                 return 0;
             }
 
@@ -269,6 +283,8 @@ namespace pmemds {
 
         /// if min-heap is not filled, then fill it
         if(min_elems->size() < minheap_size){
+            pmem::obj::transaction::manual tx(pmpool);
+
             min_elems->push_back(pqelem);
             unsigned long l_idx = min_elems->size()-1;
             bool result = keymap->insert(acc, map_t::value_type(key,mintog(l_idx)));
@@ -282,11 +298,15 @@ namespace pmemds {
                 swap(min_elems,MIN_HEAP,l_idx,parent_of(l_idx));
                 l_idx = parent_of(l_idx);
             }
+
+            pmem::obj::transaction::commit();
             return 0;
         }
 
         /// if incoming element does not belong to top-K, then insert in to max-heap
         if(min_elems->at(0)->priority > priority) {
+            pmem::obj::transaction::manual tx(pmpool);
+
             max_elems->push_back(pqelem);
             unsigned long l_idx = max_elems->size() - 1;
             bool result = keymap->insert(acc,map_t::value_type(key, maxtog(l_idx)));
@@ -300,13 +320,16 @@ namespace pmemds {
                 swap(max_elems, MAX_HEAP, l_idx, parent_of(l_idx));
                 l_idx = parent_of(l_idx);
             }
+
+            pmem::obj::transaction::commit();
             return 0;
         }
 
         /// otherwise, extract root element out of min-heap, and insert it in to max-heap.
         /// insert new element to min-heap root and min-heapify
 
-        struct pqelem_st *minimum = min_elems->at(0);
+         pmem::obj::transaction::manual tx(pmpool);
+         struct pqelem_st *minimum = min_elems->at(0);
 
         max_elems->push_back(minimum);
         unsigned long l_idx  = max_elems->size() - 1;
@@ -331,7 +354,9 @@ namespace pmemds {
         acc.release();
         min_elems->at(0) = pqelem;
         min_heapify(0);
-        return 0;
+        pmem::obj::transaction::commit();
+
+         return 0;
     }
 
     inline void persistent_priority_queue::max_heapify(const unsigned long idx) {
