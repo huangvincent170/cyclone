@@ -1,6 +1,7 @@
 #include "pmemds-common.h"
 #include "priority_queue/persistent_priority_queue.hpp"
 #include "gtest/gtest.h"
+#include "../test_common.hpp"
 
 namespace {
 
@@ -11,8 +12,10 @@ namespace {
         /* Code here will be called immediately after the constructor (right
            before each test). */
         void SetUp() override {
-            const std::string pmem_path = "/dev/shm/pmemds_test";
-            pq = new pmemds::persistent_priority_queue(pmem_path,1024*1024*1024);
+            const std::string pmem_dir = "/dev/shm/pmemds_test";
+            std::string path = pmem_dir + "/pqtest";
+            setup_pmem(pmem_path);
+            pq = new pmemds::persistent_priority_queue(path,1024*1024*1024,4);
         }
 
         /* Code here will be called immediately after each test (right
@@ -34,6 +37,7 @@ namespace {
         }
 
         ASSERT_EQ(pq->read_topK(array,&size),0);
+        std::cout << std::endl;
         for(int i = 0; i < size; i++){
             std::cout << std::to_string(array[i].idx) << " ";
         }
@@ -49,6 +53,7 @@ namespace {
         }
 
         ASSERT_EQ(pq->read_topK(array,&size),0);
+        std::cout << std::endl;
         for(int i = 0; i < size; i++){
             std::cout << std::to_string(array[i].idx) << " ";
         }
@@ -65,6 +70,7 @@ namespace {
         }
         pq->decrease_prio(8,6);
         ASSERT_EQ(pq->read_topK(array,&size),0);
+        std::cout << std::endl;
         for(int i = 0; i < size; i++){
             std::cout << std::to_string(array[i].idx) << " ";
         }
@@ -82,6 +88,7 @@ namespace {
         }
         pq->increase_prio(2,10);
         ASSERT_EQ(pq->read_topK(array,&size),0);
+        std::cout << std::endl;
         for(int i = 0; i < size; i++){
             std::cout << std::to_string(array[i].idx) << " ";
         }

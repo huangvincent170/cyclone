@@ -1,5 +1,5 @@
-#ifndef __PERSISTENT_PRIORITY_QUEUE_H
-#define __PERSISTENT_PRIORITY_QUEUE_H
+#ifndef __VOLATILE_PRIORITY_QUEUE_H
+#define __VOLATILE_PRIORITY_QUEUE_H
 
 #include <iostream>
 #include <vector>
