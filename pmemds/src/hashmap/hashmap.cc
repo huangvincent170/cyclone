@@ -202,6 +202,7 @@ namespace pmemds {
             acc->second = pstring<16>(value);
             pmem::obj::transaction::commit();
         }
+        acc.release();
         SET_STATUS(resp->meta,OK);
 
     }
