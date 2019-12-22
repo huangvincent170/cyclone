@@ -121,7 +121,6 @@ int add(int to_core, unsigned long me_quorum, rte_mbuf *m, rpc_t *rpc, wal_entry
 	if(next_schedule == head){
 		next_schedule = newest;  // no operations to schedule
 	}
-	//BOOST_LOG_TRIVIAL(info) << "scheduler add,  list size "<< size <<" quorum : " << me_quorum << " m :" << m << " rpc : " << rpc;
 	
 	size++;
 	return 0;
@@ -133,16 +132,12 @@ int add(int to_core, unsigned long me_quorum, rte_mbuf *m, rpc_t *rpc, wal_entry
  *  in to exeuction threads 
  */
 int schedule(op_commute_callback_t is_commute){
-	//BOOST_LOG_TRIVIAL(info) << "schdule attempt...";
 	node_t *list_node = next_schedule->next;
 	while(next_schedule != head){
 		while(list_node->next != NULL){ // tail node
 			void *next_op = (void *)(next_schedule->rpc+1);
 			void *list_op = (void *)(list_node->rpc+1);
 			if(!list_node->wal->marked && !is_commute(next_op, list_op)){
-//	BOOST_LOG_TRIVIAL(info) << "scheduler return, non-commute, " 
-//					<< " makred for gc : " << list_node->wal->marked
-//					<< " buffer size : " << size;
 				return NON_COMMUTE;
 			}
 			list_node = list_node->next;
@@ -152,16 +147,15 @@ int schedule(op_commute_callback_t is_commute){
 		triple[0] = (void *)(unsigned long)next_schedule->me_quorum;
 		triple[1] = next_schedule->m;
 		triple[2] = next_schedule->rpc;
-		if(rte_ring_mp_enqueue_bulk(to_cores[rb_counter++%executor_threads], triple, 3) == -ENOBUFS) {
+		if(rte_ring_mp_enqueue_bulk(
+					to_cores[rb_counter++%executor_threads], triple, 3) == -ENOBUFS) {
 			BOOST_LOG_TRIVIAL(fatal) << "raft->core comm ring is full (req stable)";
 			exit(-1);
 		}
-//	BOOST_LOG_TRIVIAL(info) << "scheduler enqueue , list size: " << size << " quorum : " << next_schedule->me_quorum << " m :" << next_schedule->m << " rpc : " << next_schedule->rpc;
 
 		next_schedule = next_schedule->prev;
 		list_node = next_schedule->next;
 	}
-	//BOOST_LOG_TRIVIAL(info) << "schduler return.";
 	return 0;
 }
 
@@ -180,15 +174,13 @@ int gc(){
 			list_node = list_node->next;
 			list_node->prev = prev_node;
 
-			rte_pktmbuf_free(del_node->m); //TODO: persistent pointer from volatile structure. Must revisit
+			rte_pktmbuf_free(del_node->m);
 			rte_free(del_node);
 			size--;
-			//BOOST_LOG_TRIVIAL(info) << "gc done , list size: " << size ;
 		}else{
 			list_node = list_node->next;
 		}
 	}
-	//BOOST_LOG_TRIVIAL(info) << "gc done , list size: " << size ;
 	return 0;
 }
 

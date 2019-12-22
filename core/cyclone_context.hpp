@@ -611,7 +611,7 @@ struct cyclone_monitor {
 				chain_tail = m;
 				accepted++;
 			}
-#ifndef __NO_BATCHING // no chaining
+#ifndef __NO_BATCHING // Batching enabled.
 			else if(accepted > 0 &&
 					(messages[accepted - 1].data.len + msg_size) <= MSG_MAXSIZE &&
 					messages[accepted - 1].type == RAFT_LOGTYPE_NORMAL &&
