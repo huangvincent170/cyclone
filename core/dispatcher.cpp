@@ -499,6 +499,10 @@ void dispatcher_start(const char* config_cluster_path,
 		core_status[i].barrier[1] = 0;
 	}
 
+#ifdef __NO_BATCHING
+	BOOST_LOG_TRIVIAL(info) << "Request batching disabled in RAFT";
+#endif
+
 #ifdef __COMMUTE
 	scheduler =  new scheduler_t();
 	scheduler->init();
