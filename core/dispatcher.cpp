@@ -354,7 +354,8 @@ void cyclone_network_init(const char *config_cluster_path,
   server_addresses      = (struct sockaddr_in *)malloc(3*sizeof(struct sockaddr_in));
   server2server_tunnels = (tunnel_t *)malloc(3*num_quorums*sizeof(tunnel_t)); 
   /* server addresses for tunnel */
-  for(int i=0;i<3;i++) {
+//for(int i=0;i<3;i++) {
+  for(int i=0;i<1;i++) {
     sprintf(key, "machines.ipaddr%d", i);
     std::string s = pt_cluster.get<std::string>(key);
     BOOST_LOG_TRIVIAL(info) << "Setting address " 

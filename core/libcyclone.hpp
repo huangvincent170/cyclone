@@ -17,15 +17,15 @@ static const int PERIODICITY                = 1;
 static const int RAFT_ELECTION_TIMEOUT      = 10000; 
 static const int RAFT_QUORUM_TO             = 500;
 static const int RAFT_REQUEST_TIMEOUT       = 1000; 
-static const int RAFT_NACK_TIMEOUT          = 20;
+static const int RAFT_NACK_TIMEOUT          = 1000;
 // RAFT log tuning -- need to match load
 static const int RAFT_LOG_TARGET  = 1000;
 
 // Client side timeouts
-static const int timeout_msec  = 30; // Client - failure detect
+static const int timeout_msec  = 1200; // Client - failure detect
 
 // Execution resources
-static const int executor_threads = 39;
+static const int executor_threads =1 ;
 
 // ZMQ specific tuning
 static const int zmq_threads = 4;
@@ -34,7 +34,7 @@ static const int zmq_threads = 4;
 static const int q_raft       = 0;
 static const int q_dispatcher = 1;
 static const int num_queues   = 2;
-static const int num_quorums  = 8;
+static const int num_quorums  = 1;
 static const int Q_BUFS = 8191;
 static const int R_BUFS = 1023;
 
