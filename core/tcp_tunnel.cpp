@@ -1,10 +1,11 @@
 #include "libcyclone.hpp"
 #include "tcp_tunnel.hpp"
-#include<sys/types.h>
-#include<sys/socket.h>
-#include<netinet/in.h>
-#include<netinet/tcp.h>
-#include<fcntl.h>
+#include <sys/types.h>
+#include <sys/socket.h>
+#include <netinet/in.h>
+#include <netinet/tcp.h>
+#include <arpa/inet.h>
+#include <fcntl.h>
 
 tunnel_t *server2server_tunnels;
 tunnel_t **server2client_tunnels;
@@ -70,6 +71,7 @@ void client_connect_server(int clientnum,
 			   int quorum, 
 			   tunnel_t *tun)
 {
+  char str[INET_ADDRSTRLEN];
   struct sockaddr_in serv_addr;
   tun->socket_snd = socket(AF_INET, SOCK_STREAM, 0); 
   if(tun->socket_snd < 0) {
@@ -81,6 +83,11 @@ void client_connect_server(int clientnum,
   serv_addr.sin_family = AF_INET;
   serv_addr.sin_port   = htons(PORT_SERVER_BASE + num_quorums*num_queues + quorum);
   serv_addr.sin_addr   = server_addresses[replica].sin_addr;
+  inet_ntop(AF_INET, &(serv_addr.sin_addr), str, INET_ADDRSTRLEN);
+  BOOST_LOG_TRIVIAL(fatal) << "Connecting to = "
+			   << std::string(str)
+			   << " port = "
+			   << ntohs(serv_addr.sin_port);
   int e = connect(tun->socket_snd, 
 		  (struct sockaddr *) &serv_addr,
 		  sizeof(serv_addr));
