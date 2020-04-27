@@ -151,14 +151,14 @@ void server_open_ports(int me, int quorum)
     BOOST_LOG_TRIVIAL(fatal) << "Unable to bind raft socket "
 			     << " quorum =  " << quorum
 			     << " address = " << iface.sin_addr.s_addr
-			     << " port = " << iface.sin_port;
+			     << " port = " << ntohs(iface.sin_port);
     exit(-1);
   }
   else {
     BOOST_LOG_TRIVIAL(info) << " quorum = " 
 			    << quorum
 			    << " RAFT port " 
-			    << iface.sin_port;
+			    << ntohs(iface.sin_port);
   }
   make_socket_non_blocking(sockets_raft[quorum]);
   if(listen(sockets_raft[quorum], 100) < 0) {
@@ -182,12 +182,12 @@ void server_open_ports(int me, int quorum)
     BOOST_LOG_TRIVIAL(fatal) << "Unable to bind client socket "
 			     << " quorum =  " << quorum
 			     << " address = " << iface.sin_addr.s_addr
-			     << " port = " << iface.sin_port;
+			     << " port = " << ntohs(iface.sin_port);
     exit(-1);
   }
   else {
     BOOST_LOG_TRIVIAL(info) << " quorum = " << quorum
-			    << " CLIENT port " << iface.sin_port;
+			    << " CLIENT port " << ntohs(iface.sin_port);
   }
   make_socket_non_blocking(sockets_client[quorum]);
   if(listen(sockets_client[quorum], 100) < 0) {
@@ -265,7 +265,7 @@ void server_accept_client(int socket, int quorum)
     // Figure out who it is.
     while(!tun->receive());
     tun->copy_out_buf(buf);
-    int client = *(int *)buf;
+    int client = *(int *)buf; // seems like client E (0,num_clients)
     BOOST_LOG_TRIVIAL(info) << "quorum = "
 			    << quorum
 			    <<" connect from client "
