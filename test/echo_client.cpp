@@ -145,7 +145,8 @@ int main(int argc, const char *argv[]) {
 
   server_addresses      = (struct sockaddr_in *)malloc(3*sizeof(struct sockaddr_in));
   /* server addresses for tunnel */
-  for(int i=0;i<3;i++) {
+  //for(int i=0;i<3;i++) { // FIX_IT
+  for(int i=0;i<1;i++) {
     sprintf(key, "machines.ipaddr%d", i);
     std::string s = pt_cluster.get<std::string>(key);
     BOOST_LOG_TRIVIAL(info) << "Setting address " 
