@@ -181,6 +181,12 @@ void server_open_ports(int me, int quorum)
 			     << quorum;
     exit(-1);
   }
+  // make the socket reusable to avoid bind errors
+  int enable = 1;
+  if (setsockopt(sockets_client[quorum], SOL_SOCKET, SO_REUSEADDR, &enable, sizeof(int)) < 0){
+    BOOST_LOG_TRIVIAL(fatal) << "setsockopt(SO_REUSEADDR) failed";
+  }	
+
   iface.sin_family = AF_INET;
   iface.sin_port   = htons(PORT_SERVER_BASE + num_quorums*num_queues + quorum);
   iface.sin_addr = server_addresses[me].sin_addr;
