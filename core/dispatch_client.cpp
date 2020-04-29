@@ -62,7 +62,8 @@ typedef struct rpc_client_st {
     }
 #endif
     while(true) {
-      if(!client2server_tunnel(server, quorum)->receive_timeout(timeout_msec*1000)) {
+      if(!client2server_tunnel(server, quorum)->receive_timeout(timeout_msec*10000)) {
+      	BOOST_LOG_TRIVIAL(info) << "msg timeout in common loop";
 	resp_sz = -1;
 	break;
       }
@@ -81,6 +82,7 @@ typedef struct rpc_client_st {
 	BOOST_LOG_TRIVIAL(warning) << "Channel seq mismatch";
 	continue;
       }
+      BOOST_LOG_TRIVIAL(info) << "msg rcv in common loop";
       break;
     }
     return resp_sz;
@@ -223,28 +225,11 @@ typedef struct rpc_client_st {
       packet_out->channel_seq = channel_seq++;
       packet_out->client_id   = me;
       packet_out->requestor   = me_mc;
-      if((core_mask & (core_mask - 1)) != 0) {
-	char *user_data = (char *)(packet_out + 1);
-	memcpy(user_data, terms, num_quorums*sizeof(unsigned int));
-	user_data += num_quorums*sizeof(unsigned int);
-	user_data += sizeof(ic_rdv_t);
-	memcpy(user_data, payload, sz);
-	packet_out->payload_sz  = 
-	  num_quorums*sizeof(unsigned int) +
-	  sizeof(ic_rdv_t) + 
-	  sz;
-	unsigned int pkt_sz =  packet_out->payload_sz + sizeof(rpc_t);
-	send_to_server(packet_out, 
-		       pkt_sz,
-		       quorum_id);
-	resp_sz = common_receive_loop(pkt_sz, quorum_id);
-      }
-      else {
+      
 	packet_out->payload_sz = sz;
 	memcpy(packet_out + 1, payload, sz);
 	send_to_server(packet_out, sizeof(rpc_t) + sz, quorum_id);
 	resp_sz = common_receive_loop(sizeof(rpc_t) + sz, quorum_id);
-      }
       if(resp_sz == -1) {
 	update_server("rx timeout, make rpc");
 	continue;

@@ -103,6 +103,7 @@ int driver(void *arg)
     rpc_flags = 0;
     //rpc_flags = RPC_FLAG_RO;
     my_core = dargs->me % executor_threads;
+    //BOOST_LOG_TRIVIAL(info) << "request loop";
     sz = make_rpc(handles[0],
 		  buffer,
 		  payload,
