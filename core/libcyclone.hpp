@@ -41,6 +41,14 @@ static const int R_BUFS = 1023;
 // Static client setting for tunnel tests
 static const int num_clients = 1;
 
+
+static const unsigned int CLIENT_ASYNC     = 1<<1;
+static const unsigned int MAX_ASYNC_CLIENTS = 32; 
+static const int async_timeout_msec  = 500000000;  // async client timeout
+
+static const unsigned int EMAX_INFLIGHT = 1;
+const int REP_TIMEDOUT = 2;
+
 // Maximum clients (1 million)
 static const unsigned int MAX_CLIENTS = 1024U*1024U;
 static const char MAX_INFLIGHT = 1;
@@ -96,7 +104,7 @@ void* cyclone_client_init(int client_id,
 			  int client_queue,
 			  const char *config_cluster_path,
 			  int server_ports,
-			  const char *config_quorum_path);
+			  const char *config_quorum_path,unsigned int flags,unsigned int max_inflight );
 void cyclone_client_post_init(void *handle);
 // Make an rpc call -- returns size of response
 int make_rpc(void *handle,
@@ -105,6 +113,18 @@ int make_rpc(void *handle,
 	     void **response,
 	     unsigned long core_mask,
 	     int rpc_flags);
+
+// Async client request
+int make_rpc_async(void *handle,
+         void *payload,
+         int sz, 
+         void (*cb)(void *,int,unsigned long),
+         void *,
+         unsigned long core_mask,
+         int rpc_flags);
+
+void cyclone_launch_clients(void *handle, int (*f)(void *), void *arg, unsigned slave_id);
+
 
 int delete_node(void *handle, unsigned long core_mask, int node);
 

@@ -142,7 +142,7 @@ static int make_socket_non_blocking (int sfd)
 void server_open_ports(int me, int quorum)
 {
   struct sockaddr_in iface;
-  
+  char str[INET_ADDRSTRLEN]; 
   // RAFT port
   sockets_raft[quorum] = socket(AF_INET, SOCK_STREAM, 0);
   if(sockets_raft[quorum] < 0) {
@@ -150,22 +150,27 @@ void server_open_ports(int me, int quorum)
 			     << quorum;
     exit(-1);
   }
+  // make the socket reusable to avoid bind errors
+  int enable = 1;
+  if (setsockopt(sockets_raft[quorum], SOL_SOCKET, SO_REUSEADDR, &enable, sizeof(int)) < 0){
+    BOOST_LOG_TRIVIAL(fatal) << "setsockopt(SO_REUSEADDR) failed for raft socket";
+  }	
   iface.sin_family = AF_INET;
   iface.sin_port   = htons(PORT_SERVER_BASE + quorum*num_queues);
   iface.sin_addr = server_addresses[me].sin_addr;
+  inet_ntop(AF_INET, &(iface.sin_addr), str, INET_ADDRSTRLEN);
   //iface.sin_addr.s_addr = INADDR_ANY;
   if(bind(sockets_raft[quorum], (struct sockaddr *)&iface, sizeof(iface)) < 0) {
     BOOST_LOG_TRIVIAL(fatal) << "Unable to bind raft socket "
 			     << " quorum =  " << quorum
-			     << " address = " << iface.sin_addr.s_addr
+			     << " address = " << std::string(str)
 			     << " port = " << ntohs(iface.sin_port);
     exit(-1);
   }
   else {
-    BOOST_LOG_TRIVIAL(info) << " quorum = " 
-			    << quorum
-			    << " RAFT port " 
-			    << ntohs(iface.sin_port);
+    BOOST_LOG_TRIVIAL(info) << " quorum = " << quorum
+				<< " address = " << std::string(str)
+			    << " RAFT port " << ntohs(iface.sin_port);
   }
   make_socket_non_blocking(sockets_raft[quorum]);
   if(listen(sockets_raft[quorum], 100) < 0) {
@@ -182,24 +187,25 @@ void server_open_ports(int me, int quorum)
     exit(-1);
   }
   // make the socket reusable to avoid bind errors
-  int enable = 1;
   if (setsockopt(sockets_client[quorum], SOL_SOCKET, SO_REUSEADDR, &enable, sizeof(int)) < 0){
-    BOOST_LOG_TRIVIAL(fatal) << "setsockopt(SO_REUSEADDR) failed";
+    BOOST_LOG_TRIVIAL(fatal) << "setsockopt(SO_REUSEADDR) failed for client socket";
   }	
 
   iface.sin_family = AF_INET;
   iface.sin_port   = htons(PORT_SERVER_BASE + num_quorums*num_queues + quorum);
   iface.sin_addr = server_addresses[me].sin_addr;
+  inet_ntop(AF_INET, &(iface.sin_addr), str, INET_ADDRSTRLEN);
   //iface.sin_addr.s_addr = INADDR_ANY;
   if(bind(sockets_client[quorum], (struct sockaddr *)&iface, sizeof(iface)) < 0) {
     BOOST_LOG_TRIVIAL(fatal) << "Unable to bind client socket "
 			     << " quorum =  " << quorum
-			     << " address = " << iface.sin_addr.s_addr
+			     << " address = " << std::string(str)
 			     << " port = " << ntohs(iface.sin_port);
     exit(-1);
   }
   else {
     BOOST_LOG_TRIVIAL(info) << " quorum = " << quorum
+				<< " address = " << std::string(str)
 			    << " CLIENT port " << ntohs(iface.sin_port);
   }
   make_socket_non_blocking(sockets_client[quorum]);

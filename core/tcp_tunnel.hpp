@@ -155,7 +155,7 @@ extern tunnel_t *server2server_tunnels;
 extern tunnel_t **server2client_tunnels;
 extern tunnel_t* server2server_tunnel(int server, int quorum);
 extern tunnel_t* server2client_tunnel(int client, int quorum); 
-extern tunnel_t* client2server_tunnel(int server);
+//extern tunnel_t* client2server_tunnel(int server);
 extern void server_open_ports(int me, int quorum);
 extern void server_accept_server(int socket,
 				 int quorum, 

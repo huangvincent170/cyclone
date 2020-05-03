@@ -4,7 +4,10 @@ counter_coordinator_driver counter_driver_mt counter_driver_noop_mt
 #all: counter_server counter_driver_noop_mt counter_delete_node counter_add_node counter_loader counter_driver_mt
 all: echo_server echo_client
 
+server: echo_server
 
+#client: echo_client
+client: echo_async_client
 
 CXXFLAGS = -O3 -DBOOST_LOG_DYN_LINK
 #CXXFLAGS = -O1 -g -fno-omit-frame-pointer -DBOOST_LOG_DYN_LINK
@@ -32,6 +35,10 @@ echo_server:echo_server.cpp
 
 echo_client:echo_client.cpp 
 	$(CXX) $(CXXFLAGS) echo_client.cpp $(BOOST_THREAD_LIB) $(LIBS) -o $@
+
+echo_async_client:echo_async_client.cpp 
+	$(CXX) $(CXXFLAGS) echo_async_client.cpp $(BOOST_THREAD_LIB) $(LIBS) -o $@
+
 .PHONY:clean
 
 clean:
