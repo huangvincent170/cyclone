@@ -42,6 +42,6 @@ echo_async_client:echo_async_client.cpp
 .PHONY:clean
 
 clean:
-	rm -f echo_server echo_client
+	rm -f echo_server echo_client echo_async_client
 
 

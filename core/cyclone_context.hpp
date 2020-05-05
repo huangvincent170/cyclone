@@ -450,7 +450,8 @@ struct cyclone_monitor {
     int accepted = 0;
     rte_mbuf *m;
     rpc_t *rpc;
-
+	/* if(available)
+		BOOST_LOG_TRIVIAL(info) << "accepted message : " << available; */
     memset(chain_size, 0, 2*PKT_BURST);
     for(int i=0;i<available;i++) {
       m = pkt_array[i];

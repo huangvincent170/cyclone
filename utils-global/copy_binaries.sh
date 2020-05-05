@@ -17,7 +17,7 @@ do
 	node=$(basename $i)
 	ip=`cat ${i}/ip_address`
 	clush -w ${ip} rm -rf ${deploy_dir}/cyclone.tcp/test/${binary_prefix}_server
-	clush -w ${ip} rm -rf ${deploy_dir}/cyclone.tcp/test/${binary_prefix}_client
+	clush -w ${ip} rm -rf ${deploy_dir}/cyclone.tcp/test/${binary_prefix}_async_client
 	#clush -w ${ip} rm -rf ${deploy_dir}/cyclone.git/test/${binary_prefix}_async_client
 	scp ../test/${binary_prefix}_server ${ip}:${deploy_dir}/cyclone.tcp/test/
 	scp ../test/${binary_prefix}_client ${ip}:${deploy_dir}/cyclone.tcp/test/
