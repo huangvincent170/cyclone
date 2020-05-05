@@ -402,7 +402,9 @@ int exec(){
 		struct epoll_event event;
 		struct epoll_event events[1];
 
-
+		BOOST_LOG_TRIVIAL(info) << "Async listener "
+					<< "server : " << server
+					<< " quorum : " << quorum;
 		tunnel_t *tun = clnt->client2server_tunnel(server, quorum);
 
 		event.data.u32 = 0;
@@ -428,9 +430,9 @@ int exec(){
 		
 
 		int seen_events = epoll_wait(epoll_fd, &events[0], 1,0);
-		//TODO : return even if no events
+
 		int available = 0;
-		if(tun->receive()){ // we don't go through seen indexes. We only have one port to monitor
+		if(seen_events && tun->receive()){ // we don't go through seen indexes. We only have one port to monitor
 			rte_mbuf *mb = rte_pktmbuf_alloc(global_dpdk_context->mempools[clnt->me_queue]);
 			if(mb == NULL){
 				BOOST_LOG_TRIVIAL(fatal) << "no mbufs for receive async client";
@@ -441,6 +443,7 @@ int exec(){
 		}	
 
 		if(available ){
+			//BOOST_LOG_TRIVIAL(info) << "received " << available << "messages";
 			for(int i=0;i<available;i++) {
 			m = pkt_array[i];
 			struct ether_hdr *e = rte_pktmbuf_mtod(m, struct ether_hdr *); 

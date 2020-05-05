@@ -132,7 +132,7 @@ int driver(void *arg)
  }
 
 int main(int argc, const char *argv[]) {
-  if(argc != 10) {
+  if(argc != 11) {
     printf("Usage: %s client_id_start client_id_stop mc replicas"
 		   	"clients partitions cluster_config quorum_config_prefix" 
 			"server_ports inflight_cap\n", argv[0]);
@@ -147,7 +147,7 @@ int main(int argc, const char *argv[]) {
   server_addresses      = (struct sockaddr_in *)malloc(3*sizeof(struct sockaddr_in));
   /* server addresses for tunnel */
   //for(int i=0;i<3;i++) { // FIX_IT
-  for(int i=0;i<2;i++) {
+  for(int i=0;i<1;i++) {
     sprintf(key, "machines.ipaddr%d", i);
     std::string s = pt_cluster.get<std::string>(key);
     BOOST_LOG_TRIVIAL(info) << "Setting address " 
@@ -206,6 +206,7 @@ int main(int argc, const char *argv[]) {
   BOOST_LOG_TRIVIAL(info) << "sleep 10 sec...";
   sleep(10);
   for(int me = client_id_start; me < client_id_stop; me++) {
+  	  cyclone_client_post_init(dargs_array[me-client_id_start]->handles[0]);
 	  cyclone_launch_clients(dargs_array[me-client_id_start]->handles[0],driver, dargs_array[me-client_id_start], 1+me-client_id_start);
   }
   rte_eal_mp_wait_lcore();
