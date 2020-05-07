@@ -393,6 +393,10 @@ int exec(){
 	std::map<unsigned long, async_comm_t *>::iterator it;
 
 
+	//The server and quorum should be set/updated based on probing step
+	server = 0;
+	quorum = 0;
+
 	// the receive port is fixed for a session. 
 	int epoll_fd= epoll_create(100);
 		if(epoll_fd == -1){
@@ -403,9 +407,9 @@ int exec(){
 		struct epoll_event events[1];
 
 		BOOST_LOG_TRIVIAL(info) << "Async listener "
-					<< "server : " << server
+					<< "server : " << clnt->server
 					<< " quorum : " << quorum;
-		tunnel_t *tun = clnt->client2server_tunnel(server, quorum);
+		tunnel_t *tun = clnt->client2server_tunnel(clnt->server, quorum);
 
 		event.data.u32 = 0;
 		event.events = EPOLLIN;
