@@ -327,7 +327,11 @@ typedef struct executor_st {
 					quorums[0]->remove_inflight(client_buffer->client_id);
 				}
 #ifndef __COMMUTE
+#ifdef __EXTRA_COPY
+				rte_free(m);
+#else
 				rte_pktmbuf_free(m);
+#endif
 #else
 				wal->marked = GC_READY;
 				__sync_synchronize(); // publish

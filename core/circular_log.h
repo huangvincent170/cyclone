@@ -10,6 +10,7 @@ static void **log_data(struct circular_log *log)
 }
 
 // Return -1 if log full
+// Read operation
 static int log_offer(struct circular_log *log,
 		     void *ptr,
 		     int tail,
@@ -24,6 +25,7 @@ static int log_offer(struct circular_log *log,
     return tail;
 }
 
+// update operation
 static void log_poll(struct circular_log *log,
 		     int LOG_ENTRIES)
 {
@@ -45,6 +47,7 @@ static void log_poll_batch(struct circular_log *log,
   asm volatile("mfence;clflush %0"::"m"(*log));
 }
 
+// delete operation
 static void log_pop(struct circular_log *log,
 		    unsigned long LOG_ENTRIES)
 {

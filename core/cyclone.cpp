@@ -348,6 +348,12 @@ static int __raft_logentry_offer_batch(raft_server_t* raft,
   else {
     is_leader = 0;
   }
+
+#ifdef __EXTRA_COPY
+    rte_mbuf *m = (rte_mbuf *)e->data.buf;
+    e->data.buf = deep_copy(m);
+#endif
+
   for(int i=0; i<count;i++,e++) {
     if(is_leader) {
       add_head(e->data.buf, cyclone_handle, e, prev, ety_idx + i);

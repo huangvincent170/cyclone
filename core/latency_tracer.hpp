@@ -12,6 +12,95 @@ enum trcekey{
 	MAX_LT_TRACE
 };
 
+static unsigned long tracer_current_time(){
+    struct timeval tm; 
+    gettimeofday(&tm, NULL);
+    return tm.tv_sec*1000000 + tm.tv_usec;
+}
+
+static uint64_t get_cpu_freq(void)
+{
+    FILE *fd;
+    uint64_t freq = 0;
+    float freqf = 0;
+    char *line = NULL;
+    size_t len = 0;
+
+    fd = fopen("/proc/cpuinfo", "r");
+    if (!fd) {
+        fprintf(stderr, "failed to get cpu frequecy\n");
+        perror(NULL);
+        return freq;
+    }
+
+    while (getline(&line, &len, fd) != EOF) {
+        if (sscanf(line, "cpu MHz\t: %f", &freqf) == 1) {
+            freqf = freqf * 1000000UL;
+            freq = (uint64_t)freqf;
+            break;
+        }
+    }
+
+    fclose(fd);
+    return freq;
+}
+
+static uint64_t read_tsc(void)
+{
+    uint32_t a, d;
+    __asm __volatile("rdtsc" : "=a" (a), "=d" (d));
+    return ((uint64_t) a) | (((uint64_t) d) << 32);
+}
+
+
+
+#if !defined(__BATCHING_TRACER)
+
+#define BATCH_INIT_RUNTIME()
+#define BTCH_START()
+#define BATCH_END()
+
+#define BATCH_PRINT()
+
+#else
+
+#define BATCH_INIT_RUNTIME() btracer.init_tracer()
+#define BATCH_START()  btracer.start_counter()
+#define BATCH_END() btracer.end_counter()
+
+#define BATCH_PRINT()
+
+
+typedef struct batch_tracer_{
+
+  long count;
+  unsigned long ttime;
+  unsigned long stime;
+  unsigned long etime;
+
+
+  void init_tracer(){
+	 ttime=0;
+	 stime=0;
+	 etime=0;
+
+  }
+
+  int start_counter(){
+	stime = tracer_current_time(); 
+	return 0;
+  }
+  
+  int end_counter(){
+	unsigned long elapsed_time = tracer_current_time() - stime;
+	ttime += elapsed_time;
+	return 0;
+  }
+};
+
+#endif
+
+
 #if !defined (__LATENCY_TRACER)
 
 #define LT_INIT_RUNTIME()
@@ -62,46 +151,6 @@ typedef struct lt_counter_{
 }lt_counter_t;
 
 extern struct lt_tracer_ ltracer;
-
-static unsigned long tracer_current_time(){
-    struct timeval tm; 
-    gettimeofday(&tm, NULL);
-    return tm.tv_sec*1000000 + tm.tv_usec;
-}
-
-static uint64_t get_cpu_freq(void)
-{
-    FILE *fd;
-    uint64_t freq = 0;
-    float freqf = 0;
-    char *line = NULL;
-    size_t len = 0;
-
-    fd = fopen("/proc/cpuinfo", "r");
-    if (!fd) {
-        fprintf(stderr, "failed to get cpu frequecy\n");
-        perror(NULL);
-        return freq;
-    }
-
-    while (getline(&line, &len, fd) != EOF) {
-        if (sscanf(line, "cpu MHz\t: %f", &freqf) == 1) {
-            freqf = freqf * 1000000UL;
-            freq = (uint64_t)freqf;
-            break;
-        }
-    }
-
-    fclose(fd);
-    return freq;
-}
-
-static uint64_t read_tsc(void)
-{
-    uint32_t a, d;
-    __asm __volatile("rdtsc" : "=a" (a), "=d" (d));
-    return ((uint64_t) a) | (((uint64_t) d) << 32);
-}
 
 
 

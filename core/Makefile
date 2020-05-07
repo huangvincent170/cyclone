@@ -1,3 +1,11 @@
+# Blizzard specific compilation flags
+#
+#__EXTRA_COPY : perform extra copy of incoming message to provide crash-consistency semantics.
+#__NO_BATCHING - turn-off batching optimization.
+#
+
+
+
 all: libcyclone.a
 
 CXXFLAGS = -O3 -fPIC -DBOOST_LOG_DYN_LINK

@@ -717,7 +717,8 @@ struct cyclone_monitor {
 				}
 			}
 #endif
-
+			/* we want to measure how much cpu time spent on batching/no-batching.*/
+			LT_LOOP_START();
 			// Handle any outstanding requests
 			int monitor_port  = queue2port(cyclone_handle->my_q(q_raft), global_dpdk_context->ports);
 			int monitor_queue = queue_index_at_port(cyclone_handle->my_q(q_raft), global_dpdk_context->ports);
@@ -786,7 +787,9 @@ struct cyclone_monitor {
 			monitor_queue = queue_index_at_port(cyclone_handle->my_q(q_dispatcher), global_dpdk_context->ports);
 			available = cyclone_rx_burst(monitor_port, monitor_queue, &pkt_array[0], PKT_BURST);
 			if(available) {
+				LT_BATCHING_START();
 				accept(available, 0);
+				LT_BATCHING_END();
 			}
 #ifdef __COMMUTE
 		   scheduler->schedule(app_callbacks.op_callback);
