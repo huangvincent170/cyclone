@@ -1,11 +1,12 @@
 #!/bin/bash
 #declare -a wl=("hashmap")
 declare -a wl=("pqueue")
-declare -a bf=(1)
+declare -a bf=(1 2 4 6 8 10 12 14)
 
 declare -a mt=("nvram")
 
-declare -r rl=(1)
+#declare -r rl=(1)
+declare -r rl=(3)
 
 for replicas in "${rl[@]}"
 do
@@ -20,7 +21,8 @@ do
     ./vote_bench.py -dc -m "$m" -w "$w"
     ./vote_bench.py -db -m "$m" -w "$w"
 
-    ./vote_bench.py -start -m "$m" -w "$w"
+    ./vote_bench.py -startsrv -m "$m" -w "$w"
+    ./vote_bench.py -startclnt -m "$m" -w "$w"
 	# wait for sometime
 	sleep 60
     ./vote_bench.py -stop -m "$m" -w "$w"

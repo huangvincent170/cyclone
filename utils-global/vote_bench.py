@@ -17,7 +17,8 @@ parser.add_argument('-g', dest='gen', action='store_true', default=False, help="
 parser.add_argument('-collect', dest='collect', action='store_true', default=False, help="collect output")
 parser.add_argument('-db', dest='deploy_bins', action='store_true', default=False, help="deploy client/server binaries")
 parser.add_argument('-dc', dest='deploy_configs', action='store_true', default=False, help="deploy configs")
-parser.add_argument('-start', dest='start', action='store_true', default=False, help="run experiment")
+parser.add_argument('-startsrv', dest='startsrv', action='store_true', default=False, help="run experiment")
+parser.add_argument('-startclnt', dest='startclnt', action='store_true', default=False, help="run experiment")
 parser.add_argument('-stop', dest='stop', action='store_true', default=False, help="stop experiment")
 parser.add_argument('-w', dest='workload', default=empty , help='workload name, eg: echo, pmemkv', choices=wl)
 parser.add_argument('-m', dest='memtype', default=empty , help='memory type', choices=ml)
@@ -53,7 +54,8 @@ if __name__ == '__main__':
 
     c = args.clean
     g = args.gen
-    strt = args.start
+    strt_serv = args.startsrv
+    strt_clnt = args.startclnt
     stop = args.stop
     db = args.deploy_bins
     dc = args.deploy_configs
@@ -70,8 +72,10 @@ if __name__ == '__main__':
         vt.generate(args)
     if dc == True:
         vt.deploy_configs(args)
-    if strt == True:
-        vt.start_cyclone(args)
+    if strt_serv == True:
+        vt.start_cyclone_server(args)
+    if strt_clnt == True:
+        vt.start_cyclone_client(args)
     if stop == True:
         vt.stop_cyclone(args)
     if clct == True:
