@@ -17,6 +17,10 @@ same. We replicate logical operation to the remote node, as opposed to value rep
 We show that with carefully optimized NVM aware operation replication layer + NVM aware data structures, we can provide
 both persistent and reliability gurantees for application data with minimal overhead.
 
+## Git Branches
+
+* tcp_tunnel - Blizzard replication engine with TCP/IP as the transport protocol.
+
 ## Code structure
 
 We are using Intel's Cyclone codebase as our starting point. The Cylone implements a efficient log replication
