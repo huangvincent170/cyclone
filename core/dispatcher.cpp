@@ -295,7 +295,6 @@ typedef struct executor_st {
 	void operator() ()
 	{
 		resp_buffer = (rpc_t *)malloc(MSG_MAXSIZE);
-		unsigned long counter = 0;
 		while(true) {
 			int e = rte_ring_sc_dequeue(to_cores[tid], (void **)&quorum); // quorum id (long value)
 			if(e == 0) {

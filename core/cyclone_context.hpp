@@ -193,7 +193,6 @@ typedef struct cyclone_st {
 
 	volatile unsigned int snapshot;
 
-	unsigned long counter = 0;
 
 	char current_inflight(int client)
 	{
@@ -373,6 +372,7 @@ struct cyclone_monitor {
 	unsigned int *snapshot;
 	int is_leader;
 	msg_entry_t *messages;
+	unsigned long counter = 0;
 
 	cyclone_monitor()
 		:terminate(false)
@@ -458,6 +458,27 @@ struct cyclone_monitor {
 		memset(chain_size, 0, 2*PKT_BURST);
 #ifndef __NO_BATCHING
 	   LT_LOCAL_START_BATCH(trcekey_batch, -1); // I don't know the count at this point
+
+#else
+
+		for(int i=0;i<available;i++) {
+			m = pkt_array[i];
+			if(!multicore) {
+				if(bad(m)) {
+					BOOST_LOG_TRIVIAL(fatal) << "bad request";
+					rte_pktmbuf_free(m);
+					continue;
+				}
+				adjust_head(m);
+				rpc = pktadj2rpc(m);
+				LT_START(trcekey_batch,rpc); // message entry point into cyclone server
+			}
+			else {
+				BOOST_LOG_TRIVIAL(fatal) << "unused path";
+				rpc = rte_pktmbuf_mtod(m, rpc_t *);
+			}
+
+		}
 #endif
 
 		for(int i=0;i<available;i++) {
@@ -470,9 +491,6 @@ struct cyclone_monitor {
 				}
 				adjust_head(m);
 				rpc = pktadj2rpc(m);
-#ifdef __NO_BATCHING
-				LT_START(trcekey_batch,rpc); // message entry point into cyclone server
-#endif
 			}
 			else {
 				BOOST_LOG_TRIVIAL(fatal) << "unused path";

@@ -6,7 +6,7 @@ enum trcekey{
 	trcekey_oplog,
 	trcekey_app_wr,
 	trcekey_app_ro,
-	trcekey_other,
+	trcekey_batch,
 	trcekey_pipe1,
 	trcekey_pipe2,
 	MAX_LT_TRACE
@@ -41,7 +41,7 @@ static const char *print_headers[MAX_LT_TRACE] =
 	"OPLOG",
 	"APP_WR",
 	"APP_RO",
-	"OTHER",
+	"BATCH",
 	"PIPE1",
 	"PIPE2"
 };
