@@ -476,7 +476,7 @@ struct cyclone_monitor {
 					continue;
 				}
 			}
-			if(!multicore && is_multicore_rpc(rpc)) {
+		 /*	if(!multicore && is_multicore_rpc(rpc)) {
 				// Received a multi-core operation
 				// Check that I am quorum 0
 				if(cyclone_handle->me_quorum != 0) {
@@ -515,7 +515,7 @@ struct cyclone_monitor {
 				}
 				rte_pktmbuf_free(m);
 				continue;
-			}
+			} */
 			if(rpc->code == RPC_REQ_STABLE) {
 				if(take_snapshot(snapshot)) {
 					rte_pktmbuf_append(m, num_quorums*sizeof(unsigned int));
@@ -631,8 +631,8 @@ struct cyclone_monitor {
 				//compact(mprev); // debug
 			}
 #endif
-			else {
-				if(is_multicore_rpc(rpc)) { // Add a fresh head
+			else { // Add a fresh head 
+				if(is_multicore_rpc(rpc)) {
 					rte_mbuf *m_pre = rte_pktmbuf_alloc(global_dpdk_context->mempools
 							[cyclone_handle->my_q(q_dispatcher)]);
 					if(m_pre == NULL) {
