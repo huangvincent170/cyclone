@@ -336,7 +336,7 @@ static int __raft_logentry_offer_batch(raft_server_t* raft,
       				       int ety_idx,
       				       int count)
 {
-  LT_LOCAL_START_BATCH(trcekey_oplog, count);
+  //LT_LOCAL_START_BATCH(trcekey_oplog, count);
   cyclone_t* cyclone_handle = (cyclone_t *)udata;
   struct circular_log *log = cyclone_handle->log;
   unsigned long tail = log->tail;
@@ -438,7 +438,7 @@ static int __raft_logentry_offer_batch(raft_server_t* raft,
 
   }
   log_persist(log, tail, cyclone_handle->RAFT_LOGENTRIES);
-  LT_LOCAL_END_BATCH(trcekey_oplog, count);
+  //LT_LOCAL_END_BATCH(trcekey_oplog, count);
   return 0;
 }
 

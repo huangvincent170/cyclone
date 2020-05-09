@@ -56,7 +56,6 @@ static void client_reply(rpc_t *req,
 			m,
 			rep,
 			sizeof(rpc_t) + sz);
-	LT_END(trcekey_other, req);
 	int e = cyclone_tx(global_dpdk_context,
 			m,
 			q);
@@ -116,8 +115,6 @@ int exec_rpc_internal(rpc_t *rpc,
 
 	init_rpc_cookie_info(cookie, rpc, wal);
 	while(wal->rep == REP_UNKNOWN);
-	LT_END(trcekey_raft, rpc);
-	LT_THROUGHPUT_START(trcekey_pipe1,1);
 	if(wal->rep != REP_SUCCESS) {
 		return -1;
 	}
@@ -130,7 +127,6 @@ int exec_rpc_internal(rpc_t *rpc,
 			return -1;
 		}
 	}
-	LT_THROUGHPUT_END(trcekey_pipe1,1);
 	const unsigned char * user_data = (const unsigned char *)(rpc + 1);
 	//int checkpoint_idx = app_callbacks.flashlog_callback
 	//	((const unsigned char *)rpc, len + sizeof(rpc_t), cookie);
@@ -140,12 +136,9 @@ int exec_rpc_internal(rpc_t *rpc,
 		user_data += num_quorums*sizeof(unsigned int) + sizeof(ic_rdv_t);
 		len        -= (num_quorums*sizeof(unsigned int) + sizeof(ic_rdv_t));
 	}
-	LT_START(trcekey_app_wr, rpc);
 	app_callbacks.rpc_callback(user_data,
 			len,
 			cookie, &wal->pmdk_state);
-	LT_END(trcekey_app_wr, rpc);
-	LT_START(trcekey_other, rpc);
 	cstatus->checkpoint_idx = checkpoint_idx;
 	__sync_synchronize(); // publish core status
 	return 0;
@@ -167,11 +160,9 @@ int exec_rpc_internal_ro(rpc_t *rpc,
 		user_data += num_quorums*sizeof(unsigned int) + sizeof(ic_rdv_t);
 		len       -= (num_quorums*sizeof(unsigned int) + sizeof(ic_rdv_t));
 	}
-	//LT_START(app_wr, rpc);
 	app_callbacks.rpc_callback(user_data,
 			len,
 			cookie, &wal->pmdk_state);
-	//LT_END(app_wr, rpc);
 	return 0;
 }
 
@@ -315,11 +306,6 @@ typedef struct executor_st {
 				//client_buffer->timestamp = rte_get_tsc_cycles();
 				wal = pktadj2wal(m);
 				exec();
-				counter++;
-				if(!(counter%100000)){
-					LT_PRINT();
-					counter=0;
-				}
 				if(!is_multicore_rpc(client_buffer)) {
 					quorums[quorum]->remove_inflight(client_buffer->client_id);
 				}

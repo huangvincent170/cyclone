@@ -193,6 +193,8 @@ typedef struct cyclone_st {
 
 	volatile unsigned int snapshot;
 
+	unsigned long counter = 0;
+
 	char current_inflight(int client)
 	{
 		return client_inflight[client];
@@ -454,20 +456,29 @@ struct cyclone_monitor {
 		rpc_t *rpc;
 
 		memset(chain_size, 0, 2*PKT_BURST);
+#ifndef __NO_BATCHING
+	   LT_LOCAL_START_BATCH(trcekey_batch, -1); // I don't know the count at this point
+#endif
+
 		for(int i=0;i<available;i++) {
 			m = pkt_array[i];
 			if(!multicore) {
 				if(bad(m)) {
+					BOOST_LOG_TRIVIAL(fatal) << "bad request";
 					rte_pktmbuf_free(m);
 					continue;
 				}
 				adjust_head(m);
 				rpc = pktadj2rpc(m);
-				LT_START(trcekey_other,rpc); // message entry point into cyclone server
+#ifdef __NO_BATCHING
+				LT_START(trcekey_batch,rpc); // message entry point into cyclone server
+#endif
 			}
 			else {
+				BOOST_LOG_TRIVIAL(fatal) << "unused path";
 				rpc = rte_pktmbuf_mtod(m, rpc_t *);
 			}
+			
 			int core = __builtin_ffsl(rpc->core_mask) - 1;
 			// Admission control
 			if(!multicore) {
@@ -657,8 +668,8 @@ struct cyclone_monitor {
 					chain_tail = m;
 					chain_size[accepted] = 1;
 				}
-				LT_PAUSE(trcekey_other, rpc);
-				LT_START(trcekey_raft, rpc);
+				//LT_PAUSE(trcekey_other, rpc);
+				//LT_START(trcekey_raft, rpc);
 				accepted++;
 			}
 #ifdef __NO_BATCHING
@@ -666,6 +677,7 @@ struct cyclone_monitor {
 					&messages[accepted-1],
 					NULL,
 					1);
+			LT_END(trcekey_batch,rpc);
 			if(e != 0) {
 					rte_pktmbuf_free((rte_mbuf *)messages[accepted-1].data.buf);
 			}
@@ -677,6 +689,7 @@ struct cyclone_monitor {
 					messages,
 					NULL,
 					accepted);
+			LT_LOCAL_END_BATCH(trcekey_batch, accepted);
 			if(e != 0) {
 				for(int i=0;i<accepted;i++) {
 					rte_pktmbuf_free((rte_mbuf *)messages[i].data.buf);
@@ -684,6 +697,11 @@ struct cyclone_monitor {
 			}
 		}
 #endif // __NO_BATCHING
+		counter++;
+		if(!(counter%100000)){	
+			LT_PRINT();
+			counter=0;
+		}
 	}
 
 
