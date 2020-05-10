@@ -111,6 +111,7 @@ static uint64_t read_tsc(void)
 														}while(0)
 
 #define LT_START(key, rpc) ltracer.start_counter(key, rpc)
+#define LT_START_FROM(key,rpc,t) ltracer.start_counter_from(key,rpc,t)
 #define LT_PAUSE(key, rpc) ltracer.pause_counter(key, rpc)
 #define LT_END(key, rpc) ltracer.end_counter(key, rpc)
 
@@ -121,6 +122,7 @@ static uint64_t read_tsc(void)
 #define LT_THROUGHPUT_END(key,count) ltracer.end_throughput_counter(key,count)
 
 #define LT_PRINT() ltracer.print_trace()
+#define LT_CURRENT_TIME() tracer_current_time();
 
 
 typedef struct lt_tracer_{
@@ -146,6 +148,17 @@ typedef struct lt_tracer_{
 		rpc->timestamp =  tracer_current_time();
 		return 0;
 	}
+
+
+	int start_counter_from(enum trcekey key, struct rpc_st *rpc, unsigned long t1){
+		if(key >= MAX_LT_TRACE){
+			printf("invalid counter key\n");
+			exit(1);
+		}	
+		rpc->timestamp =  t1;
+		return 0;
+	}
+
 
 	int pause_counter(enum trcekey key, struct rpc_st *rpc){
 		if(key >= MAX_LT_TRACE){
@@ -221,7 +234,7 @@ typedef struct lt_tracer_{
 				counters[i].ttime/((float)counters[i].count);
 			}
 		}
-			printf( "%s : %.5f  "
+		/*	printf( "%s : %.5f  "
 					"%s : %.5f  "
 					"%s : %.5f  "
 					"%s : %.5f  "
@@ -233,7 +246,8 @@ typedef struct lt_tracer_{
 					print_headers[2], time[2],
 					print_headers[3], time[3],
 					print_headers[4], time[4],
-					print_headers[5], time[5]); 
+					print_headers[5], time[5]); */
+		    printf("%s : %.5f \n", print_headers[4],time[4]);
 
 			/* printf( "%s : %lu , %lu  "
 					"%s : %lu , %lu  "
