@@ -146,6 +146,7 @@ static int queue_index_at_port(int queue, int num_ports)
   return queue/num_ports;
 }
 
+/*
 static void persist_mbuf(rte_mbuf *m)
 {
   int block_counts = 0;
@@ -155,6 +156,19 @@ static void persist_mbuf(rte_mbuf *m)
     m = m->next;
   }
 }
+*/
+
+static void persist_mbuf(rte_mbuf *m) 
+{
+  while(m != NULL) {
+    flush_clwb(m, sizeof(rte_mbuf));
+    flush_clwb(m->buf_addr, m->data_len);
+    m = m->next;
+  }
+  asm_sfence();
+}
+
+
 
 static void initialize_ipv4_header(rte_mbuf *m,
 				   struct ipv4_hdr *ip_hdr, 
@@ -507,7 +521,7 @@ static void dpdk_context_init(dpdk_context_t *context,
 			(char *)"-m",
 			(char *)"1024",
 			(char *)"--huge-dir",
-			(char *)"/mnt/pmem1"};
+			(char *)"/mnt/pmem0"};
 //  			(char *)"--log-level=8"};
 // ret = rte_eal_init(6, fake_argv);
   ret = rte_eal_init(5, fake_argv);

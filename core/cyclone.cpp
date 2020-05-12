@@ -189,7 +189,9 @@ static int __persist_vote(raft_server_t* raft,
   cyclone_t* cyclone_handle = (cyclone_t *)udata;
   raft_pstate_t* root = cyclone_handle->pop_raft_state;
   root->voted_for = voted_for;
-  clflush(root, sizeof(raft_pstate_t));
+  //clflush(root, sizeof(raft_pstate_t));
+  flush_clwb(root, sizeof(raft_pstate_t));
+  asm_sfence();
   return status;
 }
 
@@ -204,7 +206,9 @@ static int __persist_term(raft_server_t* raft,
   cyclone_t* cyclone_handle = (cyclone_t *)udata;
   raft_pstate_t *root = cyclone_handle->pop_raft_state;
   root->term = current_term;
-  clflush(root, sizeof(raft_pstate_t));
+  //clflush(root, sizeof(raft_pstate_t));
+  flush_clwb(root, sizeof(raft_pstate_t));
+  asm_sfence();
   return status;
 }
 

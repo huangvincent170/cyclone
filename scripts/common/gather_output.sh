@@ -16,10 +16,15 @@ do
 		echo "copy back logs"
 		scp ${ip}:${deploy_dir}/${node}/client_log0  ${out_dir}/client_${ip}.log
 	fi
-	if [ "${node}" = "cyclone_0" ]; then
-		echo "copy back server 0 logs"
-		scp ${ip}:${deploy_dir}/${node}/server_log  ${out_dir}/server_${ip}.log
-	fi
+#	if [ "${node}" = "cyclone_0" ]; then
+#		echo "copy back server 0 logs"
+#		scp ${ip}:${deploy_dir}/${node}/server_log  ${out_dir}/server_${ip}.log
+#	fi
+	#copy all server output
+	if [[ -f "$i/launch_clients" ]] && [[ -f "$i/launch_servers" ]] ; then
+        echo "copy back server logs"
+        scp ${ip}:${deploy_dir}/${node}/server_log  ${out_dir}/server_${ip}.log
+    fi
     fi
 done
 
