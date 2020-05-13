@@ -2,7 +2,7 @@
 declare -a wl=("echo")
 declare -a bf=(1 2 4 6 8 10 12 16 20)
 
-declare -a mt=("dram")
+declare -a mt=("nvram")
 
 declare -r rl=(3)
 
