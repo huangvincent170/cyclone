@@ -5,8 +5,8 @@
 #include "priority_queue/priority_queue.h"
 #include "vector/adjvector.h"
 
-//const unsigned long ds_pool_size = 1024*1024*1024*1;
-const unsigned long ds_pool_size = 8388608;
+const unsigned long ds_pool_size = 1024*1024*1024*1;
+//const unsigned long ds_pool_size = 8388608;
 
 
 namespace pmemds{

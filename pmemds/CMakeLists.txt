@@ -17,8 +17,8 @@ set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${CMAKE_SOURCE_DIR}/cmake)
 
 set(CMAKE_VERBOSE_MAKEFILE ON)
 set(RTE_CSDK /home/pfernando/dpdk)
-set(PMDK_INCLUDE ${CMAKE_SOURCE_DIR}/../pmdk/src/include)
-set(PMDK_LIB ${CMAKE_SOURCE_DIR}/../pmdk/src/debug)
+set(PMDK_INCLUDE ${CMAKE_SOURCE_DIR}/../../pmdk/src/include)
+set(PMDK_LIB ${CMAKE_SOURCE_DIR}/../../pmdk/src/debug)
 
 
 find_package(PkgConfig QUIET)

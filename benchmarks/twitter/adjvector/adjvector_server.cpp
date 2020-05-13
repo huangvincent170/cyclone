@@ -13,7 +13,7 @@
 
 #include "pmemds.h"
 
-static const std::string pmem_path = "/mnt/pmem1/pmemds";
+static const std::string pmem_path = "/mnt/pmem0/pmemds";
 pmemds::PMLib *pmlib;
 
 void callback(const unsigned char *data,
