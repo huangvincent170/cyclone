@@ -1,5 +1,7 @@
 #!/usr/bin/env python
+import sys
 import argparse
+sys.path.append('../common')
 from commonbench import *
 
 #workloads

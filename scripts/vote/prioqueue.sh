@@ -1,5 +1,4 @@
 #!/bin/bash
-#declare -a wl=("hashmap")
 declare -a wl=("pqueue")
 declare -a bf=(1 2 4 6 8 10 12 14)
 

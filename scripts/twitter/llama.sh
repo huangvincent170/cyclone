@@ -1,7 +1,5 @@
 #!/bin/bash
-#declare -a wl=("llama_mem" "llama_persist")
-declare -a wl=("llama_persist")
-#declare -a bf=(1 2 3 4)
+declare -a wl=("llama_mem" "llama_persist")
 declare -a bf=(1 2 3)
 
 declare -a mt=("nvram")
