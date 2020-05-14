@@ -7,7 +7,7 @@ def launch_cmds_server_gen(f, q, r, m, quorums, replicas, clients, ports):
     if os.environ.has_key('CYCLONE_PASS'):
         passwd=os.environ.get('CYCLONE_PASS')
     cmd='echo ' + passwd + ' | sudo -S '
-    cmd= cmd + 'rm -rf /mnt/pmem1/pmemds\n'
+    cmd= cmd + 'rm -rf /mnt/pmem0/pmemds\n'
     f.write(cmd)
     cmd=''
     cmd=cmd + 'echo ' + passwd + ' | sudo -S '
