@@ -7,10 +7,10 @@ def launch_cmds_server_gen(f, q, r, m, quorums, replicas, clients, ports):
     if os.environ.has_key('CYCLONE_PASS'):
         passwd=os.environ.get('CYCLONE_PASS')
     cmd= ' echo ' + passwd + ' | sudo -S '
-    cmd=cmd + 'rm -rf /mnt/pmem1/voterocksdata\n'
+    cmd=cmd + 'rm -rf /mnt/pmem0/voterocksdata\n'
     f.write(cmd)
     cmd=' echo ' + passwd + ' | sudo -S '
-    cmd= cmd + 'rm -f /mnt/pmem1/voterockswal/*\n'
+    cmd= cmd + 'rm -f /mnt/pmem0/voterockswal/*\n'
     f.write(cmd)
     cmd=' echo ' + passwd + ' | sudo -S '
     cmd=cmd + ' LD_LIBRARY_PATH=/usr/lib:/usr/local/lib '

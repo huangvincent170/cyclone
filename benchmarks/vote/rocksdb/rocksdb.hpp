@@ -28,9 +28,9 @@ typedef struct rockskv_st{
 }rockskv_t;
 
 
-const char *preload_dir = "/mnt/pmem1/votepreloaded";
-const char *data_dir = "/mnt/pmem1/voterocksdata";
-const char *log_dir  = "/mnt/pmem1/voterockswal";
+const char *preload_dir = "/mnt/pmem0/votepreloaded";
+const char *data_dir = "/mnt/pmem0/voterocksdata";
+const char *log_dir  = "/mnt/pmem0/voterockswal";
 const unsigned long rocks_keys = 1000000;
 const int use_rocksdbwal = 1;
 #endif

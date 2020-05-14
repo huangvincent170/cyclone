@@ -20,5 +20,5 @@ typedef struct llama_res_st{
 }llama_res_t;
 
 const unsigned long max_llama_nodes = 1000000;
-const char *llama_db = "/mnt/pmem1/llama_db";
+const char *llama_db = "/mnt/pmem0/llama_db";
 #endif

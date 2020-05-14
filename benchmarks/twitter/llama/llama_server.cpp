@@ -22,7 +22,7 @@ typedef ll_mlcsr_ro_graph benchmarkable_graph_t;
 #define benchmarkable_graph(g)  ((g)->ro_graph())
 
 std::string input_file = "/home/pfernando/deploy-cyclone/benchmarks/data/twitter/twitter_rv_15066953.net";
-std::string database_directory = "/mnt/pmem1/llama_db";
+std::string database_directory = "/mnt/pmem0/llama_db";
 const int preload_batch= 100*1000;
 const int write_batch = 100;
 
