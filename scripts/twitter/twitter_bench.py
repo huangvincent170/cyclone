@@ -31,6 +31,7 @@ parser.add_argument('-m', dest='memtype', default=empty , help='memory type', ch
 parser.add_argument('-b', dest='bufsize', default=empty , help='inflight buffer size')
 parser.add_argument('-rep', dest='replicas', default=empty , help='number of replicas', choices=rl)
 parser.add_argument('-commute', dest='is_commute', action='store_true', default=False , help='concurrent execution')
+parser.add_argument('-nobatch', dest='no_batching', action='store_true', default=False , help='batching enabled by default. Excuse the not not logic.')
 
 try:
     args = parser.parse_args()

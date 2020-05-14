@@ -1,7 +1,7 @@
 #!/bin/bash
 declare -a wl=("adjvector")
-#declare -a bf=(1 2 3 4)
-declare -a bf=(1 2 3)
+#declare -a bf=(1 2 3)
+declare -a bf=(1)
 
 declare -a mt=("nvram")
 
