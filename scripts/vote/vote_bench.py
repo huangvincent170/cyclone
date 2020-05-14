@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-import system
+import sys
 import argparse
 sys.path.append('../common')
 from commonbench import *
