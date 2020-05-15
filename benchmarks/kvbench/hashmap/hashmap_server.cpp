@@ -28,6 +28,7 @@ void callback(const unsigned char *data,
 	//TX_SET_BLIZZARD_MBUF_COMMIT_ADDR(pmdk_state);
     request = (pm_rpc_t *) data;
     pmlib->exec(0,request,&response,&(cookie->ret_size));
+	cookie->ret_value = (void *)response;
 }
 
 int commute_callback(void *arg1, void *arg2)
