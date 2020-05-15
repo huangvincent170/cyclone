@@ -19,13 +19,13 @@ set(CMAKE_VERBOSE_MAKEFILE ON)
 set(RTE_CSDK /home/pfernando/dpdk)
 set(PMDK_INCLUDE ${CMAKE_SOURCE_DIR}/../pmdk/src/include)
 set(PMDK_LIB ${CMAKE_SOURCE_DIR}/../pmdk/src/debug)
-set(PMMOBJ_CPP_INCLUDE ${CMAKE_SOURCE_DIR}/../libpmemobj-cpp/include)
+set(PMEMOBJ_CPP_INCLUDE ${CMAKE_SOURCE_DIR}/../libpmemobj-cpp/include)
 
 
 find_package(PkgConfig QUIET)
 
 
-include_directories(../../libpmemobj-cpp/include)
+include_directories(${PMEMOBJ_CPP_INCLUDE})
 include_directories(${PMDK_INCLUDE})
 include_directories(${RTE_CSDK}/x86_64-native-linuxapp-gcc/include)
 include_directories(include)

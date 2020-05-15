@@ -1,0 +1,16 @@
+diff --git a/include/libpmemobj++/container/concurrent_hash_map.hpp b/include/libpmemobj++/container/concurrent_hash_map.hpp
+index 0ea1ed2..686deda 100644
+--- a/include/libpmemobj++/container/concurrent_hash_map.hpp
++++ b/include/libpmemobj++/container/concurrent_hash_map.hpp
+@@ -261,9 +261,10 @@ namespace concurrent_hash_map_internal
+ static inline void
+ check_outside_tx()
+ {
+-	if (pmemobj_tx_stage() != TX_STAGE_NONE)
++/*	if (pmemobj_tx_stage() != TX_STAGE_NONE)
+ 		throw pmem::transaction_scope_error(
+ 			"Function called inside transaction scope.");
++*/
+ }
+ 
+ template <typename Hash>
