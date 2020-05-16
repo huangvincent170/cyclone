@@ -25,7 +25,7 @@ namespace pmemdsclient {
         SET_OP_ID(payload.meta, CREATE_DS);
         SET_TYPE_ID(payload.meta, SORTED_BTREE);
         SET_DS_ID(payload.meta, this->ds_id);
-        if (!client->sendmsg(&payload, &response,this->core_mask)) {
+        if (!client->sendmsg(&payload, &response,this->core_mask,UPDATE_OPERATION)) {
             LOG_ERROR("btree create");
         }
         if (STATUS(response->meta) != OK) {
@@ -40,7 +40,7 @@ namespace pmemdsclient {
         SET_OP_ID(payload.meta, CREATE_DS);
         SET_TYPE_ID(payload.meta, SORTED_BTREE);
         SET_DS_ID(payload.meta, this->ds_id);
-        if (client->sendmsg_async(&payload, this->core_mask, cb) != 0) {
+        if (client->sendmsg_async(&payload, this->core_mask,UPDATE_OPERATION, cb) != 0) {
             LOG_ERROR("btree create async call failed");
         }
         return OK;
@@ -53,7 +53,7 @@ namespace pmemdsclient {
         SET_OP_ID(payload.meta, CLOSE_DS);
         SET_TYPE_ID(payload.meta, SORTED_BTREE);
         SET_DS_ID(payload.meta, this->ds_id);
-        if (!client->sendmsg(&payload, &response, this->core_mask)) {
+        if (!client->sendmsg(&payload, &response, this->core_mask,UPDATE_OPERATION)) {
             LOG_ERROR("btree close");
         }
         if (STATUS(response->meta) != OK) {
@@ -68,7 +68,7 @@ namespace pmemdsclient {
         SET_OP_ID(payload.meta, CLOSE_DS);
         SET_TYPE_ID(payload.meta, SORTED_BTREE);
         SET_DS_ID(payload.meta, this->ds_id);
-        if (client->sendmsg_async(&payload, this->core_mask, cb) != 0) {
+        if (client->sendmsg_async(&payload, this->core_mask, UPDATE_OPERATION , cb) != 0) {
             LOG_ERROR("btree async close");
         }
         return OK;
@@ -83,7 +83,7 @@ namespace pmemdsclient {
         SET_OP_ID(payload.meta,REMOVE_DS);
         SET_TYPE_ID(payload.meta,SORTED_BTREE);
         SET_DS_ID(payload.meta,this->ds_id);
-        if(!client->sendmsg(&payload,&response,this->core_mask)){
+        if(!client->sendmsg(&payload,&response,this->core_mask,UPDATE_OPERATION)){
             LOG_ERROR("btree remove");
         }
         if(STATUS(response->meta) != OK){
@@ -98,7 +98,7 @@ namespace pmemdsclient {
         SET_OP_ID(payload.meta,REMOVE_DS);
         SET_TYPE_ID(payload.meta,SORTED_BTREE);
         SET_DS_ID(payload.meta,this->ds_id);
-        if (client->sendmsg_async(&payload, this->core_mask, cb) != 0) {
+        if (client->sendmsg_async(&payload, this->core_mask, UPDATE_OPERATION ,cb) != 0) {
             LOG_ERROR("btree async remove");
         }
         return OK;
@@ -112,7 +112,7 @@ namespace pmemdsclient {
         SET_OP_ID(payload.meta,GET);
         SET_TYPE_ID(payload.meta,SORTED_BTREE);
         payload.key = key;
-        if(!client->sendmsg(&payload,&response,this->core_mask)){
+        if(!client->sendmsg(&payload,&response,this->core_mask, READ_OPERATION)){
             LOG_ERROR("get operation");
         }
         if(STATUS(response->meta) != OK){
@@ -128,7 +128,7 @@ namespace pmemdsclient {
         SET_OP_ID(payload.meta,GET);
         SET_TYPE_ID(payload.meta,SORTED_BTREE);
         payload.key = key;
-        if (client->sendmsg_async(&payload, this->core_mask, cb) != 0) {
+        if (client->sendmsg_async(&payload, this->core_mask, READ_OPERATION, cb) != 0) {
             LOG_ERROR("btree async get");
         }
         return OK;
@@ -143,7 +143,7 @@ namespace pmemdsclient {
         SET_TYPE_ID(payload.meta,SORTED_BTREE);
         payload.key = key;
         snprintf(payload.value,MAX_VAL_LENGTH,"%s",value.c_str());
-        if(!client->sendmsg(&payload,&response,this->core_mask)){
+        if(!client->sendmsg(&payload,&response,this->core_mask, UPDATE_OPERATION)){
             LOG_ERROR("btree put");
         }
         if(STATUS(response->meta) != OK){
@@ -160,7 +160,7 @@ namespace pmemdsclient {
         SET_TYPE_ID(payload.meta,SORTED_BTREE);
         payload.key = key;
         snprintf(payload.value,MAX_VAL_LENGTH,"%s",value.c_str());
-        if (client->sendmsg_async(&payload, this->core_mask, cb) != 0) {
+        if (client->sendmsg_async(&payload, this->core_mask, UPDATE_OPERATION, cb) != 0) {
             LOG_ERROR("btree async put");
         }
         return OK;
@@ -174,7 +174,7 @@ namespace pmemdsclient {
         SET_OP_ID(payload.meta,DELETE);
         SET_TYPE_ID(payload.meta,SORTED_BTREE);
         payload.key = key;
-        if(!client->sendmsg(&payload,&response,this->core_mask)){
+        if(!client->sendmsg(&payload,&response,this->core_mask, UPDATE_OPERATION)){
             LOG_ERROR("btree key delete");
         }
         if(STATUS(response->meta) != OK){
@@ -190,7 +190,7 @@ namespace pmemdsclient {
         SET_OP_ID(payload.meta,DELETE);
         SET_TYPE_ID(payload.meta,SORTED_BTREE);
         payload.key = key;
-        if (client->sendmsg_async(&payload, this->core_mask, cb) != 0) {
+        if (client->sendmsg_async(&payload, this->core_mask, UPDATE_OPERATION , cb) != 0) {
             LOG_ERROR("btree async remove");
         }
         return OK;

@@ -64,22 +64,21 @@ namespace pmemdsclient{
 
     DPDKPMClient::~DPDKPMClient() {}
 
-    int DPDKPMClient::sendmsg(pm_rpc_t* msg , pm_rpc_t** response,unsigned long core_mask) {
+    int DPDKPMClient::sendmsg(pm_rpc_t* msg , pm_rpc_t** response,unsigned long core_mask, int rpc_flags) {
         return make_rpc(this->dpdk_client,msg,sizeof(pm_rpc_t),
                         reinterpret_cast<void **>(response),core_mask,0);
     }
 
-    int DPDKPMClient::sendmsg_async(pm_rpc_t *msg, unsigned long core_mask, void (*cb)(void *)) {
+    int DPDKPMClient::sendmsg_async(pm_rpc_t *msg, unsigned long core_mask, int rpc_flags, void (*cb)(void *)) {
         uint8_t ds_type = TYPE_ID(msg->meta);
         uint16_t op_id  = OP_ID(msg->meta);
         uint16_t ds_id  = DS_ID(msg->meta);
         //LOG_DEBUG("data-structure type : " + std::to_string(ds_type) + " operation id : " + std::to_string(op_id) + " data-structure id : " + std::to_string(ds_id));
 
         struct cb_st *cb_ctxt = (struct cb_st *)rte_malloc("callback_ctxt", sizeof(struct cb_st), 0);
-        //cb_ctxt->request_type = rpc_flags;
+        cb_ctxt->request_type = rpc_flags;
         cb_ctxt->request_id = request_id++;
         cb_ctxt->callback = cb;
-        int rpc_flags = 0;
         int ret;
 	int emax_inflight_count; // notify us if the async call stuck in the loop
         do{

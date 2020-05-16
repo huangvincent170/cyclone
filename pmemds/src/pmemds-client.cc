@@ -10,7 +10,7 @@ namespace pmemdsclient {
         pm_rpc_t payload = {0,0,"\0"};
         SET_OP_ID(payload.meta,OPEN);
         snprintf(payload.value,MAX_VAL_LENGTH,"%s",appname.c_str());
-        if(!sendmsg(&payload,&response,1UL)){
+        if(!sendmsg(&payload,&response,1UL,UPDATE_OPERATION)){
             LOG_ERROR("pmclient open");
         }
         if(STATUS(response->meta) == OK){
@@ -24,7 +24,7 @@ namespace pmemdsclient {
         pm_rpc_t payload = {0,0,"\0"};
         SET_OP_ID(payload.meta,OPEN);
         snprintf(payload.value,MAX_VAL_LENGTH,"%s",appname.c_str());
-        if (sendmsg_async(&payload,1UL, cb) != 0) {
+        if (sendmsg_async(&payload,1UL,UPDATE_OPERATION, cb) != 0) {
             LOG_ERROR("pmclient open");
         }
         return OK;
@@ -35,7 +35,7 @@ namespace pmemdsclient {
         pm_rpc_t payload = {0,0,"\0"};
         SET_OP_ID(payload.meta,CLOSE);
         snprintf(payload.value,MAX_VAL_LENGTH,"%s",this->appname.c_str());
-        if(!sendmsg(&payload,&response,1UL)){
+        if(!sendmsg(&payload,&response,UPDATE_OPERATION,1UL)){
             LOG_ERROR("pmclient close");
         }
         if(STATUS(response->meta) == OK){
@@ -49,7 +49,7 @@ namespace pmemdsclient {
         pm_rpc_t payload = {0,0,"\0"};
         SET_OP_ID(payload.meta,CLOSE);
         snprintf(payload.value,MAX_VAL_LENGTH,"%s",this->appname.c_str());
-        if (sendmsg_async(&payload, 1UL, cb) != 0) {
+        if (sendmsg_async(&payload, 1UL,UPDATE_OPERATION, cb) != 0) {
             LOG_ERROR("pmclient close");
         }
         return OK;
@@ -61,7 +61,7 @@ namespace pmemdsclient {
         int resp_size;
         pm_rpc_t payload = {0,0,"\0"};
         SET_OP_ID(payload.meta,GET_TOPK);
-        if(!(resp_size = sendmsg(&payload,&response,1UL))){
+        if(!(resp_size = sendmsg(&payload,&response,1UL, READ_OPERATION))){
             LOG_ERROR("get topK articles");
         }
         if(STATUS(response->meta) != OK){
@@ -85,7 +85,7 @@ namespace pmemdsclient {
     int PMClient::topk(void (*cb)(void *)) {
         pm_rpc_t payload = {0,0,"\0"};
         SET_OP_ID(payload.meta,GET_TOPK);
-        if (sendmsg_async(&payload, 1UL, cb) != 0) {
+        if (sendmsg_async(&payload, 1UL, READ_OPERATION, cb) != 0) {
             LOG_ERROR("btree async put");
         }
         return OK;

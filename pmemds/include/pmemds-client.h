@@ -29,8 +29,8 @@ namespace pmemdsclient {
 
 
 
-        virtual int sendmsg(pm_rpc_t *msg, pm_rpc_t **response, unsigned long core_mask)=0;
-        virtual int sendmsg_async(pm_rpc_t *msg, unsigned long core_mask, void (*cb)(void *))=0;
+        virtual int sendmsg(pm_rpc_t *msg, pm_rpc_t **response, unsigned long core_mask,int rpc_flags)=0;
+        virtual int sendmsg_async(pm_rpc_t *msg, unsigned long core_mask, int rpc_flags, void (*cb)(void *))=0;
     protected:
         std::string appname;
     };

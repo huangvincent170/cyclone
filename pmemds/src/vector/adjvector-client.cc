@@ -9,7 +9,7 @@ namespace pmemdsclient{
         SET_TYPE_ID(payload.meta,this->type_id);
         payload.key = from_node;
         payload.key2 = to_node;
-        if(!client->sendmsg(&payload,&response,this->core_mask)){
+        if(!client->sendmsg(&payload,&response,this->core_mask, UPDATE_OPERATION)){
             LOG_ERROR("adjvector add_edge sync call");
         }
         if(STATUS(response->meta) != OK){
@@ -27,7 +27,7 @@ namespace pmemdsclient{
         SET_TYPE_ID(payload.meta,this->type_id);
         payload.key = fromnode_id;
         payload.key2 = tonode_id;
-        if (client->sendmsg_async(&payload, this->core_mask, cb) != 0) {
+        if (client->sendmsg_async(&payload, this->core_mask, UPDATE_OPERATION ,cb) != 0) {
             LOG_ERROR("adjvector add_edge async call");
         }
         return OK;
@@ -40,7 +40,7 @@ namespace pmemdsclient{
         SET_OP_ID(payload.meta,VERTEX_OUTDEGREE);
         SET_TYPE_ID(payload.meta,this->type_id);
         payload.key = node_id;
-        if(!client->sendmsg(&payload,&response,this->core_mask)){
+        if(!client->sendmsg(&payload,&response,this->core_mask, READ_OPERATION)){
             LOG_ERROR("vertex_outdegree sync call");
         }
         if(STATUS(response->meta) != OK){
@@ -57,7 +57,7 @@ namespace pmemdsclient{
         SET_OP_ID(payload.meta,VERTEX_OUTDEGREE);
         SET_TYPE_ID(payload.meta,this->type_id);
         payload.key = node_id;
-        if (client->sendmsg_async(&payload, this->core_mask, cb) != 0) {
+        if (client->sendmsg_async(&payload, this->core_mask,READ_OPERATION, cb) != 0) {
             LOG_ERROR("vertex_outdegree async call");
         }
         return OK;
@@ -78,7 +78,7 @@ namespace pmemdsclient{
         SET_OP_ID(payload.meta, CREATE_DS);
         SET_TYPE_ID(payload.meta, this->type_id);
         SET_DS_ID(payload.meta, this->ds_id);
-        if (!client->sendmsg(&payload, &response, this->core_mask)) {
+        if (!client->sendmsg(&payload, &response, this->core_mask, UPDATE_OPERATION)) {
             LOG_ERROR("adjvector create");
         }
         if (STATUS(response->meta) != OK) {
@@ -93,7 +93,7 @@ namespace pmemdsclient{
         SET_OP_ID(payload.meta, CREATE_DS);
         SET_TYPE_ID(payload.meta, this->type_id);
         SET_DS_ID(payload.meta, this->ds_id);
-        if (client->sendmsg_async(&payload, this->core_mask, cb) != 0) {
+        if (client->sendmsg_async(&payload, this->core_mask, UPDATE_OPERATION,cb) != 0) {
             LOG_ERROR("adjvector create async call failed");
         }
         return OK;
@@ -105,7 +105,7 @@ namespace pmemdsclient{
         SET_OP_ID(payload.meta, CLOSE_DS);
         SET_TYPE_ID(payload.meta, this->type_id);
         SET_DS_ID(payload.meta, this->ds_id);
-        if (!client->sendmsg(&payload, &response, this->core_mask)) {
+        if (!client->sendmsg(&payload, &response, this->core_mask, UPDATE_OPERATION)) {
             LOG_ERROR("adjvector close");
         }
         if (STATUS(response->meta) != OK) {
@@ -120,7 +120,7 @@ namespace pmemdsclient{
         SET_OP_ID(payload.meta, CLOSE_DS);
         SET_TYPE_ID(payload.meta, this->type_id);
         SET_DS_ID(payload.meta, this->ds_id);
-        if (client->sendmsg_async(&payload, this->core_mask, cb) != 0) {
+        if (client->sendmsg_async(&payload, this->core_mask,UPDATE_OPERATION ,cb) != 0) {
             LOG_ERROR("adjvector create async call failed");
         }
         return OK;

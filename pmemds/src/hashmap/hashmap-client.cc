@@ -33,7 +33,7 @@ namespace pmemdsclient {
         SET_OP_ID(payload.meta, CREATE_DS);
         SET_TYPE_ID(payload.meta, this->type_id);
         SET_DS_ID(payload.meta, this->ds_id);
-        if (!client->sendmsg(&payload, &response, this->core_mask)) {
+        if (!client->sendmsg(&payload, &response, this->core_mask, UPDATE_OPERATION)) {
             LOG_ERROR("hashmap create");
         }
         if (STATUS(response->meta) != OK) {
@@ -49,7 +49,7 @@ namespace pmemdsclient {
         SET_OP_ID(payload.meta, CREATE_DS);
         SET_TYPE_ID(payload.meta, this->type_id);
         SET_DS_ID(payload.meta, this->ds_id);
-        if (client->sendmsg_async(&payload, this->core_mask, cb) != 0) {
+        if (client->sendmsg_async(&payload, this->core_mask, UPDATE_OPERATION, cb) != 0) {
             LOG_ERROR("hashmap create async call failed");
         }
         return OK;
@@ -62,7 +62,7 @@ namespace pmemdsclient {
         SET_OP_ID(payload.meta, CLOSE_DS);
         SET_TYPE_ID(payload.meta, this->type_id);
         SET_DS_ID(payload.meta, this->ds_id);
-        if (!client->sendmsg(&payload, &response, this->core_mask)) {
+        if (!client->sendmsg(&payload, &response, this->core_mask, UPDATE_OPERATION)) {
             LOG_ERROR("hashmap close");
         }
         if (STATUS(response->meta) != OK) {
@@ -78,7 +78,7 @@ namespace pmemdsclient {
         SET_OP_ID(payload.meta, CLOSE_DS);
         SET_TYPE_ID(payload.meta, this->type_id);
         SET_DS_ID(payload.meta, this->ds_id);
-        if (client->sendmsg_async(&payload, this->core_mask, cb) != 0) {
+        if (client->sendmsg_async(&payload, this->core_mask, UPDATE_OPERATION, cb) != 0) {
             LOG_ERROR("hashmap async close");
         }
     }
@@ -92,7 +92,7 @@ namespace pmemdsclient {
         SET_OP_ID(payload.meta,REMOVE_DS);
         SET_TYPE_ID(payload.meta,this->type_id);
         SET_DS_ID(payload.meta,this->ds_id);
-        if(!client->sendmsg(&payload,&response,this->core_mask)){
+        if(!client->sendmsg(&payload,&response,this->core_mask, UPDATE_OPERATION)){
             LOG_ERROR("hashmap remove");
         }
         if(STATUS(response->meta) != OK){
@@ -108,7 +108,7 @@ namespace pmemdsclient {
         SET_OP_ID(payload.meta,REMOVE_DS);
         SET_TYPE_ID(payload.meta,this->type_id);
         SET_DS_ID(payload.meta,this->ds_id);
-        if (client->sendmsg_async(&payload, this->core_mask, cb) != 0) {
+        if (client->sendmsg_async(&payload, this->core_mask, UPDATE_OPERATION, cb) != 0) {
             LOG_ERROR("hashmap async remove");
         }
     }
@@ -121,7 +121,7 @@ namespace pmemdsclient {
         SET_OP_ID(payload.meta,GET);
         SET_TYPE_ID(payload.meta,this->type_id);
         payload.key = key;
-        if(!client->sendmsg(&payload,&response,this->core_mask)){
+        if(!client->sendmsg(&payload,&response,this->core_mask, READ_OPERATION)){
             LOG_ERROR("get operation");
         }
         if(STATUS(response->meta) != OK){
@@ -138,7 +138,7 @@ namespace pmemdsclient {
         SET_OP_ID(payload.meta,GET);
         SET_TYPE_ID(payload.meta,this->type_id);
         payload.key = key;
-        if (client->sendmsg_async(&payload, this->core_mask, cb) != 0) {
+        if (client->sendmsg_async(&payload, this->core_mask, READ_OPERATION, cb) != 0) {
             LOG_ERROR("hashmap async get");
         }
 
@@ -153,7 +153,7 @@ namespace pmemdsclient {
         SET_TYPE_ID(payload.meta,this->type_id);
         payload.key = key;
         snprintf(payload.value,MAX_VAL_LENGTH,"%s",value.c_str());
-        if(!client->sendmsg(&payload,&response,this->core_mask)){
+        if(!client->sendmsg(&payload,&response,this->core_mask, UPDATE_OPERATION)){
             LOG_ERROR("hashmap put");
         }
         if(STATUS(response->meta) != OK){
@@ -171,7 +171,7 @@ namespace pmemdsclient {
         SET_TYPE_ID(payload.meta,this->type_id);
         payload.key = key;
         snprintf(payload.value,MAX_VAL_LENGTH,"%s",value.c_str());
-        if (client->sendmsg_async(&payload, this->core_mask, cb) != 0) {
+        if (client->sendmsg_async(&payload, this->core_mask, UPDATE_OPERATION, cb) != 0) {
             LOG_ERROR("hashmap async put");
         }
         return OK;
@@ -185,7 +185,7 @@ namespace pmemdsclient {
         SET_OP_ID(payload.meta,DELETE);
         SET_TYPE_ID(payload.meta,this->type_id);
         payload.key = key;
-        if(!client->sendmsg(&payload,&response,this->core_mask)){
+        if(!client->sendmsg(&payload,&response,this->core_mask, UPDATE_OPERATION)){
             LOG_ERROR("hashmap key delete");
         }
         if(STATUS(response->meta) != OK){
@@ -202,7 +202,7 @@ namespace pmemdsclient {
         SET_OP_ID(payload.meta,DELETE);
         SET_TYPE_ID(payload.meta,this->type_id);
         payload.key = key;
-        if (client->sendmsg_async(&payload, this->core_mask, cb) != 0) {
+        if (client->sendmsg_async(&payload, this->core_mask, UPDATE_OPERATION, cb) != 0) {
             LOG_ERROR("hashmap async remove");
         }
         return OK;

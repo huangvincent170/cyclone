@@ -31,7 +31,7 @@ namespace pmemdsclient {
         SET_OP_ID(payload.meta, CREATE_DS);
         SET_TYPE_ID(payload.meta, this->type_id);
         SET_DS_ID(payload.meta,this->ds_id);
-        if (!client->sendmsg(&payload, &response, this->core_mask)) {
+        if (!client->sendmsg(&payload, &response, this->core_mask,UPDATE_OPERATION)) {
             LOG_ERROR("priority queue create");
         }
         if (STATUS(response->meta) != OK) {
@@ -47,7 +47,7 @@ namespace pmemdsclient {
         SET_OP_ID(payload.meta, CREATE_DS);
         SET_TYPE_ID(payload.meta, this->type_id);
         SET_DS_ID(payload.meta,this->ds_id);
-        if (client->sendmsg_async(&payload, this->core_mask, cb) != 0) {
+        if (client->sendmsg_async(&payload, this->core_mask, UPDATE_OPERATION, cb) != 0) {
             LOG_ERROR("prioq async create");
         }
         return OK;
@@ -60,7 +60,7 @@ namespace pmemdsclient {
         SET_OP_ID(payload.meta,CLOSE_DS);
         SET_TYPE_ID(payload.meta, this->type_id);
         SET_DS_ID(payload.meta,this->ds_id);
-        if(!client->sendmsg(&payload,&response,this->core_mask)){
+        if(!client->sendmsg(&payload,&response,this->core_mask, UPDATE_OPERATION)){
             LOG_ERROR("priority_queue close");
         }
         if(STATUS(response->meta) != OK){
@@ -76,7 +76,7 @@ namespace pmemdsclient {
         SET_OP_ID(payload.meta,CLOSE_DS);
         SET_TYPE_ID(payload.meta, this->type_id);
         SET_DS_ID(payload.meta,this->ds_id);
-        if (client->sendmsg_async(&payload, this->core_mask, cb) != 0) {
+        if (client->sendmsg_async(&payload, this->core_mask, UPDATE_OPERATION, cb) != 0) {
             LOG_ERROR("prioq async close");
         }
         return OK;
@@ -88,7 +88,7 @@ namespace pmemdsclient {
         SET_OP_ID(payload.meta,REMOVE_DS);
         SET_TYPE_ID(payload.meta, this->type_id);
         SET_DS_ID(payload.meta,this->ds_id);
-        if(!client->sendmsg(&payload,&response,this->core_mask)){
+        if(!client->sendmsg(&payload,&response,this->core_mask, UPDATE_OPERATION)){
             LOG_ERROR("priority_queue remove");
         }
         if(STATUS(response->meta) != OK){
@@ -104,7 +104,7 @@ namespace pmemdsclient {
         SET_OP_ID(payload.meta,REMOVE_DS);
         SET_TYPE_ID(payload.meta, this->type_id);
         SET_DS_ID(payload.meta,this->ds_id);
-        if (client->sendmsg_async(&payload, this->core_mask, cb) != 0) {
+        if (client->sendmsg_async(&payload, this->core_mask, UPDATE_OPERATION, cb) != 0) {
             LOG_ERROR("prioq async remove");
         }
         return OK;
@@ -120,7 +120,7 @@ namespace pmemdsclient {
         payload.key = key;
         unsigned long *value = reinterpret_cast<unsigned long *>(payload.value);
         *value = priority;
-        if(!client->sendmsg(&payload,&response,this->core_mask)){
+        if(!client->sendmsg(&payload,&response,this->core_mask, UPDATE_OPERATION)){
             LOG_ERROR("priority queue insert");
         }
         if(STATUS(response->meta) != OK){
@@ -140,7 +140,7 @@ namespace pmemdsclient {
         payload.key = key;
         unsigned long *value = reinterpret_cast<unsigned long *>(payload.value);
         *value = priority;
-        if (client->sendmsg_async(&payload, this->core_mask, cb) != 0) {
+        if (client->sendmsg_async(&payload, this->core_mask, UPDATE_OPERATION, cb) != 0) {
             LOG_ERROR("prioq async insert");
         }
         return OK;
@@ -159,7 +159,7 @@ namespace pmemdsclient {
         unsigned long *value = reinterpret_cast<unsigned long *>(payload.value);
         *value = delta_prio;
 
-        if(!client->sendmsg(&payload,&response,this->core_mask)){
+        if(!client->sendmsg(&payload,&response,this->core_mask, UPDATE_OPERATION)){
             LOG_ERROR("priority queue insert");
         }
         if(STATUS(response->meta) != OK){
@@ -179,7 +179,7 @@ namespace pmemdsclient {
         payload.key = key;
         unsigned long *value = reinterpret_cast<unsigned long *>(payload.value);
         *value = delta_prio;
-        if (client->sendmsg_async(&payload, this->core_mask, cb) != 0) {
+        if (client->sendmsg_async(&payload, this->core_mask, UPDATE_OPERATION, cb) != 0) {
             LOG_ERROR("prioq async increase prio");
         }
         return OK;
@@ -196,7 +196,7 @@ namespace pmemdsclient {
         unsigned long *value = reinterpret_cast<unsigned long *>(payload.value);
         *value = delta_prio;
 
-        if(!client->sendmsg(&payload,&response,this->core_mask)){
+        if(!client->sendmsg(&payload,&response,this->core_mask, UPDATE_OPERATION)){
             LOG_ERROR("priority queue insert");
         }
         if(STATUS(response->meta) != OK){
@@ -216,7 +216,7 @@ namespace pmemdsclient {
         payload.key = key;
         unsigned long *value = reinterpret_cast<unsigned long *>(payload.value);
         *value = delta_prio;
-        if (client->sendmsg_async(&payload, this->core_mask, cb) != 0) {
+        if (client->sendmsg_async(&payload, this->core_mask, UPDATE_OPERATION, cb) != 0) {
             LOG_ERROR("prioq async decrease prio");
         }
         return OK;

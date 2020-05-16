@@ -10,9 +10,9 @@ namespace pmemdsclient {
 
         ~DPDKPMClient();
 
-        int sendmsg(pm_rpc_t *msg, pm_rpc_t **response, unsigned long core_mask);
+        int sendmsg(pm_rpc_t *msg, pm_rpc_t **response, unsigned long core_mask,int rpc_flags);
 
-        int sendmsg_async(pm_rpc_t *msg, unsigned long core_mask, void (*cb)(void *));
+        int sendmsg_async(pm_rpc_t *msg, unsigned long core_mask, int rpc_flags, void (*cb)(void *));
 
     private:
         void *dpdk_client;

@@ -1,0 +1,42 @@
+ 
+# Prerequisites
+*.d
+
+# Compiled Object files
+*.slo
+*.lo
+*.o
+*.obj # Precompiled Headers *.gch
+*.pch
+
+# Compiled Dynamic libraries
+*.so
+*.dylib
+*.dll
+
+# Fortran module files
+*.mod
+*.smod
+
+# Compiled Static libraries
+*.lai
+*.la
+*.a
+*.lib
+
+# Executables
+*.exe
+*.out
+*.app
+
+*.pyc
+
+
+scripts/**/exec_clients.sh
+scripts/**/exec_preload.sh
+scripts/**/exec_servers.sh
+scripts/**/killall.sh
+scripts/**/exec_inactive_servers.sh
+scripts/**/build_client.sh
+scripts/**/gen_configs/
+scripts/**/results/
