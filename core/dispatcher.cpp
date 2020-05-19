@@ -327,7 +327,26 @@ typedef struct executor_st {
 					quorums[0]->remove_inflight(client_buffer->client_id);
 				}
 #ifndef __COMMUTE
+#if defined(__EXTRA_COPY)
+			    while(m != NULL){
+			      rte_mbuf *temp = m->next;
+				  rte_free(m);
+				  m = temp;
+				}
+#elif defined(__NAIVE_BATCHING)
+				if(m->nb_segs > 1){	
+				  while(m != NULL){
+					rte_mbuf *temp = m->next;
+					rte_free(m);
+					m = temp;
+				  }
+				}else{
+				  rte_pktmbuf_free(m); // going back to memory pool
+				}
+
+#else
 				rte_pktmbuf_free(m);
+#endif
 #else
 				wal->marked = GC_READY;
 				__sync_synchronize(); // publish
