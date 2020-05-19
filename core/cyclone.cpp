@@ -332,6 +332,29 @@ static void add_head(void *pkt,
   memcpy(entry, ety, sizeof(raft_entry_t));
 }
 
+rte_mbuf* deep_copy(rte_mbuf *m){
+  unsigned long clsize = 64; // cache line size of intel cpus
+  unsigned long mask = clsize-1;
+  unsigned long buf_size;
+  unsigned long aligned_buf_size = (buf_size + mask) & ~mask;
+  rte_mbuf head;
+  head->next = NULL;
+
+  rte_mbuf *it = &head;
+  while(m != NULL){
+	buf_size = ((unsigned long)m - (unsigned long)rte_pktmbuf_mtod(m) + 1) +
+						rte_pktmbuf_datalen(m);  
+	aligned_buf_size = (buf_size + mask) & ~mask;
+	it->next = (rte_mbuf *)rte_malloc(aligned_buf_size);
+	memcpy((void *)it->next, (void *)m, buf_size);	
+
+	it = it->next;
+	m = m->next;
+  }
+  return head.next;
+}
+
+
 /** Raft callback for appending an item to the log */
 static int __raft_logentry_offer_batch(raft_server_t* raft,
       				       void *udata,
@@ -352,8 +375,23 @@ static int __raft_logentry_offer_batch(raft_server_t* raft,
   else {
     is_leader = 0;
   }
+
   for(int i=0; i<count;i++,e++) {
-    if(is_leader) {
+#if defined( __EXTRA_COPY)
+	rte_mbuf *m = (rte_mbuf *)e->data.buf;
+	e->data.buf = deep_copy(m);
+	rte_pktmbuf_free(m);
+#elif defined(__NAIVE_BATCHING)
+	rte_mbuf *m = (rte_mbuf *)e->data.buf;
+	if(m->nb_segs > 1){
+	  e->data.buf = deep_copy(m);
+	  rte_pktmbuf_free(m);
+	}
+#endif  
+
+
+
+  if(is_leader) {
       add_head(e->data.buf, cyclone_handle, e, prev, ety_idx + i);
     }
     e->id = ety_idx + i;
