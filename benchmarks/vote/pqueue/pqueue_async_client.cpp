@@ -80,18 +80,18 @@ int driver(void *arg)
 	BOOST_LOG_TRIVIAL(info) << "ZIPFIAN (ALPHA) = " << alpha;
 
 	srand(rtc_clock::current_time());
-  pmlib->open("voteApp",nullptr);
+	pmlib->open("voteApp");
 	uint8_t creation_flag = 0;
 	
-	hashMap->create(creation_flag,nullptr);
-	prio_queue->create(creation_flag,nullptr);
+	hashMap->create(creation_flag);
+	prio_queue->create(creation_flag);
 
 	// populate articles
 	BOOST_LOG_TRIVIAL(info) << "Loading articles to hashmap/prio-queue";
 	for(int i = 0; i <= keys; i++){
 	 snprintf(article_name,16,"Article #%lu",key);
-	 hashMap->put(i,article_name,nullptr);
-	 prio_queue->insert(i,0,nullptr); // 0 votes initially
+	 hashMap->put(i,article_name);
+	 prio_queue->insert(i,0); // 0 votes initially
 	}
 
 	BOOST_LOG_TRIVIAL(info) << "run bench";

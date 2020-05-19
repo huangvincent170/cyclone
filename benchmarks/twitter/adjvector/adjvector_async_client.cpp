@@ -80,9 +80,9 @@ int driver(void *arg)
 	char value_buffer[64];
 	srand(rtc_clock::current_time());
 
-	pmlib->open("twitterApp",nullptr);
+	pmlib->open("twitterApp");
 	uint8_t creation_flag = 0;
-	adjv->create(creation_flag,nullptr);
+	adjv->create(creation_flag);
 
 	for(int i=0 ;i<100000 ;i++ ){ // pre-loading some values
 		if(fscanf(fp,"%lu %lu", &tonode_id, &fromnode_id) != 2){
@@ -90,7 +90,7 @@ int driver(void *arg)
 			exit(-1);
 		}			
 		//BOOST_LOG_TRIVIAL(info) << "preload, add_edge from -> to : " << fromnode_id  << " -> "<< tonode_id;
-		adjv->add_edge(fromnode_id,tonode_id, nullptr);
+		adjv->add_edge(fromnode_id,tonode_id);
 	}
 	for( ; ; ){
 		coin = ((double)rand())/RAND_MAX;
