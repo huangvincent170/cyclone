@@ -446,13 +446,15 @@ struct cyclone_monitor {
 		}
 	}
 
+
+
 	void accept(int available, int multicore)
 	{
 		//BOOST_LOG_TRIVIAL(info) << "available messages : " << available;  
 		int accepted = 0;
 		rte_mbuf *m;
 		rpc_t *rpc;
-
+		
 		memset(chain_size, 0, 2*PKT_BURST);
 		for(int i=0;i<available;i++) {
 			m = pkt_array[i];
@@ -477,45 +479,46 @@ struct cyclone_monitor {
 				}
 			}
 			if(!multicore && is_multicore_rpc(rpc)) {
-				// Received a multi-core operation
-				// Check that I am quorum 0
-				if(cyclone_handle->me_quorum != 0) {
-					rte_pktmbuf_free(m);
-					continue;
-				}
-				if(rpc->core_mask > ((1UL << executor_threads) - 1)) {
-					BOOST_LOG_TRIVIAL(fatal) << "Invalid core mask " << rpc->core_mask;
-					exit(-1);
-				}
-				ic_rdv_t *rdv = rpc2rdv(rpc);
-				rdv->rtc_ts = cyclone_handle->nonce_base + rte_get_tsc_cycles();
-				memcpy(&rdv->mc_id,
-						global_dpdk_context->mc_addresses[global_dpdk_context->me],
-						6);
-				unsigned long quorum_mask = 0;
-				unsigned long t = rpc->core_mask;
-				while(t) {
-					int c = __builtin_ffsl(t) - 1;
-					quorum_mask |= (1 << core_to_quorum(c));
-					t = t & ~(1UL << c);
-				}
-				// Delete all headers and enqueue to quorums
-				if(rte_pktmbuf_adj(m, ((char *)rpc) - rte_pktmbuf_mtod(m, char *)) == NULL) {
-					BOOST_LOG_TRIVIAL(fatal) << "Failed to delete header for multicore";
-					exit(-1);
-				}
-				while(quorum_mask) {
-					int q = __builtin_ffsl(quorum_mask) - 1;
-					rte_mbuf_refcnt_update(m, 1);
-					if(rte_ring_sp_enqueue(to_quorums[q], (void *)m) == -ENOBUFS) {
-						BOOST_LOG_TRIVIAL(fatal) << "Failed to enqueue in cross quorum q";
-						exit(-1);
-					}
-					quorum_mask = quorum_mask & ~(1UL << q);
-				}
-				rte_pktmbuf_free(m);
-				continue;
-			}
+                // Received a multi-core operation
+                // Check that I am quorum 0
+                if(cyclone_handle->me_quorum != 0) {
+                    rte_pktmbuf_free(m);
+                    continue;
+                }
+                if(rpc->core_mask > ((1UL << executor_threads) - 1)) {
+                    BOOST_LOG_TRIVIAL(fatal) << "Invalid core mask " << rpc->core_mask;
+                    exit(-1);
+                }
+                ic_rdv_t *rdv = rpc2rdv(rpc);
+                rdv->rtc_ts = cyclone_handle->nonce_base + rte_get_tsc_cycles();
+                memcpy(&rdv->mc_id,
+                        global_dpdk_context->mc_addresses[global_dpdk_context->me],
+                        6);
+                unsigned long quorum_mask = 0;
+                unsigned long t = rpc->core_mask;
+                while(t) {
+                    int c = __builtin_ffsl(t) - 1;
+                    quorum_mask |= (1 << core_to_quorum(c));
+                    t = t & ~(1UL << c); 
+                }
+                // Delete all headers and enqueue to quorums
+                if(rte_pktmbuf_adj(m, ((char *)rpc) - rte_pktmbuf_mtod(m, char *)) == NULL) {
+                    BOOST_LOG_TRIVIAL(fatal) << "Failed to delete header for multicore";
+                    exit(-1);
+                }
+                while(quorum_mask) {
+                    int q = __builtin_ffsl(quorum_mask) - 1;
+                    rte_mbuf_refcnt_update(m, 1); 
+                    if(rte_ring_sp_enqueue(to_quorums[q], (void *)m) == -ENOBUFS) {
+                        BOOST_LOG_TRIVIAL(fatal) << "Failed to enqueue in cross quorum q";
+                        exit(-1);
+                    }
+                    quorum_mask = quorum_mask & ~(1UL << q); 
+                }
+                rte_pktmbuf_free(m);
+                continue;
+            }	
+
 			if(rpc->code == RPC_REQ_STABLE) {
 				if(take_snapshot(snapshot)) {
 					rte_pktmbuf_append(m, num_quorums*sizeof(unsigned int));
@@ -530,6 +533,7 @@ struct cyclone_monitor {
 						BOOST_LOG_TRIVIAL(fatal) << "raft->core comm ring is full (req stable)";
 						exit(-1);
 					}
+
 #else
 					wal_entry_t *wal = pktadj2wal(m);
 					wal->marked = GC_IN_USE;
@@ -549,14 +553,14 @@ struct cyclone_monitor {
 			// Do term checks
 			if(!multicore) {
 				if(rpc->quorum_term != raft_get_current_term(cyclone_handle->raft_handle)) {
-					rte_pktmbuf_free(m);
+                    rte_pktmbuf_free(m);
 					continue;
 				}
 			}
 			else {
 				unsigned int *term_array = (unsigned int *)(rpc + 1);
 				if(term_array[cyclone_handle->me_quorum] != raft_get_current_term(cyclone_handle->raft_handle)) {
-					rte_pktmbuf_free(m);
+                    rte_pktmbuf_free(m);
 					continue;
 				}
 			}
@@ -572,15 +576,16 @@ struct cyclone_monitor {
 				if(cyclone_handle->snapshot & 1) { // is leader
 				cyclone_handle->add_inflight(rpc->client_id);
 #ifndef __COMMUTE
+
 					void *triple[3];
 					triple[0] = (void *)(unsigned long)cyclone_handle->me_quorum;
 					triple[1] = m;
 					triple[2] = rpc;
-
 					if(rte_ring_mp_enqueue_bulk(to_cores[core], triple, 3) == -ENOBUFS) {
 						BOOST_LOG_TRIVIAL(fatal) << "raft->core comm ring is full (req ro)";
 						exit(-1);
 					}
+
 #else
 					wal_entry_t *wal = pktadj2wal(m);
 					wal->marked = GC_IN_USE;
@@ -593,7 +598,7 @@ struct cyclone_monitor {
 #endif
 				}
 				else {
-					rte_pktmbuf_free(m);
+                    rte_pktmbuf_free(m);
 				}
 				continue;
 			}
@@ -769,6 +774,7 @@ struct cyclone_monitor {
 					}
 					pktsetrpcsz(k, sizeof(rpc_t));
 					adjust_head(k);
+
 					messages[0].data.buf = (void *)k;
 					messages[0].data.len = pktadj2rpcsz(k);
 					messages[0].type = RAFT_LOGTYPE_NORMAL;
