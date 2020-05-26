@@ -54,6 +54,7 @@ typedef struct rpc_client_st {
 	//struct rte_hash *sentmsg_tbl;
 	std::map<unsigned long, async_comm_t *> *pendresponse_map; // ordered map 
 	volatile int64_t msg_inflight;
+	volatile bool ldr_failed; // tracking async message timeouts without locking
 	unsigned long max_inflight; 
 //	struct async_lstener_t_ *lstnr;
 
@@ -318,7 +319,17 @@ int64_t get_inflight()
 	return msg_inflight;
 }
 
+void set_leader_failed(){
+	__sync_bool_compare_and_swap(&ldr_failed,false,true);
+}
 
+void reset_leader_failed(){
+	__sync_bool_compare_and_swap(&ldr_failed,true,false);
+}
+
+bool leader_failed(){
+	return ldr_failed;
+}
 
 
   int make_rpc_async(void *payload, int sz, 
@@ -330,7 +341,16 @@ int64_t get_inflight()
     int resp_sz;
     int quorum_id = choose_quorum(core_mask);
 
-			//admission control
+	// possible leader failure
+	if(leader_failed()){
+		update_server("rx timeout, make rpc");
+		reset_leader_failed();
+		//TODO: do a return check
+		__sync_synchronize();
+		return RETRY_SEND;
+	}
+
+	  //admission control
 	  if(get_inflight() >= max_inflight){
 		//BOOST_LOG_TRIVIAL(info)<< "max inflight reached  : " << get_inflight();
 		return EMAX_INFLIGHT;
@@ -343,7 +363,7 @@ int64_t get_inflight()
       packet_out->channel_seq = channel_aseq++;
       packet_out->client_id   = me;
       packet_out->requestor   = me_mc;
-			packet_out->timestamp	  = rtc_clock::current_time();
+	  packet_out->timestamp	  = rtc_clock::current_time();
 			//packet_out->cb		  = cb;
       if((core_mask & (core_mask - 1)) != 0) {
 				BOOST_LOG_TRIVIAL(info) << "gang operations not supported";	      
@@ -367,7 +387,7 @@ int64_t get_inflight()
 			//		<<std::to_string(packet_out->client_port)
 			//		<<"inflight msgs : " << std::to_string(get_inflight());
       }
-			return 0;
+				return 0;
   }
 
 } rpc_client_t;
@@ -451,6 +471,9 @@ int exec(){
 			for(it = clnt->pendresponse_map->begin(); it != clnt->pendresponse_map->end(); it++){	
 				if(rtc_clock::current_time() - it->second->timestamp >= async_timeout_msec){
 						//BOOST_LOG_TRIVIAL(info) << "Message removed : " << it->first;
+						clnt->set_leader_failed();
+						__sync_synchronize();
+
 						it->second->cb(it->second->cb_args, REP_TIMEDOUT,async_timeout_msec); 
 						rte_free(it->second);
 						clnt->pendresponse_map->erase(it);
