@@ -62,13 +62,12 @@ void async_callback(void *args, int code, unsigned long msg_latency){
 	total_latency += msg_latency; //timouts get added in to message latency
 	if(tx_block_cnt >= 5000) {
 		unsigned long total_elapsed_time = (rtc_clock::current_time() - tx_begin_time);
-		std::cout << "LOAD = "
+		BOOST_LOG_TRIVIAL(info) << "LOAD = "
 				<< ((double)1000000*tx_block_cnt)/total_elapsed_time
 				<< " tx/sec "
 				<< "LATENCY = "
 				<< ((double)total_latency)/tx_block_cnt
-				<< " us "
-				<< std::endl;
+				<< " us ";
 		tx_block_cnt   = 0;
 		tx_failed_cnt  = 0;
 		total_latency  = 0;

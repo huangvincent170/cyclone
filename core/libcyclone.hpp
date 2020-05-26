@@ -57,7 +57,7 @@ static const char MAX_INFLIGHT = 12;
 static const unsigned int CLIENT_SYNC      = 1<<0;
 static const unsigned int CLIENT_ASYNC     = 1<<1;
 static const unsigned int MAX_ASYNC_CLIENTS = 32;
-static const int async_timeout_msec  = 500000000;  // async client timeout
+static const int async_timeout_msec  = 5000000;  // async client timeout
 
 static const unsigned int EMAX_INFLIGHT = 1;
 static const unsigned int RETRY_SEND = 2;
