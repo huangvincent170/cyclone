@@ -50,7 +50,7 @@ typedef struct cb_st{
 	unsigned long request_id;
 }cb_t;
 
-
+boost::posix_time::ptime exp_start = boost::posix_time::second_clock::local_time();
 void async_callback(void *args, int code, unsigned long msg_latency){
 	//cb_t *cb = (cb_t *)args;
 	if(code == REP_SUCCESS){
@@ -62,12 +62,14 @@ void async_callback(void *args, int code, unsigned long msg_latency){
 	total_latency += msg_latency; //timouts get added in to message latency
 	if(tx_block_cnt >= 5000) {
 		unsigned long total_elapsed_time = (rtc_clock::current_time() - tx_begin_time);
-		BOOST_LOG_TRIVIAL(info) << "LOAD = "
+		boost::posix_time::ptime now = boost::posix_time::second_clock::local_time();
+		boost::posix_time::time_duration diff = now - exp_start;
+		std::cout << diff.total_seconds() << " LOAD = "
 				<< ((double)1000000*tx_block_cnt)/total_elapsed_time
 				<< " tx/sec "
 				<< "LATENCY = "
 				<< ((double)total_latency)/tx_block_cnt
-				<< " us ";
+				<< " us " << std::endl;
 		tx_block_cnt   = 0;
 		tx_failed_cnt  = 0;
 		total_latency  = 0;
