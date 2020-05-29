@@ -22,8 +22,8 @@ do
 
     ./vote_bench.py -startsrv -m "$m" -w "$w"
     ./vote_bench.py -startclnt -m "$m" -w "$w"
-	# wait for sometime
-	sleep 60
+     # wait for sometime. We have to wait litte bit long, due to data loading
+     sleep 150
     ./vote_bench.py -stop -m "$m" -w "$w"
 
 	# gather output
