@@ -196,7 +196,9 @@ int main(int argc, const char *argv[]) {
 					      1 + me - client_id_start,
 					      fname_server,
 					      atoi(argv[9]),
-					      fname_client);
+					      fname_client,
+					      CLIENT_SYNC,
+					      0);
     }
   }
   BOOST_LOG_TRIVIAL(info) << "sleep 10 sec...";

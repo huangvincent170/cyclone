@@ -7,16 +7,16 @@ CXXFLAGS = -O3 -fPIC -DBOOST_LOG_DYN_LINK
 #CXXFLAGS += -DWORKAROUND0
 
 CXXFLAGS += -DDPDK_STACK -std=gnu++0x
-RTE_SDK?=/home/pfernando/dpdk
-CXXFLAGS += -march=native -DRTE_MACHINE_CPUFLAG_SSE -DRTE_MACHINE_CPUFLAG_SSE2 -DRTE_MACHINE_CPUFLAG_SSE3 -DRTE_MACHINE_CPUFLAG_SSSE3 -DRTE_MACHINE_CPUFLAG_SSE4_1 -DRTE_MACHINE_CPUFLAG_SSE4_2 -DRTE_MACHINE_CPUFLAG_AES -DRTE_MACHINE_CPUFLAG_PCLMULQDQ -DRTE_MACHINE_CPUFLAG_AVX -I../nvml/src/include -I../raft/include -I${RTE_SDK}/x86_64-native-linuxapp-gcc/include
+#RTE_SDK?=/home/pfernando/dpdk
+CXXFLAGS += -march=native -DRTE_MACHINE_CPUFLAG_SSE -DRTE_MACHINE_CPUFLAG_SSE2 -DRTE_MACHINE_CPUFLAG_SSE3 -DRTE_MACHINE_CPUFLAG_SSSE3 -DRTE_MACHINE_CPUFLAG_SSE4_1 -DRTE_MACHINE_CPUFLAG_SSE4_2 -DRTE_MACHINE_CPUFLAG_AES -DRTE_MACHINE_CPUFLAG_PCLMULQDQ -DRTE_MACHINE_CPUFLAG_AVX -I/home/dzahka3/dpdk-stable-16.11.11/x86_64-native-linuxapp-gcc/include -I /home/dzahka3/cyclone/raft/include
 
 
 #Depending on boost version/OS distro
-BOOST_THREAD_LIB=-lboost_thread-mt
-#BOOST_THREAD_LIB=-lboost_thread
+#BOOST_THREAD_LIB=-lboost_thread-mt
+BOOST_THREAD_LIB=-lboost_thread
 
 
-libcyclone.a: libcyclone.o dispatcher.o dispatch_client.o tcp_tunnel.o
+libcyclone.a: libcyclone.o dispatcher.o dispatch_client.o tcp_tunnel.o ../raft/libcraft.a
 	ar rcs $@ $^
 
 libcyclone.o: cyclone.cpp libcyclone.hpp
