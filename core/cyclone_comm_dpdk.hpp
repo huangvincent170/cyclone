@@ -473,12 +473,19 @@ static void install_eth_filters(int port, int queues)
 	BOOST_LOG_TRIVIAL(info) << "Added filter for rxq " << i;
     }
     else { // stop the queue to drop unwanted packets
-      int ret = rte_eth_dev_rx_queue_stop(port, 0);
-      if(ret != 0)
-	rte_exit(EXIT_FAILURE, "rte_eth_dev_queue_stop:err=%d, port=%u\n",
-		 ret, (unsigned) port);
-      else
-	BOOST_LOG_TRIVIAL(info) << "Stopped rxq 0 on port" << port;
+      // int ret = rte_eth_dev_rx_queue_stop(port, 0);
+      // 	  if (ret == -EINVAL){
+      // 	      std::cout << "EINVAL!!!" << std::endl;
+      // 	  }
+      // if (ret == -ENOTSUP){
+      // 	      std::cout << "ENOTSUP!!!" << std::endl;
+      // }
+
+      // if(ret != 0)
+      // 	rte_exit(EXIT_FAILURE, "rte_eth_dev_queue_stop:err=%d, port=%u\n",
+      // 		 ret, (unsigned) port);
+      // else
+      // 	BOOST_LOG_TRIVIAL(info) << "Stopped rxq 0 on port" << port;
     }
   }
 }

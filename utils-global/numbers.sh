@@ -3,7 +3,7 @@
 export CYCLONE_PASS="danielpassword"
 
 rm -rf test
-python config_generator.py ../utils-arch-cluster/aries-machines.ini.1 ../utils-arch-cluster/aries-example.ini.1 ./echo.py test
+python config_generator.py ../utils-arch-cluster/jedi-machines.ini.1 ../utils-arch-cluster/jedi-example.ini.1 ./echo.py test
 #python config_generator.py ../utils-arch-cluster/cluster-dpdk.ini.1 ../utils-arch-cluster/example.ini.1 ./echo.py test
 #python config_generator.py ../utils-arch-cluster/aep-machines.ini.2 ../utils-arch-cluster/aep-example.ini.2 ./echo.py test
 
