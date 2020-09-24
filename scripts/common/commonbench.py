@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python2.7
 
 import sys
 import os
@@ -6,15 +6,15 @@ import shutil
 
 DBG=1
 #all script command operate relative to this path.
-home = '/home/pfernando/deploy-cyclone'
+home = '/home/cyclone/deploy-cyclone'
 #located in remote machine
-deploy_dir = '/home/pfernando/cyclone'
+deploy_dir = '/home/cyclone/cyclone'
 gen_dir= 'gen_configs'
 
-rte_sdk = '/home/pfernando/dpdk'
-rte_nvmsdk = '/home/pfernando/nvm-dpdk'
+rte_sdk = '/home/cyclone/dpdk'
+rte_nvmsdk = '/home/cyclone/nvm-dpdk'
 #pmemkv lib with crash-consistent logging turned-off
-ncc_pmem = '/home/pfernando/pmdknlog/src/nondebug'
+ncc_pmem = '/home/cyclone/pmdknlog/src/nondebug'
 
 
 
@@ -122,7 +122,7 @@ class Common:
             return 1;
 
         print 'generating workload : ' + w +' for memory tytpe: ' + m + ' replica nodes: ' + r
-        cmd = ('python ' + 
+        cmd = ('python2 ' + 
         home +  '/scripts/common/config_generator.py ' + 
         home + '/utils-arch-cluster/cluster-dpdk.ini.' + r + ' ' + 
         home + '/utils-arch-cluster/example.ini.' + r + ' ')
