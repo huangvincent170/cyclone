@@ -2,16 +2,17 @@
 
 # prepare network interface for DPDK
 
-dpdk_home=/home/pfernando/dpdk
+dpdk_home=/home/cyclone/dpdk
 pciaddr=0000:18:00.0 
-deviface=enp24s0f0
+deviface=ens785f0
+bind_module=igb_uio
 
-modprobe uio_pci_generic
+modprobe ${bind_module}
 ${dpdk_home}/tools/dpdk-devbind.py --status
 
 ip addr flush dev ${deviface}
 
-${dpdk_home}/tools/dpdk-devbind.py --bind=uio_pci_generic  ${pciaddr}
+${dpdk_home}/tools/dpdk-devbind.py --bind=${bind_module}  ${pciaddr}
 
 #reserver huge pages
 mkdir -p /mnt/huge
