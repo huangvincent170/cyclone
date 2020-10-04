@@ -12,7 +12,7 @@ def launch_cmds_server_gen(f, q, r, m, quorums, replicas, clients, ports):
     cmd=cmd + ' echo ' + passwd + ' | sudo -S '
     cmd=cmd + ' PMEM_IS_PMEM_FORCE=1 '
     cmd=cmd + ' LD_LIBRARY_PATH=/usr/lib:/usr/local/lib '
-    cmd=cmd + '/home/pfernando/cyclone/cyclone.git/benchmarks/echo/echo/echo_server '
+    cmd=cmd + '/home/cyclone/cyclone/cyclone.git/benchmarks/echo/echo/echo_server '
     cmd=cmd + str(r) + ' '
     cmd=cmd + str(m) + ' '
     cmd=cmd + str(clients) + ' '
