@@ -48,8 +48,8 @@ def launch_cmds_client_gen(f, m, c, quorums, replicas, clients, machines, ports,
                 passwd=os.environ.get('CYCLONE_PASS')
             cmd=cmd + 'echo '+ passwd +' | sudo -S '
             cmd=cmd + ' LD_LIBRARY_PATH=/usr/lib:/usr/local/lib '
-            cmd=cmd + '/home/pfernando/cyclone/cyclone.git/benchmarks/echo/echo/echo_async_client '
- #           cmd=cmd + '/home/pfernando/cyclone/cyclone.git/test/echo_client '
+            cmd=cmd + '/home/cyclone/cyclone/cyclone.git/benchmarks/echo/echo/echo_async_client '
+ #           cmd=cmd + '/home/cyclone/cyclone/cyclone.git/test/echo_client '
             cmd=cmd + str(c_start) + ' '
             cmd=cmd + str(c_stop) + ' '
             cmd=cmd + str(m) + ' '

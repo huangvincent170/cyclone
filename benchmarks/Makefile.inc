@@ -1,19 +1,19 @@
 
 #BLIZZARD
-BLIZZARD_HOME?=/home/pfernando/cyclone
+BLIZZARD_HOME?=/home/cyclone/cyclone
 
 CXXFLAGS = -O3 -DBOOST_LOG_DYN_LINK -DBOOST_THREAD_DYN_LINK
 CXXFLAGS += $(CPPFLAGS)
 #CXXFLAGS = -O1 -g -fno-omit-frame-pointer -DBOOST_LOG_DYN_LINK
-#PMEM_SLIB?=/home/pfernando/blizzard_pmdk/src/nondebug
+#PMEM_SLIB?=/home/cyclone/blizzard_pmdk/src/nondebug
 PMEM_SLIB?=../../../pmdk/src/nondebug
 PMEM_CLIB?=../../../pmdk/src/nondebug
 
 LIBS = -lc ../../../core/libcyclone.a ../../../raft/libcraft.a -lboost_system -lboost_date_time -laio
 
 #DPDK extras
-RTE_CSDK?=/home/pfernando/dpdk
-RTE_SSDK?=/home/pfernando/dpdk
+RTE_CSDK?=/home/cyclone/dpdk
+RTE_SSDK?=/home/cyclone/dpdk
 
 CXXFLAGS += -I../../../core -DDPDK_STACK
 CXXFLAGS += -march=native -DRTE_MACHINE_CPUFLAG_SSE -DRTE_MACHINE_CPUFLAG_SSE2 -DRTE_MACHINE_CPUFLAG_SSE3 -DRTE_MACHINE_CPUFLAG_SSSE3 -DRTE_MACHINE_CPUFLAG_SSE4_1 -DRTE_MACHINE_CPUFLAG_SSE4_2 -DRTE_MACHINE_CPUFLAG_AES -DRTE_MACHINE_CPUFLAG_PCLMULQDQ -DRTE_MACHINE_CPUFLAG_AVX
