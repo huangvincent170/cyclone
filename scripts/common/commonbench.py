@@ -12,7 +12,7 @@ deploy_dir = '/home/cyclone/cyclone'
 gen_dir= 'gen_configs'
 
 rte_sdk = '/home/cyclone/dpdk'
-rte_nvmsdk = '/home/cyclone/nvm-dpdk'
+rte_nvmsdk = '/home/cyclone/dpdk-nvm'
 #pmemkv lib with crash-consistent logging turned-off
 ncc_pmem = '/home/cyclone/pmdknlog/src/nondebug'
 

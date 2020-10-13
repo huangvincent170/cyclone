@@ -1,4 +1,5 @@
-#!/usr/bin/env python
+#!/usr/bin/env python2.7
+
 import sys
 import argparse
 sys.path.append('../common')
@@ -13,7 +14,7 @@ volatile_pmemkv_ncc = 'volatile_pmemkv_ncc'
 rocksdb = 'rocksdb'
 pmemds = 'pmemds'
 hashmap = 'hashmap'
-
+novelsm = 'novelsm'
 
 wl=[]
 wl.append(echo)
@@ -25,6 +26,7 @@ wl.append(volatile_pmemkv_ncc)
 wl.append(rocksdb)
 wl.append(pmemds)
 wl.append(hashmap)
+wl.append(novelsm)
 
 wl.append(empty)
 

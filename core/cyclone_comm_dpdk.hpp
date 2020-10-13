@@ -517,14 +517,14 @@ static void dpdk_context_init(dpdk_context_t *context,
 
 #ifdef PMEM_HUGE  
   BOOST_LOG_TRIVIAL(info) << "dpddk with PMEM hugepages";
-  char* fake_argv[] = {(char *)"./fake",
+  char* pmem_argv[] = {(char *)"./fake",
 			(char *)"-m",
 			(char *)"1024",
 			(char *)"--huge-dir",
 			(char *)"/mnt/pmem0"};
 //  			(char *)"--log-level=8"};
-// ret = rte_eal_init(6, fake_argv);
-  ret = rte_eal_init(5, fake_argv);
+// ret = rte_eal_init(6, pmem_argv);
+  ret = rte_eal_init(5, pmem_argv);
 #else
   BOOST_LOG_TRIVIAL(info) << "dpddk with DRAM hugepages";
   char* fake_argv[] = {(char *)"./fake"};

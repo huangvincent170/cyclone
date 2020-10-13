@@ -6,7 +6,7 @@ all: server client
 server: rocksdb_server rocksdb_checkpoint rocksdb_loader
 client: rocksdb_async_client
 
-ROCKS_HOME?=/home/pfernando/rocksdb
+ROCKS_HOME?=/home/cyclone/rocksdb
 ROCKS_CXXFLAGS=-std=c++11 -I${ROCKS_HOME}/include/ -L${ROCKS_HOME} -DROCKSDB_PLATFORM_POSIX -DROCKSDB_LIB_IO_POSIX  -DOS_LINUX -fno-builtin-memcmp -DROCKSDB_FALLOCATE_PRESENT -DSNAPPY -DGFLAGS=gflags -DZLIB -DBZIP2 -DZSTD -DNUMA -DROCKSDB_MALLOC_USABLE_SIZE -DROCKSDB_PTHREAD_ADAPTIVE_MUTEX -DROCKSDB_BACKTRACE -march=native  "-DROCKSDB_JEMALLOC" 
 ROCKS_LIBS += ${ROCKS_HOME}/librocksdb.a ${ROCKS_HOME}/libbz2.a ${ROCKS_HOME}/libz.a ${ROCKS_HOME}/libsnappy.a -lsnappy -lgflags -lz -lbz2 -lzstd -lpthread
 

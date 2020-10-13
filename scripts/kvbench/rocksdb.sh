@@ -1,6 +1,8 @@
 #!/bin/bash
-declare -a wl=("rocksdb")
-declare -a bf=(1 2 4 6 8 10 12 16 20)
+declare -a wl=("novelsm")
+
+declare -a bf=(1)
+# declare -a bf=(1 2 4 6 8 10 12 16 20)
 
 declare -a mt=("nvram")
 

@@ -21,7 +21,8 @@ do
 #	clush -w ${ip} rm -rf ${deploy_dir}/cyclone.git/test/${binary_prefix}_client
 #	clush -w ${ip} rm -rf ${deploy_dir}/cyclone.git/test/${binary_prefix}_async_client
 		if [ -f "$i/launch_servers" ] ; then
-			scp benchmarks/${bench_name}/${binary_prefix}/${binary_prefix}_server ${ip}:${deploy_dir}/cyclone.git/benchmarks/${bench_name}/${binary_prefix}
+		    scp benchmarks/${bench_name}/${binary_prefix}/${binary_prefix}_server ${ip}:${deploy_dir}/cyclone.git/benchmarks/${bench_name}/${binary_prefix}/${binary_prefix}_server
+                    scp benchmarks/${bench_name}/${binary_prefix}/${binary_prefix}_loader ${ip}:${deploy_dir}/cyclone.git/benchmarks/${bench_name}/${binary_prefix}/${binary_prefix}_loader
 		fi
     fi
 done
