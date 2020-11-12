@@ -1,12 +1,12 @@
 #!/bin/bash
-declare -a wl=("novelsm")
+declare -a wl=("hashmap")
 
-declare -a bf=(1)
+declare -a bf=(4)
 # declare -a bf=(1 2 4 6 8 10 12 16 20)
 
 declare -a mt=("nvram")
 
-declare -r rl=(1)
+declare -r rl=(2)
 
 for replicas in "${rl[@]}"
 do
