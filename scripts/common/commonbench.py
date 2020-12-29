@@ -149,7 +149,7 @@ class Common:
             cmd += '\" -D__COMMUTE\"'
         if args.no_batching == True:
             cmd += '\" -D__NO_BATCHING\"'
-        if args.exra_copy == True:
+        if args.extra_copy == True:
             cmd += '\" -D__EXTRA_COPY\"'
         sh(cmd)
         cd(home)
