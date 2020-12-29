@@ -58,8 +58,12 @@ typedef struct wal_entry_st {
    */ 
  // char padding[64 - 5*sizeof(int)];
 #endif
-	unsigned long  pmdk_state; //external commit state (64 bit) used by pmdk undo log commits
-} __attribute__((packed)) wal_entry_t;
+  unsigned long  pmdk_state; //external commit state (64 bit) used by pmdk undo log commits
+
+  // Note: the first version of the structure used packed structures -- __attribute__((packed)). But with packed structures,
+  // we cannot pass around pointers to individual members, as the alignments can break at
+  // call sites. We got to pass the  pointer to strucrue itself.
+} wal_entry_t; 
 
 //////// RPC interface
 typedef struct rpc_st {
