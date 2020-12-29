@@ -1,12 +1,13 @@
 #!/bin/bash
-# Important: enable -D__NO_BATCHING flag in core/Makefile.
+# Important: enable -D__EXTRA_COPY flag in core/Makefile.
 declare -a wl=("echo")
 #declare -a bf=(1 2 4 6 8 10 12 16 20)
- declare -a bf=(1)
+declare -a bf=(1)
 
 declare -a mt=("nvram")
 
-declare -r rl=(3)
+#declare -r rl=(3)
+declare -r rl=(2)
 
 for replicas in "${rl[@]}"
 do
