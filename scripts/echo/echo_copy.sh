@@ -1,5 +1,5 @@
 #!/bin/bash
-# Important: enable -D__EXTRA_COPY flag in core/Makefile.
+# This script enable the -D__EXTRA_COPY flag in core/Makefile.
 declare -a wl=("echo")
 #declare -a bf=(1 2 4 6 8 10 12 16 20)
 declare -a bf=(1)
@@ -20,7 +20,7 @@ do
     ./echo_bench.py -c  
     ./echo_bench.py -g -rep "$replicas" -m "$m" -w "$w" -b "$b"
     ./echo_bench.py -dc -m "$m" -w "$w"
-    ./echo_bench.py -db -m "$m" -w "$w"
+    ./echo_bench.py -db -extracopy -m "$m" -w "$w"
 
     ./echo_bench.py -startsrv -m "$m" -w "$w"
     ./echo_bench.py -startclnt -m "$m" -w "$w"
