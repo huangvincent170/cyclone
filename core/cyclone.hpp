@@ -56,11 +56,11 @@ typedef struct wal_entry_st {
    * 2. monitor thread and executor thread during application invoke,
    * Hence we place the external commit flag in the next cacheline
    */ 
- // char padding[64 - 5*sizeof(int)];
+  //char padding[64 - 5*sizeof(int)];
 #endif
   unsigned long  pmdk_state; //external commit state (64 bit) used by pmdk undo log commits
 
-  // Note: the first version of the structure used packed structures -- __attribute__((packed)). But with packed structures,
+  // Note: Earlier version of the structure used packed structures -- __attribute__((packed)). But with packed structures,
   // we cannot pass around pointers to individual members, as the alignments can break at
   // call sites. We got to pass the  pointer to strucrue itself.
 } wal_entry_t; 

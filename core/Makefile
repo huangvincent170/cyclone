@@ -1,14 +1,16 @@
 all: libcyclone.a
 
-CXXFLAGS = -O3 -fPIC -DBOOST_LOG_DYN_LINK
+CXXFLAGS = -O0 -fPIC -DBOOST_LOG_DYN_LINK
 #CXXFLAGS = -O3 -fPIC -DBOOST_LOG_DYN_LINK -D__COMMUTE
 #CXXFLAGS = -O1 -fno-omit-frame-pointer -g -fPIC -DBOOST_LOG_DYN_LINK
 
 #Hardware Workaround
 #CXXFLAGS += -DWORKAROUND0
 #CXXFLAGS += -D__LATENCY_TRACER
-#CXXFLAGS += -D__EXTRA_COPY
-#CXXFLAGS += -D__NAIVE_BATCHING
+# flag for turning zero-copy optimization off
+CXXFLAGS += -D__EXTRA_COPY
+# flag for turning batching optimization off
+#CXXFLAGS += -D__NO_BATCHING
 CXXFLAGS += $(CPPFLAGS)
 CXXFLAGS += -DDPDK_STACK -std=gnu++0x
 RTE_SDK?=/home/cyclone/dpdk

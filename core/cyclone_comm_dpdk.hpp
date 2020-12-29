@@ -515,8 +515,17 @@ static void dpdk_context_init(dpdk_context_t *context,
   BOOST_LOG_TRIVIAL(info) << "QUEUES = " << queues;
 
 
+#ifdef __NO_BATCHING
+  BOOST_LOG_TRIVIAL(info) << "Server running without batching optimization";
+#endif
+
+
+#ifdef __EXTRA_COPY
+  BOOST_LOG_TRIVIAL(info) << "Server running without zero-copy optimization";
+#endif
+
 #ifdef PMEM_HUGE  
-  BOOST_LOG_TRIVIAL(info) << "dpddk with PMEM hugepages";
+  BOOST_LOG_TRIVIAL(info) << "dpdk with PMEM hugepages";
   char* pmem_argv[] = {(char *)"./fake",
 			(char *)"-m",
 			(char *)"1024",
