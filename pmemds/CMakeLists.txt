@@ -16,7 +16,7 @@ add_definitions(-DLIBPMEMOBJ_CPP_USE_TBB_RW_MUTEX)
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${CMAKE_SOURCE_DIR}/cmake)
 
 set(CMAKE_VERBOSE_MAKEFILE ON)
-set(RTE_CSDK /home/pfernando/dpdk)
+set(RTE_CSDK /home/cyclone/dpdk-nvm)
 set(PMDK_INCLUDE ${CMAKE_SOURCE_DIR}/../pmdk/src/include)
 set(PMDK_LIB ${CMAKE_SOURCE_DIR}/../pmdk/src/debug)
 set(PMEMOBJ_CPP_INCLUDE ${CMAKE_SOURCE_DIR}/../libpmemobj-cpp/include)

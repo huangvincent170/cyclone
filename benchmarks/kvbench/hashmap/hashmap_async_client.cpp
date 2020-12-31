@@ -19,6 +19,10 @@
 #include "dpdk_client.hpp"
 #include "hashmap/hashmap-client.h"
 
+#include "../../common/genzip.hpp"
+
+const double alpha = 1.08;
+
 /* IMPORTANT - set to large enough value */
 unsigned long pmemds_keys = 1000000;
 
@@ -68,7 +72,7 @@ int driver(void *arg)
 	unsigned  long key;
 	char value_buffer[64];
 
-	double frac_read = 0.5;
+	double frac_read = 0.95;
 	const char *frac_read_env = getenv("KV_FRAC_READ");
 	if (frac_read_env != NULL)
 	{
@@ -93,9 +97,12 @@ int driver(void *arg)
 	uint8_t creation_flag = 0;
 	hashMap->create(creation_flag,nullptr);
 	//for(int i=0 ;i<10000 ;i++ ){
+        rand_val(1234);
 	for( ; ; ){
 		double coin = ((double)rand()) / RAND_MAX;
-		unsigned long key = rand() % keys;
+                unsigned long key = (unsigned long) zipf(alpha, keys);
+                // BOOST_LOG_TRIVIAL(info) << "KEY" << key;
+		// unsigned long key = rand() % keys;
 		if (coin > frac_read){
 			snprintf(value_buffer,MAX_VAL_LENGTH,"v_%lu",key);
 			//BOOST_LOG_TRIVIAL(info) << "put op :" << key;

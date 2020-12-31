@@ -246,7 +246,7 @@ class Common:
         if r == empty:
             print "Error gathering output, specify replicas"
             return 1
-        outdir = home + '/scripts/' + self.bench() + '/results/'+ self.bench() + '/' + w + '/rep' + r  + '/' + m + '/' 
+        outdir = home + '/scripts/' + self.bench() + '/results/'+ self.bench() + '/' + w + args.post_fix + '/rep' + r  + '/' + m + '/' 
         if c is True:
             outdir = outdir + 'commute' + '/' + b
         else:

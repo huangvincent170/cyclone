@@ -17,6 +17,7 @@ parser = argparse.ArgumentParser(prog="runscript", description="script to run cy
 parser.add_argument('-c', dest='clean', action='store_true', default=False, help="clean env after a run")
 parser.add_argument('-g', dest='gen', action='store_true', default=False, help="generate config")
 parser.add_argument('-collect', dest='collect', action='store_true', default=False, help="collect output")
+parser.add_argument('-pf', dest='post_fix', default='', help="append postfix to result path")
 parser.add_argument('-db', dest='deploy_bins', action='store_true', default=False, help="deploy client/server binaries")
 parser.add_argument('-dc', dest='deploy_configs', action='store_true', default=False, help="deploy configs")
 parser.add_argument('-startsrv', dest='startsrv', action='store_true', default=False, help="run experiment")

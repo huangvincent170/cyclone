@@ -16,6 +16,9 @@ def launch_cmds_server_gen(f, q, r, m, quorums, replicas, clients, ports):
     cmd=cmd + ' LD_LIBRARY_PATH=/usr/lib:/usr/local/lib '
     cmd=cmd + '/home/cyclone/cyclone/cyclone.git/benchmarks/kvbench/novelsm/novelsm_loader\n'
     f.write(cmd)
+    cmd= ' echo ' + passwd + ' | sudo -S '
+    cmd=cmd + 'cp -r /mnt/pmem0/preloaded /mnt/pmem0/rocksdata\n'
+    f.write(cmd)
     cmd=''
     if os.environ.has_key('RBT_SLEEP_USEC'):
         cmd=cmd + 'RBT_SLEEP_USEC=' + os.environ.get('RBT_SLEEP_USEC') + ' '

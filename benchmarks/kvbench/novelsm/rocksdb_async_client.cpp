@@ -48,6 +48,10 @@
 
 #include "rocksdb.hpp"
 
+#include "../../common/genzip.hpp"
+
+const double alpha = 1.08;
+
 unsigned long tx_wr_block_cnt = 0UL;
 unsigned long tx_ro_block_cnt = 0UL;
 unsigned long tx_failed_cnt = 0UL;
@@ -161,7 +165,7 @@ int driver(void *arg)
 	   */
 	rockskv_t *kv = (rockskv_t *)buffer;
 
-	double frac_read = 0.5;
+	double frac_read = 0.95;
 	const char *frac_read_env = getenv("KV_FRAC_READ");
 	if(frac_read_env != NULL) {
 		frac_read = atof(frac_read_env);
@@ -178,6 +182,7 @@ int driver(void *arg)
 
 	srand(rtc_clock::current_time());
 	struct cb_st *cb_ctxt;
+        rand_val(1234);
 	for( ; ; ){
 		if(timedout_msgs > 0){ // re-try timedout messages
 			__sync_synchronize();
@@ -199,7 +204,8 @@ int driver(void *arg)
 				rpc_flags = RPC_FLAG_RO;
 				kv->op    = OP_GET;
 			}
-			kv->key   = rand() % keys;
+                        kv->key   = zipf(alpha, keys);
+			// kv->key   = rand() % keys;
 			my_core = kv->key % executor_threads;
 			cb_ctxt = (struct cb_st *)rte_malloc("callback_ctxt", sizeof(struct cb_st), 0);
 			cb_ctxt->request_type = rpc_flags;

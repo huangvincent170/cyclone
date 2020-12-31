@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python2.7
 import sys
 import argparse
 sys.path.append('../common')
@@ -6,11 +6,13 @@ from commonbench import *
 
 #workloads
 adjvector = 'adjvector'
+graphone  = 'graphone' 
 llama_mem = 'llama_mem'
 llama_persist = 'llama_persist'
 
 wl=[]
 wl.append(adjvector)
+wl.append(graphone)
 wl.append(llama_mem)
 wl.append(llama_persist)
 

@@ -1,8 +1,8 @@
 #!/bin/bash
 # This script enable the -D__EXTRA_COPY flag in core/Makefile.
 declare -a wl=("echo")
-#declare -a bf=(1 2 4 6 8 10 12 16 20)
-declare -a bf=(1)
+declare -a bf=(1 2 4 6 8 10 12 16 20)
+#declare -a bf=(1)
 
 declare -a mt=("nvram")
 
@@ -29,7 +29,7 @@ do
     ./echo_bench.py -stop -m "$m" -w "$w"
 
     # gather output
-    ./echo_bench.py -collect -rep "$replicas" -m "$m" -w "$w" -b "$b"
+    ./echo_bench.py -collect -rep "$replicas" -m "$m" -w "$w" -b "$b" -pf "_extra_copy"
     done
   done
 done

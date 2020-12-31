@@ -1,4 +1,5 @@
-#!/usr/bin/env python
+#!/usr/bin/env python2.7
+
 import sys
 import argparse
 sys.path.append('../common')
@@ -6,10 +7,11 @@ from commonbench import *
 
 #workloads
 pqueue = 'pqueue'
+novelsm = 'novelsm'
 
 wl=[]
 wl.append(pqueue)
-
+wl.append(novelsm)
 wl.append(empty)
 
 

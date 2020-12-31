@@ -78,6 +78,44 @@ static void __send_appendentries_response(void *udata,
 	cyclone_tx(global_dpdk_context, m, my_raft_q);
 }
 
+#ifdef __EXTRA_COPY
+
+rte_mbuf* deep_copy(rte_mbuf *m){
+  unsigned long clsize = 64; // cache line size of intel cpus
+  unsigned long mask = clsize-1;
+  unsigned long buf_size;
+  unsigned long buf_offset;
+  unsigned long aligned_buf_size = (buf_size + mask) & ~mask;
+  rte_mbuf head;
+  head.next = NULL;
+  //BOOST_LOG_TRIVIAL(info) << "segments : " << m->nb_segs;
+  rte_mbuf *it = &head;
+  while(m != NULL){
+    buf_offset = (unsigned long)rte_pktmbuf_mtod(m, char *) - (unsigned long)m; 
+    buf_size = buf_offset + rte_pktmbuf_data_len(m);  
+    aligned_buf_size = (buf_size + mask) & ~mask;
+    it->next = (rte_mbuf *)rte_malloc("ExtraCopy",aligned_buf_size,0);
+	//BOOST_LOG_TRIVIAL(info) << "buf_size : " << buf_size << " aligned_buf_size : " << aligned_buf_size;
+	if(it->next == NULL){
+		BOOST_LOG_TRIVIAL(fatal) << "deep_copy: memory allocation failed, rte_malloc ";
+	}
+    memcpy((void *)it->next, (void *)m, buf_size);  
+
+    // new addresses
+    it->buf_addr = (void *) ((char *)m->buf_addr + buf_offset);
+    it->buf_physaddr = 0xDEADBEEF;
+    it->pool = NULL;    
+    it = it->next;
+    m = m->next;
+  }
+	
+  it->next = NULL; 
+  return head.next;
+}
+
+#endif
+
+
 /** Raft callback for sending appendentries message */
 static int __send_appendentries(raft_server_t* raft,
 		void *udata,
@@ -121,12 +159,14 @@ static int __send_appendentries_opt(raft_server_t* raft,
 		raft_node_t *node,
 		msg_appendentries_t* m)
 {
+#if defined(__EXTRA_COPY)
+		rte_mbuf *copyofbc[PKT_BURST];
+#endif
 	cyclone_t* cyclone_handle = (cyclone_t *)udata;
 	void *socket      = (void *)raft_node_get_udata(node);
 	if(m->n_entries == 0)
 		return __send_appendentries(raft, udata, node, m);
 	int pkts_out = (PKT_BURST > m->n_entries) ? m->n_entries:PKT_BURST;
-	//int pkts_out = 1;
 	int i;
 	int tx = 0;
 	int my_raft_q   = cyclone_handle->my_q(q_raft);
@@ -146,6 +186,9 @@ static int __send_appendentries_opt(raft_server_t* raft,
 		rte_mbuf *bc = b;
 		rte_pktmbuf_refcnt_update(bc, 1);
 
+#if defined(__EXTRA_COPY)
+		copyofbc[i] = deep_copy(bc);
+#endif
 		/* prepend new header */
 		e->next = bc;
 		/* update header's fields */
@@ -173,6 +216,16 @@ static int __send_appendentries_opt(raft_server_t* raft,
 	tx += cyclone_flush_buffer(global_dpdk_context,
 			queue2port(my_raft_q, global_dpdk_context->ports),
 			my_raft_q);
+#if defined(__EXTRA_COPY)
+	for(i=0;i<pkts_out;i++) {
+		    rte_mbuf *it = copyofbc[i];
+                    while(it != NULL){
+                        rte_mbuf *temp = it->next;
+                        rte_free(it);
+                        it = temp;
+                    }				
+	}
+#endif
 	if(tx < pkts_out) {
 		BOOST_LOG_TRIVIAL(warning) << "Send appendentries fail";
 	}
@@ -331,44 +384,6 @@ static void add_head(void *pkt,
 	msg_entry_t *entry = (msg_entry_t *)(hdr + 1);
 	memcpy(entry, ety, sizeof(raft_entry_t));
 }
-
-
-#ifdef __EXTRA_COPY
-
-rte_mbuf* deep_copy(rte_mbuf *m){
-  unsigned long clsize = 64; // cache line size of intel cpus
-  unsigned long mask = clsize-1;
-  unsigned long buf_size;
-  unsigned long buf_offset;
-  unsigned long aligned_buf_size = (buf_size + mask) & ~mask;
-  rte_mbuf head;
-  head.next = NULL;
-  //BOOST_LOG_TRIVIAL(info) << "segments : " << m->nb_segs;
-  rte_mbuf *it = &head;
-  while(m != NULL){
-    buf_offset = (unsigned long)rte_pktmbuf_mtod(m, char *) - (unsigned long)m; 
-    buf_size = buf_offset + rte_pktmbuf_data_len(m);  
-    aligned_buf_size = (buf_size + mask) & ~mask;
-    it->next = (rte_mbuf *)rte_malloc("ExtraCopy",aligned_buf_size,0);
-	//BOOST_LOG_TRIVIAL(info) << "buf_size : " << buf_size << " aligned_buf_size : " << aligned_buf_size;
-	if(it->next == NULL){
-		BOOST_LOG_TRIVIAL(fatal) << "deep_copy: memory allocation failed, rte_malloc ";
-	}
-    memcpy((void *)it->next, (void *)m, buf_size);  
-
-    // new addresses
-    it->buf_addr = (void *) ((char *)m->buf_addr + buf_offset);
-    it->buf_physaddr = 0xDEADBEEF;
-    it->pool = NULL;    
-    it = it->next;
-    m = m->next;
-  }
-	
-  it->next = NULL; 
-  return head.next;
-}
-
-#endif
 
 
 /** Raft callback for appending an item to the log */

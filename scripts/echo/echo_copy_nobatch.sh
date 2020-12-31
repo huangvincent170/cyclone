@@ -6,7 +6,7 @@ declare -a bf=(1 2 4 6 8 10 12 16 20)
 
 declare -a mt=("nvram")
 
-declare -r rl=(3)
+declare -r rl=(2)
 
 for replicas in "${rl[@]}"
 do
@@ -28,7 +28,7 @@ do
     ./echo_bench.py -stop -m "$m" -w "$w"
 
     # gather output
-    ./echo_bench.py -collect -rep "$replicas" -m "$m" -w "$w" -b "$b"
+    ./echo_bench.py -collect -rep "$replicas" -m "$m" -w "$w" -b "$b" -pf "_extra_copy_nobatch"
     done
   done
 done

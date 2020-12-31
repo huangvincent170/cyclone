@@ -58,9 +58,14 @@ void callback(const unsigned char *data,
   memcpy(cookie->ret_value, data, len);
 }
 
+// we explicitly set serial processing. All the commute
+// scheduling techniques will be engaged. But the request
+// processing will be done serially. This will give us the 
+// worst case overhead of commute scheduling optimizaiton.
 int commute_callback(void *arg1, void *arg2)
 {
-  return 1; // parallel
+  return 0; 
+  // return 1; 
 }
 
 void gc(rpc_cookie_t *cookie)
