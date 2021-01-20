@@ -1,13 +1,13 @@
 #!/bin/bash
 declare -a wl=("echo")
-#declare -a bf=(1 2 4 6 8 10 12 16 20)
- declare -a bf=(12)
+declare -a bf=(1 2 4 6 8 10 12 16 20)
+ # declare -a bf=(12)
 
 declare -a mt=("nvram")
 # declare -a mt=("dram")
 
 #declare -r rl=(1 2 3)
-declare -r rl=(2)
+declare -r rl=(3)
 
 for replicas in "${rl[@]}"
 do

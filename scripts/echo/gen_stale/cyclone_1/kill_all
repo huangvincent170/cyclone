@@ -1,0 +1,3 @@
+echo gatech | sudo -S pkill echo_server
+echo gatech | sudo -S pkill echo_client
+echo gatech | sudo -S pkill echo_async
