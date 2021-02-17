@@ -16,7 +16,7 @@ CXXFLAGS = -O3 -DBOOST_LOG_DYN_LINK
 # ${PMEM_LIB}/libpmemobj.a ${PMEM_LIB}/libpmem.a
 LIBS = -lc ../core/libcyclone.a ../raft/libcraft.a -lboost_system -lboost_date_time -lpthread
 #DPDK extras
-RTE_SDK=/home/dzahka3/dpdk-stable-16.11.11
+RTE_SDK=/home/vhuang31/dpdk-stable-16.11.11
 
 CXXFLAGS += -I../core -DDPDK_STACK
 CXXFLAGS += -march=native -DRTE_MACHINE_CPUFLAG_SSE -DRTE_MACHINE_CPUFLAG_SSE2 -DRTE_MACHINE_CPUFLAG_SSE3 -DRTE_MACHINE_CPUFLAG_SSSE3 -DRTE_MACHINE_CPUFLAG_SSE4_1 -DRTE_MACHINE_CPUFLAG_SSE4_2 -DRTE_MACHINE_CPUFLAG_AES -DRTE_MACHINE_CPUFLAG_PCLMULQDQ -DRTE_MACHINE_CPUFLAG_AVX  -I${RTE_SDK}/x86_64-native-linuxapp-gcc/include
