@@ -65,6 +65,7 @@ int callback(const unsigned char *data,
     marks[cookie->core_id] = rtc_clock::current_time();
   }
   */
+  BOOST_LOG_TRIVIAL(info) << "recv'd rpc from client";
   return cookie->log_idx;
 }
 

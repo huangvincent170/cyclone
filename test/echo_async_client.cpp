@@ -123,9 +123,11 @@ int driver(void *arg)
                 1UL << my_core,
                 rpc_flags);
             if(ret == EMAX_INFLIGHT) {
-                //BOOST_LOG_TRIVIAL(fatal) << "buffer full";
+		//                BOOST_LOG_TRIVIAL(fatal) << "buffer full";
                 continue;
-            }
+            } else {
+		//		BOOST_LOG_TRIVIAL(fatal) << "other";
+	    }
         }while(ret);
   }
   return 0; 
