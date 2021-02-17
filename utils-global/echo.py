@@ -8,9 +8,9 @@ def launch_cmds_server_gen(f, q, r, m, quorums, replicas, clients, ports):
         cmd=cmd + 'RBT_SLEEP_USEC=' + os.environ.get('RBT_SLEEP_USEC') + ' ' 
     if os.environ.has_key('CYCLONE_PASS'):
         passwd=os.environ.get('CYCLONE_PASS')
-    cmd=cmd + ' echo ' + passwd + ' | sudo -S '
+    cmd=cmd + 'sudo -S '
     cmd=cmd + ' PMEM_IS_PMEM_FORCE=1 '
-    cmd=cmd + ' LD_LIBRARY_PATH=/usr/lib:/usr/local/lib '
+    cmd=cmd + ' LD_LIBRARY_PATH=/usr/local/lib64:/usr/lib:/usr/local/lib '
     cmd=cmd + '/home/dzahka3/cyclone/cyclone.tcp/test/echo_server '
     cmd=cmd + str(r) + ' ' 
     cmd=cmd + str(m) + ' ' 
@@ -44,9 +44,9 @@ def launch_cmds_client_gen(f, m, c, quorums, replicas, clients, machines, ports)
                 cmd=cmd + 'QUORUMS_ACTIVE=' + os.environ.get('QUORUMS_ACTIVE') + ' '    
             if os.environ.has_key('CYCLONE_PASS'):
                 passwd=os.environ.get('CYCLONE_PASS')
-            cmd=cmd + 'echo '+ passwd +' | sudo -S '
-            cmd=cmd + ' LD_LIBRARY_PATH=/usr/lib:/usr/local/lib '
-            cmd=cmd + '/home/dzahka3/cyclone/cyclone.tcp/test/echo_client '
+            cmd=cmd + ' sudo -S '
+            cmd=cmd + ' LD_LIBRARY_PATH=/usr/local/lib64:/usr/lib:/usr/local/lib '
+            cmd=cmd + '/home/dzahka3/cyclone/cyclone.tcp/test/echo_async_client '
             cmd=cmd + str(c_start) + ' '
             cmd=cmd + str(c_stop) + ' '
             cmd=cmd + str(m) + ' '
@@ -54,7 +54,7 @@ def launch_cmds_client_gen(f, m, c, quorums, replicas, clients, machines, ports)
             cmd=cmd + str(clients) + ' '
             cmd=cmd + str(quorums) + ' '
             #cmd=cmd + 'config_cluster.ini config_quorum ' + str(ports) + ' &> client_log' + str(0) + '&\n'
-            cmd=cmd + 'config_cluster.ini config_quorum ' + str(ports)
+            cmd=cmd + 'config_cluster.ini config_quorum 3864 ' + str(ports)
             f.write(cmd)
        
 def killall_cmds_gen(f):
