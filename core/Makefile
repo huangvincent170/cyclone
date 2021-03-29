@@ -10,13 +10,16 @@ CXXFLAGS += -DDPDK_STACK -std=gnu++0x
 #RTE_SDK?=/home/pfernando/dpdk
 CXXFLAGS += -march=native -DRTE_MACHINE_CPUFLAG_SSE -DRTE_MACHINE_CPUFLAG_SSE2 -DRTE_MACHINE_CPUFLAG_SSE3 -DRTE_MACHINE_CPUFLAG_SSSE3 -DRTE_MACHINE_CPUFLAG_SSE4_1 -DRTE_MACHINE_CPUFLAG_SSE4_2 -DRTE_MACHINE_CPUFLAG_AES -DRTE_MACHINE_CPUFLAG_PCLMULQDQ -DRTE_MACHINE_CPUFLAG_AVX -I/home/vhuang31/dpdk-stable-16.11.11/x86_64-native-linuxapp-gcc/include -I /home/vhuang31/cyclone-src/raft/include
 
+#ucx stuff
+ucx_path = ~/ucx-1.10.0
+CXXFLAGS += -lucp -lucs -I $(ucx_path)/install/include -L $(ucx_path)/install/lib
 
 #Depending on boost version/OS distro
 #BOOST_THREAD_LIB=-lboost_thread-mt
 BOOST_THREAD_LIB=-lboost_thread
 
 
-libcyclone.a: libcyclone.o dispatcher.o dispatch_client.o tcp_tunnel.o ../raft/libcraft.a
+libcyclone.a: libcyclone.o dispatcher.o dispatch_client.o tcp_tunnel.o cyclone_ucp.o ../raft/libcraft.a
 	ar rcs $@ $^
 
 libcyclone.o: cyclone.cpp libcyclone.hpp
@@ -37,6 +40,9 @@ dispatch_client.o: dispatch_client.cpp  libcyclone.hpp
 tcp_tunnel.o: tcp_tunnel.cpp libcyclone.hpp
 	$(CXX) $(CXXFLAGS) tcp_tunnel.cpp -c -o $@
 
+cyclone_ucp.o: cyclone_ucp.cpp libcyclone.hpp
+	$(CXX) $(CXXFLAGS) cyclone_ucp.cpp -c -o $@
+
 .PHONY:clean install
 
 install:libcyclone.a
@@ -44,7 +50,7 @@ install:libcyclone.a
 	cp libcyclone.hpp /usr/include
 
 clean:
-	rm -f libcyclone.o dispatcher.o dispatch_client.o tcp_tunnel.o \
+	rm -f libcyclone.o dispatcher.o dispatch_client.o tcp_tunnel.o cyclone_ucp.o \
 	checkpoint.o checkpoint_savepage.o libcyclone.a /usr/lib/libcyclone.so \
 	/usr/lib/libcyclone.a /usr/include/libcyclone.hpp
 
