@@ -11,8 +11,8 @@ CXXFLAGS += -DDPDK_STACK -std=gnu++0x
 CXXFLAGS += -march=native -DRTE_MACHINE_CPUFLAG_SSE -DRTE_MACHINE_CPUFLAG_SSE2 -DRTE_MACHINE_CPUFLAG_SSE3 -DRTE_MACHINE_CPUFLAG_SSSE3 -DRTE_MACHINE_CPUFLAG_SSE4_1 -DRTE_MACHINE_CPUFLAG_SSE4_2 -DRTE_MACHINE_CPUFLAG_AES -DRTE_MACHINE_CPUFLAG_PCLMULQDQ -DRTE_MACHINE_CPUFLAG_AVX -I/home/vhuang31/dpdk-stable-16.11.11/x86_64-native-linuxapp-gcc/include -I /home/vhuang31/cyclone-src/raft/include
 
 #ucx stuff
-ucx_path = ~/ucx-1.10.0
-CXXFLAGS += -lucp -lucs -I $(ucx_path)/install/include -L $(ucx_path)/install/lib
+ucx_path = /home/vhuang31/ucx-1.10.0
+CXXFLAGS += -I $(ucx_path)/install/include -L $(ucx_path)/install/lib
 
 #Depending on boost version/OS distro
 #BOOST_THREAD_LIB=-lboost_thread-mt

@@ -2,6 +2,10 @@
 
 export LD_LIBRARY_PATH="~/ucx-1.10.0/install/lib"
 cd ../core
+# make clean
+make
+cd ../test
+# make clean
 make
 cd ../utils-global
 rm -rf ~/cyclone/
