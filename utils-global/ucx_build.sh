@@ -1,6 +1,5 @@
 #!/bin/bash -e
 
-export LD_LIBRARY_PATH="~/ucx-1.10.0/install/lib"
 cd ../core
 # make clean
 make
