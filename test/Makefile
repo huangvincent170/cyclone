@@ -22,7 +22,7 @@ CXXFLAGS += -I../core -DDPDK_STACK
 CXXFLAGS += -march=native -DRTE_MACHINE_CPUFLAG_SSE -DRTE_MACHINE_CPUFLAG_SSE2 -DRTE_MACHINE_CPUFLAG_SSE3 -DRTE_MACHINE_CPUFLAG_SSSE3 -DRTE_MACHINE_CPUFLAG_SSE4_1 -DRTE_MACHINE_CPUFLAG_SSE4_2 -DRTE_MACHINE_CPUFLAG_AES -DRTE_MACHINE_CPUFLAG_PCLMULQDQ -DRTE_MACHINE_CPUFLAG_AVX  -I${RTE_SDK}/x86_64-native-linuxapp-gcc/include
 
 #ucx stuff
-ucx_path = /home/vhuang31/ucx-1.10.0
+ucx_path = /home/vhuang31/ucx-1.9.0
 CXXFLAGS += -I $(ucx_path)/install/include 
 LIBS += -L $(ucx_path)/install/lib -Wl,-rpath,${ucx_path}/install/lib -Wl,--whole-archive -lucp -Wl,--whole-archive -lucs
 

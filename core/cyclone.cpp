@@ -10,6 +10,9 @@
 #include <fcntl.h>
 #include "tcp_tunnel.hpp"
 
+#include "cyclone_ucp.hpp"
+#include <thread>
+
 extern dpdk_context_t * global_dpdk_context;
 extern cyclone_t ** quorums;
 struct rte_ring ** to_cores;
@@ -749,6 +752,10 @@ void cyclone_boot()
   for(int i=0;i<num_quorums;i++) {
     server_open_ports(quorums[i]->me, i);
   }
+
+  std::thread st(run_server2);
+  st.detach();
+
   BOOST_LOG_TRIVIAL(info) << "Launch sleeping 10 seconds for startup ....";
   sleep(10);
   BOOST_LOG_TRIVIAL(info) << "Done!";
