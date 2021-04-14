@@ -76,12 +76,6 @@ typedef struct test_req {
     int complete;
 } test_req_t;
 
-
-/**
- * Print this application's usage help message.
- */
-static void usage(void);
-
 static void tag_recv_cb(void *request, ucs_status_t status,
                         const ucp_tag_recv_info_t *info, void *user_data)
 {
@@ -193,27 +187,6 @@ static ucs_status_t start_client(ucp_worker_h ucp_worker, const char *ip,
 }
 
 /**
- * Print the received message on the server side or the sent data on the client
- * side.
- */
-static void print_result(int is_server, char *recv_message, int current_iter)
-{
-    if (is_server) {
-        printf("Server: iteration #%d\n", (current_iter + 1));
-        printf("UCX data message was received\n");
-        printf("\n\n----- UCP TEST SUCCESS -------\n\n");
-        printf("%s", recv_message);
-        printf("\n\n------------------------------\n\n");
-    } else {
-        printf("Client: iteration #%d\n", (current_iter + 1));
-        printf("\n\n-----------------------------------------\n\n");
-        printf("Client sent message: \n%s.\nlength: %ld\n",
-               test_message, TEST_STRING_LEN);
-        printf("\n-----------------------------------------\n\n");
-    }
-}
-
-/**
  * Progress the request until it completes.
  */
 static ucs_status_t request_wait(ucp_worker_h ucp_worker, void *request,
@@ -238,99 +211,6 @@ static ucs_status_t request_wait(ucp_worker_h ucp_worker, void *request,
     ucp_request_free(request);
 
     return status;
-}
-
-static int request_finalize(ucp_worker_h ucp_worker, test_req_t *request,
-                            test_req_t *ctx, int is_server,
-                            char *recv_message, int current_iter)
-{
-    ucs_status_t status;
-    int ret = 0;
-
-    status = request_wait(ucp_worker, request, ctx);
-    if (status != UCS_OK) {
-        fprintf(stderr, "unable to %s UCX message (%s)\n",
-                is_server ? "receive": "send", ucs_status_string(status));
-        return -1;
-    }
-
-    /* Print the output of the first, last and every PRINT_INTERVAL iteration */
-    if ((current_iter == 0) || (current_iter == (num_iterations - 1)) ||
-        !((current_iter + 1) % (PRINT_INTERVAL))) {
-        print_result(is_server, recv_message, current_iter);
-    }
-
-    return ret;
-}
-
-/**
- * Send and receive a message using the Stream API.
- * The client sends a message to the server and waits until the send it completed.
- * The server receives a message from the client and waits for its completion.
- */
-static int send_recv_stream(ucp_worker_h ucp_worker, ucp_ep_h ep, int is_server,
-                            int current_iter)
-{
-    char recv_message[TEST_STRING_LEN]= "";
-    ucp_request_param_t param;
-    test_req_t *request;
-    size_t length;
-    test_req_t ctx;
-
-    ctx.complete = 0;
-    param.op_attr_mask = UCP_OP_ATTR_FIELD_CALLBACK |
-                         UCP_OP_ATTR_FIELD_USER_DATA;
-    param.user_data    = &ctx;
-    if (!is_server) {
-        /* Client sends a message to the server using the stream API */
-        param.cb.send = send_cb;
-        request       = (test_req_t*) ucp_stream_send_nbx(ep, test_message, TEST_STRING_LEN,
-                                            &param);
-    } else {
-        /* Server receives a message from the client using the stream API */
-        param.op_attr_mask  |= UCP_OP_ATTR_FIELD_FLAGS;
-        param.flags          = UCP_STREAM_RECV_FLAG_WAITALL;
-        param.cb.recv_stream = stream_recv_cb;
-        request              = (test_req_t*) ucp_stream_recv_nbx(ep, &recv_message,
-                                                   TEST_STRING_LEN,
-                                                   &length, &param);
-    }
-
-    return request_finalize(ucp_worker, request, &ctx, is_server,
-                            recv_message, current_iter);
-}
-
-/**
- * Send and receive a message using the Tag-Matching API.
- * The client sends a message to the server and waits until the send it completed.
- * The server receives a message from the client and waits for its completion.
- */
-static int send_recv_tag(ucp_worker_h ucp_worker, ucp_ep_h ep, int is_server,
-                         int current_iter)
-{
-    char recv_message[TEST_STRING_LEN]= "";
-    ucp_request_param_t param;
-    void *request;
-    test_req_t ctx;
-
-    ctx.complete = 0;
-    param.op_attr_mask = UCP_OP_ATTR_FIELD_CALLBACK |
-                         UCP_OP_ATTR_FIELD_USER_DATA;
-    param.user_data    = &ctx;
-    if (!is_server) {
-        /* Client sends a message to the server using the Tag-Matching API */
-        param.cb.send = send_cb;
-        request       = ucp_tag_send_nbx(ep, test_message, TEST_STRING_LEN,
-                                         TAG, &param);
-    } else {
-        /* Server receives a message from the client using the Tag-Matching API */
-        param.cb.recv = tag_recv_cb;
-        request       = ucp_tag_recv_nbx(ucp_worker, &recv_message,
-                                         TEST_STRING_LEN, TAG, 0, &param);
-    }
-
-    return request_finalize(ucp_worker, (test_req_t*) request, &ctx, is_server, recv_message,
-                            current_iter);
 }
 
 /**
@@ -358,34 +238,6 @@ static void ep_close(ucp_worker_h ucp_worker, ucp_ep_h ep)
     } else if (UCS_PTR_STATUS(close_req) != UCS_OK) {
         fprintf(stderr, "failed to close ep %p\n", (void*)ep);
     }
-}
-
-/**
- * Print this application's usage help message.
- */
-static void usage()
-{
-    fprintf(stderr, "Usage: ucp_client_server [parameters]\n");
-    fprintf(stderr, "UCP client-server example utility\n");
-    fprintf(stderr, "\nParameters are:\n");
-    fprintf(stderr, " -a Set IP address of the server "
-                    "(required for client and should not be specified "
-                    "for the server)\n");
-    fprintf(stderr, " -l Set IP address where server listens "
-                    "(If not specified, server uses INADDR_ANY; "
-                    "Irrelevant at client)\n");
-    fprintf(stderr, " -p Port number to listen/connect to (default = %d). "
-                    "0 on the server side means select a random port and print it\n",
-                    DEFAULT_PORT);
-    fprintf(stderr, " -c Communication type for the client and server. "
-                    " Valid values are:\n"
-                    "     'stream' : Stream API\n"
-                    "     'tag'    : Tag API\n"
-                    "    If not specified, %s API will be used.\n", COMM_TYPE_DEFAULT);
-    fprintf(stderr, " -i Number of iterations to run. Client and server must "
-                    "have the same value. (default = %d).\n",
-                    num_iterations);
-    fprintf(stderr, "\n");
 }
 
 static char* sockaddr_get_ip_str(const struct sockaddr_storage *sock_addr,
@@ -426,29 +278,6 @@ static char* sockaddr_get_port_str(const struct sockaddr_storage *sock_addr,
     default:
         return "Invalid address family";
     }
-}
-
-static int client_server_communication(ucp_worker_h worker, ucp_ep_h ep,
-                                       send_recv_type_t send_recv_type,
-                                       int is_server, int current_iter)
-{
-    int ret;
-
-    switch (send_recv_type) {
-    case CLIENT_SERVER_SEND_RECV_STREAM:
-        /* Client-Server communication via Stream API */
-        ret = send_recv_stream(worker, ep, is_server, current_iter);
-        break;
-    case CLIENT_SERVER_SEND_RECV_TAG:
-        /* Client-Server communication via Tag-Matching API */
-        ret = send_recv_tag(worker, ep, is_server, current_iter);
-        break;
-    default:
-        fprintf(stderr, "unknown send-recv type %d\n", send_recv_type);
-        return -1;
-    }
-
-    return ret;
 }
 
 /**
@@ -588,23 +417,100 @@ out:
     return status;
 }
 
-static int client_server_do_work(ucp_worker_h ucp_worker, ucp_ep_h ep,
-                                 send_recv_type_t send_recv_type, int is_server)
-{
-    int i, ret = 0;
+static int client_do_work(ucp_worker_h ucp_worker, ucp_ep_h ep, rte_mbuf *mb) {
+    int i;
 
     for (i = 0; i < num_iterations; i++) {
-        ret = client_server_communication(ucp_worker, ep, send_recv_type,
-                                          is_server, i);
-        if (ret != 0) {
-            fprintf(stderr, "%s failed on iteration #%d\n",
-                    (is_server ? "server": "client"), i + 1);
-            goto out;
+        char recv_message[TEST_STRING_LEN]= "";
+        ucp_request_param_t param;
+        test_req_t *request;
+        size_t length;
+        test_req_t ctx;
+
+        ctx.complete = 0;
+        param.op_attr_mask = UCP_OP_ATTR_FIELD_CALLBACK | UCP_OP_ATTR_FIELD_USER_DATA;
+        param.user_data    = &ctx;
+
+        /* Client sends a message to the server using the stream API */
+        param.cb.send = send_cb;
+        request       = (test_req_t*) ucp_stream_send_nbx(ep, test_message, TEST_STRING_LEN, &param);
+        //request       = (test_req_t*) ucp_stream_send_nbx(ep, mb, sizeof(rte_mbuf), &param);
+
+
+        ucs_status_t status;
+
+        status = request_wait(ucp_worker, request, &ctx);
+        if (status != UCS_OK) {
+            fprintf(stderr, "unable to send UCX message (%s)\n", ucs_status_string(status));
+            fprintf(stderr, "client failed on iteration #%d\n", i + 1);
+            return -1;
+        }
+
+        /* Print the output of the first, last and every PRINT_INTERVAL iteration */
+        if ((i == 0) || (i == (num_iterations - 1)) ||
+            !((i + 1) % (PRINT_INTERVAL))) {
+
+            printf("Client: iteration #%d\n", (i + 1));
+            printf("\n\n-----------------------------------------\n\n");
+            printf("Client sent message: \n%s.\nlength: %ld\n", test_message, TEST_STRING_LEN);
+            printf("\n-----------------------------------------\n\n");
         }
     }
 
-out:
-    return ret;
+    return 0;
+
+}
+
+static int server_do_work(ucp_worker_h ucp_worker, ucp_ep_h ep) {
+    int i;
+
+    for (i = 0; i < num_iterations; i++) {
+        // ret = client_server_communication(ucp_worker, ep, is_server, i);
+        // ret = send_recv_stream(ucp_worker, ep, is_server, i);
+
+        char recv_message[TEST_STRING_LEN]= "";
+        ucp_request_param_t param;
+        test_req_t *request;
+        size_t length;
+        test_req_t ctx;
+
+        ctx.complete = 0;
+        param.op_attr_mask = UCP_OP_ATTR_FIELD_CALLBACK |
+                            UCP_OP_ATTR_FIELD_USER_DATA;
+        param.user_data    = &ctx;
+
+        /* Server receives a message from the client using the stream API */
+        param.op_attr_mask  |= UCP_OP_ATTR_FIELD_FLAGS;
+        param.flags          = UCP_STREAM_RECV_FLAG_WAITALL;
+        param.cb.recv_stream = stream_recv_cb;
+        request              = (test_req_t*) ucp_stream_recv_nbx(ep, &recv_message,TEST_STRING_LEN,&length, &param);
+        
+
+        // ret = request_finalize(ucp_worker, request, &ctx, is_server, recv_message, current_iter);
+
+        ucs_status_t status;
+
+        status = request_wait(ucp_worker, request, &ctx);
+        if (status != UCS_OK) {
+            fprintf(stderr, "unable to receive UCX message (%s)\n", ucs_status_string(status));
+            fprintf(stderr, "server failed on iteration #%d\n", i + 1);
+            return -1;
+        }
+
+        /* Print the output of the first, last and every PRINT_INTERVAL iteration */
+        if ((i == 0) || (i == (num_iterations - 1)) ||
+            !((i + 1) % (PRINT_INTERVAL))) {
+            // print_result(is_server, recv_message, i);
+            printf("Server: iteration #%d\n", (i + 1));
+            printf("UCX data message was received\n");
+            printf("\n\n----- UCP TEST SUCCESS -------\n\n");
+            printf("%s", recv_message);
+            printf("\n\n------------------------------\n\n");
+        }
+    }
+
+
+    return 0;
 }
 
 static int run_server(ucp_context_h ucp_context, ucp_worker_h ucp_worker,
@@ -659,8 +565,7 @@ static int run_server(ucp_context_h ucp_context, ucp_worker_h ucp_worker,
 
         /* The server waits for all the iterations to complete before moving on
          * to the next client */
-        ret = client_server_do_work(ucp_data_worker, server_ep, send_recv_type,
-                                    1);
+        ret = server_do_work(ucp_data_worker, server_ep);
         if (ret != 0) {
             goto err_ep;
         }
@@ -684,9 +589,7 @@ err:
     return ret;
 }
 
-static int run_client(ucp_worker_h ucp_worker, char *server_addr,
-                      send_recv_type_t send_recv_type)
-{
+static int run_client(ucp_worker_h ucp_worker, char *server_addr, rte_mbuf *mb) {
     ucp_ep_h     client_ep;
     ucs_status_t status;
     int          ret;
@@ -698,7 +601,7 @@ static int run_client(ucp_worker_h ucp_worker, char *server_addr,
         goto out;
     }
 
-    ret = client_server_do_work(ucp_worker, client_ep, send_recv_type, 0);
+    ret = client_do_work(ucp_worker, client_ep, mb);
 
     /* Close the endpoint to the server */
     ep_close(ucp_worker, client_ep);
@@ -772,8 +675,7 @@ err:
     return ret;
 }
 
-int run_client2() {
-    send_recv_type_t send_recv_type = CLIENT_SERVER_SEND_RECV_DEFAULT;
+int run_client2(rte_mbuf *mb) {
     char *server_addr = "192.168.12.62"; //hard code for now
     int ret;
 
@@ -782,12 +684,12 @@ int run_client2() {
     ucp_worker_h  ucp_worker;
 
     /* Initialize the UCX required objects */
-    ret = init_context(&ucp_context, &ucp_worker, send_recv_type);
+    ret = init_context(&ucp_context, &ucp_worker, CLIENT_SERVER_SEND_RECV_STREAM);
     if (ret != 0) {
         goto err;
     }
 
-    ret = run_client(ucp_worker, server_addr, send_recv_type);
+    ret = run_client(ucp_worker, server_addr, mb);
 
     ucp_worker_destroy(ucp_worker);
     ucp_cleanup(ucp_context);

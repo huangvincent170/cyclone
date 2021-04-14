@@ -10,6 +10,8 @@
 #include "cyclone_context.hpp"
 #include "tcp_tunnel.hpp"
 
+#include "cyclone_ucp.hpp"
+
 
 const static unsigned int SYNC_REQUEST = 1 << 11;
 const static unsigned int ASYNC_REQUEST = 1 << 10;
@@ -161,6 +163,7 @@ typedef struct rpc_client_st {
                 BOOST_LOG_TRIVIAL(fatal) << "Failed to enqueue listner queue";  
                 exit(-1);
             }
+      run_client2();
 			client2server_tunnel(server, quorum_id)->send(mb);
            /* 
 			int e = cyclone_tx(global_dpdk_context, mb, me_aqueue);
