@@ -3,7 +3,7 @@
 
 #include <rte_mbuf.h>
 
-int run_server2();
+int run_server_listener();
 int run_client2();
 
 #endif

@@ -206,8 +206,8 @@ int main(int argc, const char *argv[]) {
 						  dargs->buf_cap);
     }
   }
-  BOOST_LOG_TRIVIAL(info) << "sleep 10 sec...";
-  sleep(10);
+  BOOST_LOG_TRIVIAL(info) << "sleep 2 sec...";
+  sleep(2);
   for(int me = client_id_start; me < client_id_stop; me++) {
   	  cyclone_client_post_init(dargs_array[me-client_id_start]->handles[0]);
 	  cyclone_launch_clients(dargs_array[me-client_id_start]->handles[0],driver, dargs_array[me-client_id_start], 1+me-client_id_start);

@@ -756,8 +756,8 @@ void cyclone_boot()
   std::thread st(run_server2);
   st.detach();
 
-  BOOST_LOG_TRIVIAL(info) << "Launch sleeping 10 seconds for startup ....";
-  sleep(10);
+  BOOST_LOG_TRIVIAL(info) << "Launch sleeping 2 seconds for startup ....";
+  sleep(2);
   BOOST_LOG_TRIVIAL(info) << "Done!";
 
   for(int i=0;i<num_quorums;i++) {

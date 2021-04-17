@@ -4,29 +4,6 @@
 * See file LICENSE for terms.
 */
 
-/*
- * UCP client - server example utility
- * -----------------------------------------------
- *
- * Server side:
- *
- *    ./ucp_client_server
- *
- * Client side:
- *
- *    ./ucp_client_server -a <server-ip>
- *
- * Notes:
- *
- *    - The server will listen to incoming connection requests on INADDR_ANY.
- *    - The client needs to pass the IP address of the server side to connect to
- *      as an argument to the test.
- *    - Currently, the passed IP needs to be an IPoIB or a RoCE address.
- *    - The port which the server side would listen on can be modified with the
- *      '-p' option and should be used on both sides. The default port to use is
- *      13337.
- */
-
 #include "cyclone_ucp.hpp"
 #include <iostream>
 #include <ucp/api/ucp.h>
@@ -40,21 +17,9 @@
 #define DEFAULT_PORT           13337
 #define IP_STRING_LEN          50
 #define PORT_STRING_LEN        8
-#define TAG                    0xCAFE
-#define COMM_TYPE_DEFAULT      "STREAM"
-#define PRINT_INTERVAL         2000
-#define DEFAULT_NUM_ITERATIONS 1
 
 const  char test_message[]           = "UCX Client-Server Hello World";
 static uint16_t server_port          = DEFAULT_PORT;
-static int num_iterations            = DEFAULT_NUM_ITERATIONS;
-
-
-typedef enum {
-    CLIENT_SERVER_SEND_RECV_STREAM  = UCS_BIT(0),
-    CLIENT_SERVER_SEND_RECV_TAG     = UCS_BIT(1),
-    CLIENT_SERVER_SEND_RECV_DEFAULT = CLIENT_SERVER_SEND_RECV_STREAM
-} send_recv_type_t;
 
 
 /**
@@ -76,24 +41,13 @@ typedef struct test_req {
     int complete;
 } test_req_t;
 
-static void tag_recv_cb(void *request, ucs_status_t status,
-                        const ucp_tag_recv_info_t *info, void *user_data)
-{
-    test_req_t *ctx = (test_req_t*) user_data;
-
-    ctx->complete = 1;
-}
 
 /**
  * The callback on the receiving side, which is invoked upon receiving the
  * stream message.
  */
-static void
-stream_recv_cb(void *request, ucs_status_t status, size_t length,
-               void *user_data)
-{
+static void stream_recv_cb(void *request, ucs_status_t status, size_t length, void *user_data) {
     test_req_t *ctx = (test_req_t*) user_data;
-
     ctx->complete = 1;
 }
 
@@ -101,20 +55,16 @@ stream_recv_cb(void *request, ucs_status_t status, size_t length,
  * The callback on the sending side, which is invoked after finishing sending
  * the message.
  */
-static void send_cb(void *request, ucs_status_t status, void *user_data)
-{
+static void send_cb(void *request, ucs_status_t status, void *user_data) {
     test_req_t *ctx = (test_req_t*) user_data;
-
     ctx->complete = 1;
 }
 
 /**
  * Error handling callback.
  */
-static void err_cb(void *arg, ucp_ep_h ep, ucs_status_t status)
-{
-    printf("error handling callback was invoked with status %d (%s)\n",
-           status, ucs_status_string(status));
+static void err_cb(void *arg, ucp_ep_h ep, ucs_status_t status) {
+    printf("error handling callback was invoked with status %d (%s)\n", status, ucs_status_string(status));
 }
 
 /**
@@ -418,104 +368,70 @@ out:
 }
 
 static int client_do_work(ucp_worker_h ucp_worker, ucp_ep_h ep) {
-    int i;
+    char recv_message[TEST_STRING_LEN]= "";
+    ucp_request_param_t param;
+    test_req_t *request;
+    size_t length;
+    test_req_t ctx;
 
-    for (i = 0; i < num_iterations; i++) {
-        char recv_message[TEST_STRING_LEN]= "";
-        ucp_request_param_t param;
-        test_req_t *request;
-        size_t length;
-        test_req_t ctx;
+    ctx.complete = 0;
+    param.op_attr_mask = UCP_OP_ATTR_FIELD_CALLBACK | UCP_OP_ATTR_FIELD_USER_DATA;
+    param.user_data    = &ctx;
 
-        ctx.complete = 0;
-        param.op_attr_mask = UCP_OP_ATTR_FIELD_CALLBACK | UCP_OP_ATTR_FIELD_USER_DATA;
-        param.user_data    = &ctx;
+    /* Client sends a message to the server using the stream API */
+    param.cb.send = send_cb;
+    request       = (test_req_t*) ucp_stream_send_nbx(ep, test_message, TEST_STRING_LEN, &param);
 
-        /* Client sends a message to the server using the stream API */
-        param.cb.send = send_cb;
-        request       = (test_req_t*) ucp_stream_send_nbx(ep, test_message, TEST_STRING_LEN, &param);
-        //request       = (test_req_t*) ucp_stream_send_nbx(ep, mb, sizeof(rte_mbuf), &param);
+    ucs_status_t status;
 
-
-        ucs_status_t status;
-
-        status = request_wait(ucp_worker, request, &ctx);
-        if (status != UCS_OK) {
-            fprintf(stderr, "unable to send UCX message (%s)\n", ucs_status_string(status));
-            fprintf(stderr, "client failed on iteration #%d\n", i + 1);
-            return -1;
-        }
-
-        /* Print the output of the first, last and every PRINT_INTERVAL iteration */
-        if ((i == 0) || (i == (num_iterations - 1)) ||
-            !((i + 1) % (PRINT_INTERVAL))) {
-
-            printf("Client: iteration #%d\n", (i + 1));
-            printf("\n\n-----------------------------------------\n\n");
-            printf("Client sent message: \n%s.\nlength: %ld\n", test_message, TEST_STRING_LEN);
-            printf("\n-----------------------------------------\n\n");
-        }
+    status = request_wait(ucp_worker, request, &ctx);
+    if (status != UCS_OK) {
+        fprintf(stderr, "client failed: unable to send UCX message (%s)\n", ucs_status_string(status));
+        return -1;
     }
 
-    return 0;
+    printf("\n\n-----------------------------------------\n\n");
+    printf("Client sent message: \n%s.\nlength: %ld\n", test_message, TEST_STRING_LEN);
+    printf("\n-----------------------------------------\n\n");
 
+    return 0;
 }
 
 static int server_do_work(ucp_worker_h ucp_worker, ucp_ep_h ep) {
-    int i;
+    char recv_message[TEST_STRING_LEN]= "";
+    ucp_request_param_t param;
+    test_req_t *request;
+    size_t length;
+    test_req_t ctx;
 
-    for (i = 0; i < num_iterations; i++) {
-        // ret = client_server_communication(ucp_worker, ep, is_server, i);
-        // ret = send_recv_stream(ucp_worker, ep, is_server, i);
+    ctx.complete = 0;
+    param.op_attr_mask = UCP_OP_ATTR_FIELD_CALLBACK |
+                        UCP_OP_ATTR_FIELD_USER_DATA;
+    param.user_data    = &ctx;
 
-        char recv_message[TEST_STRING_LEN]= "";
-        ucp_request_param_t param;
-        test_req_t *request;
-        size_t length;
-        test_req_t ctx;
+    /* Server receives a message from the client using the stream API */
+    param.op_attr_mask  |= UCP_OP_ATTR_FIELD_FLAGS;
+    param.flags          = UCP_STREAM_RECV_FLAG_WAITALL;
+    param.cb.recv_stream = stream_recv_cb;
+    request              = (test_req_t*) ucp_stream_recv_nbx(ep, &recv_message,TEST_STRING_LEN,&length, &param);
 
-        ctx.complete = 0;
-        param.op_attr_mask = UCP_OP_ATTR_FIELD_CALLBACK |
-                            UCP_OP_ATTR_FIELD_USER_DATA;
-        param.user_data    = &ctx;
+    ucs_status_t status;
 
-        /* Server receives a message from the client using the stream API */
-        param.op_attr_mask  |= UCP_OP_ATTR_FIELD_FLAGS;
-        param.flags          = UCP_STREAM_RECV_FLAG_WAITALL;
-        param.cb.recv_stream = stream_recv_cb;
-        request              = (test_req_t*) ucp_stream_recv_nbx(ep, &recv_message,TEST_STRING_LEN,&length, &param);
-        
-
-        // ret = request_finalize(ucp_worker, request, &ctx, is_server, recv_message, current_iter);
-
-        ucs_status_t status;
-
-        status = request_wait(ucp_worker, request, &ctx);
-        if (status != UCS_OK) {
-            fprintf(stderr, "unable to receive UCX message (%s)\n", ucs_status_string(status));
-            fprintf(stderr, "server failed on iteration #%d\n", i + 1);
-            return -1;
-        }
-
-        /* Print the output of the first, last and every PRINT_INTERVAL iteration */
-        if ((i == 0) || (i == (num_iterations - 1)) ||
-            !((i + 1) % (PRINT_INTERVAL))) {
-            // print_result(is_server, recv_message, i);
-            printf("Server: iteration #%d\n", (i + 1));
-            printf("UCX data message was received\n");
-            printf("\n\n----- UCP TEST SUCCESS -------\n\n");
-            printf("%s", recv_message);
-            printf("\n\n------------------------------\n\n");
-        }
+    status = request_wait(ucp_worker, request, &ctx);
+    if (status != UCS_OK) {
+        fprintf(stderr, "server failed: unable to receive UCX message (%s)\n", ucs_status_string(status));
+        return -1;
     }
 
-
+    printf("UCX data message was received\n");
+    printf("\n\n----- UCP TEST SUCCESS -------\n\n");
+    printf("%s", recv_message);
+    printf("\n\n------------------------------\n\n");
+    
     return 0;
 }
 
-static int run_server(ucp_context_h ucp_context, ucp_worker_h ucp_worker,
-                      char *listen_addr, send_recv_type_t send_recv_type)
-{
+static int run_server(ucp_context_h ucp_context, ucp_worker_h ucp_worker, char *listen_addr) {
     ucx_server_ctx_t context;
     ucp_worker_h     ucp_data_worker;
     ucp_ep_h         server_ep;
@@ -613,8 +529,7 @@ out:
 /**
  * Initialize the UCP context and worker.
  */
-static int init_context(ucp_context_h *ucp_context, ucp_worker_h *ucp_worker,
-                        send_recv_type_t send_recv_type)
+static int init_context(ucp_context_h *ucp_context, ucp_worker_h *ucp_worker)
 {
     /* UCP objects */
     ucp_params_t ucp_params;
@@ -625,12 +540,7 @@ static int init_context(ucp_context_h *ucp_context, ucp_worker_h *ucp_worker,
 
     /* UCP initialization */
     ucp_params.field_mask = UCP_PARAM_FIELD_FEATURES;
-
-    if (send_recv_type == CLIENT_SERVER_SEND_RECV_STREAM) {
-        ucp_params.features = UCP_FEATURE_STREAM;
-    } else {
-        ucp_params.features = UCP_FEATURE_TAG;
-    }
+    ucp_params.features = UCP_FEATURE_STREAM;
 
     status = ucp_init(&ucp_params, NULL, ucp_context);
     if (status != UCS_OK) {
@@ -652,8 +562,7 @@ err:
     return ret;
 }
 
-int run_server2() {
-    send_recv_type_t send_recv_type = CLIENT_SERVER_SEND_RECV_DEFAULT;
+int run_server_listener() {
     char *listen_addr = NULL;
     int ret;
 
@@ -662,12 +571,12 @@ int run_server2() {
     ucp_worker_h  ucp_worker;
 
     /* Initialize the UCX required objects */
-    ret = init_context(&ucp_context, &ucp_worker, send_recv_type);
+    ret = init_context(&ucp_context, &ucp_worker);
     if (ret != 0) {
         goto err;
     }
 
-    ret = run_server(ucp_context, ucp_worker, listen_addr, send_recv_type);
+    ret = run_server(ucp_context, ucp_worker, listen_addr);
 
     ucp_worker_destroy(ucp_worker);
     ucp_cleanup(ucp_context);
@@ -684,7 +593,7 @@ int run_client2() {
     ucp_worker_h  ucp_worker;
 
     /* Initialize the UCX required objects */
-    ret = init_context(&ucp_context, &ucp_worker, CLIENT_SERVER_SEND_RECV_STREAM);
+    ret = init_context(&ucp_context, &ucp_worker);
     if (ret != 0) {
         goto err;
     }
