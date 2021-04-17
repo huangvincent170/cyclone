@@ -417,7 +417,7 @@ out:
     return status;
 }
 
-static int client_do_work(ucp_worker_h ucp_worker, ucp_ep_h ep, rte_mbuf *mb) {
+static int client_do_work(ucp_worker_h ucp_worker, ucp_ep_h ep) {
     int i;
 
     for (i = 0; i < num_iterations; i++) {
@@ -589,7 +589,7 @@ err:
     return ret;
 }
 
-static int run_client(ucp_worker_h ucp_worker, char *server_addr, rte_mbuf *mb) {
+static int run_client(ucp_worker_h ucp_worker, char *server_addr) {
     ucp_ep_h     client_ep;
     ucs_status_t status;
     int          ret;
@@ -601,7 +601,7 @@ static int run_client(ucp_worker_h ucp_worker, char *server_addr, rte_mbuf *mb) 
         goto out;
     }
 
-    ret = client_do_work(ucp_worker, client_ep, mb);
+    ret = client_do_work(ucp_worker, client_ep);
 
     /* Close the endpoint to the server */
     ep_close(ucp_worker, client_ep);
@@ -675,7 +675,7 @@ err:
     return ret;
 }
 
-int run_client2(rte_mbuf *mb) {
+int run_client2() {
     char *server_addr = "192.168.12.62"; //hard code for now
     int ret;
 
@@ -689,7 +689,7 @@ int run_client2(rte_mbuf *mb) {
         goto err;
     }
 
-    ret = run_client(ucp_worker, server_addr, mb);
+    ret = run_client(ucp_worker, server_addr);
 
     ucp_worker_destroy(ucp_worker);
     ucp_cleanup(ucp_context);
