@@ -3,6 +3,9 @@
 #ifndef UINT64_MAX
 #define UINT64_MAX (-1UL)
 #endif
+
+#include <vector>
+#include <thread>
 static const int DISP_MAX_MSGSIZE = 4096; 
 //Note: DISP_MAX_MSGSIZE must be within MSG_MAXSIZE with room for rpc_t header
 const int REP_UNKNOWN = 0;
@@ -124,6 +127,7 @@ int make_rpc_async(void *handle,
          int rpc_flags);
 
 void cyclone_launch_clients(void *handle, int (*f)(void *), void *arg, unsigned slave_id);
+void cyclone_launch_clients_cpp_threads(void *handle ,int (*f)(void *), void* arg, std::vector<std::thread> *client_threads_v);
 
 
 int delete_node(void *handle, unsigned long core_mask, int node);

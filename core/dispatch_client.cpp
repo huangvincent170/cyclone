@@ -535,8 +535,10 @@ void cyclone_launch_clients(void *handle ,int (*f)(void *), void* arg, unsigned 
             }
 }
 
-
-
+void cyclone_launch_clients_cpp_threads(void *handle ,int (*f)(void *), void* arg, std::vector<std::thread> *client_threads_v) {
+  client_threads_v->emplace_back(std::thread(async_listener, handle));
+  client_threads_v->emplace_back(std::thread(f, arg));
+}
 
 void* cyclone_client_init(int client_id,
 			  int client_mc,

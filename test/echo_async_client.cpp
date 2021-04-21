@@ -16,7 +16,6 @@
 #include <netinet/in.h>
 #include <arpa/inet.h>
 
-
 unsigned long request_id = 0UL; // wrap around at MAX
 std::vector<unsigned long> *replayq;
 std::map<unsigned long, unsigned long> *clnt_map;
@@ -208,9 +207,13 @@ int main(int argc, const char *argv[]) {
   }
   BOOST_LOG_TRIVIAL(info) << "sleep 10 sec...";
   sleep(10);
+
+  std::vector<std::thread> client_threads_v;
   for(int me = client_id_start; me < client_id_stop; me++) {
-  	  cyclone_client_post_init(dargs_array[me-client_id_start]->handles[0]);
-	  cyclone_launch_clients(dargs_array[me-client_id_start]->handles[0],driver, dargs_array[me-client_id_start], 1+me-client_id_start);
+    cyclone_client_post_init(dargs_array[me-client_id_start]->handles[0]);
+    cyclone_launch_clients_cpp_threads(dargs_array[me-client_id_start]->handles[0],driver, dargs_array[me-client_id_start], &client_threads_v);
   }
-  rte_eal_mp_wait_lcore();
+  for (auto &client_thread : client_threads_v) {
+    client_thread.join();
+  }
 }

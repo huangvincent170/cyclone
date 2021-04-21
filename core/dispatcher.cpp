@@ -491,17 +491,16 @@ void dispatcher_start(const char* config_cluster_path,
   double tsc_mhz = (rte_get_tsc_hz()/1000000.0);
   unsigned long QUORUM_TO = RAFT_QUORUM_TO*tsc_mhz;
   
+  std::vector<std::thread> executor_threads_v;
   for(int i=0;i < executor_threads;i++) {
     executor_t *ex = new executor_t();
     ex->tid = i;
     ex->replicas =  pt_quorum.get<int>("active.replicas");
     ex->QUORUM_TO = QUORUM_TO;
-    int e = rte_eal_remote_launch(dpdk_executor, (void *)ex, 1 + num_quorums + i);
-    if(e != 0) {
-      BOOST_LOG_TRIVIAL(fatal) << "Failed to launch executor on remote lcore";
-      exit(-1);
-    }
+    executor_threads_v.emplace_back(std::thread(dpdk_executor, (void *)ex));
   }
-  rte_eal_mp_wait_lcore();
+  for (auto &executor_thread : executor_threads_v) {
+    executor_thread.join();
+  }
 }
 
