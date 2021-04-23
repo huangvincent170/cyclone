@@ -9,6 +9,7 @@
 #include <unistd.h>
 #include "cyclone_context.hpp"
 #include "tcp_tunnel.hpp"
+#include "cyclone_ucp.hpp"
 
 
 const static unsigned int SYNC_REQUEST = 1 << 11;
@@ -44,15 +45,19 @@ typedef struct rpc_client_st {
   int server_ports;
   unsigned int *terms;
 
-   //async client
-    int me_aqueue;
+  //async client
+  int me_aqueue;
   unsigned long channel_aseq;
-    struct rte_ring *to_lstnr;  
-    //struct rte_hash *sentmsg_tbl;
-    std::map<unsigned long, async_comm_t *> *pendresponse_map; // ordered map 
-    volatile int64_t msg_inflight;
-    unsigned long max_inflight; 
+  struct rte_ring *to_lstnr;  
+  //struct rte_hash *sentmsg_tbl;
+  std::map<unsigned long, async_comm_t *> *pendresponse_map; // ordered map 
+  volatile int64_t msg_inflight;
+  unsigned long max_inflight; 
 
+  //ucp stuff
+  ucp_worker_h ucp_conn_worker;
+  ucp_context_h ucp_context;
+  ucp_listener_context_t ucp_listener_cxt;
 
 
   tunnel_t* client2server_tunnel(int server, int quorum)
@@ -446,6 +451,15 @@ int exec(){
 			pkt_array[available++] = mb;
 		}	
 
+    if (clnt->ucp_listener_cxt.conn_request == NULL) {
+      ucp_worker_progress(clnt->ucp_conn_worker);
+    } else {
+      if (client_recv_data(clnt->ucp_conn_worker, clnt->ucp_context, &(clnt->ucp_listener_cxt)) != 0) {
+        printf("recv data failed!\n");
+      }
+      clnt->ucp_listener_cxt.conn_request = NULL;
+    }
+
 		if(available ){
 			//BOOST_LOG_TRIVIAL(info) << "received " << available << "messages";
 			for(int i=0;i<available;i++) {
@@ -611,6 +625,21 @@ void* cyclone_client_init(int client_id,
 			    client->client2server_tunnel(i, j));
     }
   }
+
+  //UCP init stuff
+  if (init_context(&(client->ucp_context), &(client->ucp_conn_worker)) != 0) {
+    BOOST_LOG_TRIVIAL(fatal) << "ucp client context init failed!";
+    exit(-1);
+  }
+
+  if (init_listener(&(client->ucp_conn_worker), &(client->ucp_listener_cxt), &(client->ucp_listener_cxt.listener)) != UCS_OK) {
+    BOOST_LOG_TRIVIAL(fatal) << "ucp client listener init failed!";
+    exit(-1);
+  }
+
+  client->ucp_listener_cxt.conn_request = NULL;
+
+
   BOOST_LOG_TRIVIAL(info) << "Connections done... ";
   return (void *)client;
 }

@@ -19,6 +19,7 @@
 #include "checkpoint.hpp"
 #include "cyclone_context.hpp"
 #include "tcp_tunnel.hpp"
+#include "cyclone_ucp.hpp"
 
 dpdk_context_t * global_dpdk_context = NULL;
 extern struct rte_ring ** to_cores;
@@ -61,6 +62,9 @@ static void client_reply(rpc_t *req,
   */
   tunnel_t *tun = server2client_tunnel(req->client_id, quorum);
   tun->send(m);
+  if (send_client_ucp() != 0) {
+    printf("send client failed\n");
+  }
 }
 
 void init_rpc_cookie_info(rpc_cookie_t *cookie, 
