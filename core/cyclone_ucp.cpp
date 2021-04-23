@@ -338,13 +338,8 @@ int client_recv_data(ucp_worker_h ucp_conn_worker, ucp_context_h ucp_context, uc
     }
     printf("Received message %s\n", recv_message);
 
-    /* Close the endpoint to the client */
-    ep_close(ucp_data_worker, server_ep);
-
     /* Reinitialize the server's context to be used for the next client */
     ucp_listener_cxt->conn_request = NULL;
-
-    printf("Waiting for connection...\n");
 
 
 err_ep:
