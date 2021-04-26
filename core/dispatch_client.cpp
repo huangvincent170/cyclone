@@ -94,30 +94,42 @@ typedef struct rpc_client_st {
     }
 #endif
     while(true) {
-      if(!client2server_tunnel(server, quorum)->receive_timeout(timeout_msec*10000)) {
-      	BOOST_LOG_TRIVIAL(info) << "msg timeout in common loop";
-	resp_sz = -1;
-	break;
+  //     if(!client2server_tunnel(server, quorum)->receive_timeout(timeout_msec*10000)) {
+  //     	BOOST_LOG_TRIVIAL(info) << "msg timeout in common loop";
+	// resp_sz = -1;
+	// break;
+  //     }
+  //     rte_mbuf *mb = rte_pktmbuf_alloc(global_dpdk_context->mempools[me_queue]);
+  //     if(mb == NULL) {
+	// BOOST_LOG_TRIVIAL(fatal) << "no mbufs for client rcv";
+	// exit(-1);
+  //     }
+  //     client2server_tunnel(server, quorum)->copy_out(mb);
+  //     int payload_offset = sizeof(struct ether_hdr) + sizeof(struct ipv4_hdr);
+  //     void *payload = rte_pktmbuf_mtod_offset(mb, void *, payload_offset);
+  //     resp_sz = mb->data_len - payload_offset;
+  //     rte_memcpy(packet_in, payload, resp_sz);
+  //     rte_pktmbuf_free(mb);
+  //     if(packet_in->channel_seq != (channel_seq - 1)) {
+	// BOOST_LOG_TRIVIAL(warning) << "Channel seq mismatch";
+	// continue;
+  //     }
+  // BOOST_LOG_TRIVIAL(info) << "initial msg rcv channel " << packet_in->channel_seq << " common loop";
+  //     break;
+
+  //todo implement timeout
+  rpc_t init_rpc;
+  if (ucp_listener_cxt.conn_request == NULL) {
+      ucp_worker_progress(ucp_conn_worker);
+    } else {
+      if (client_recv_data(ucp_conn_worker, ucp_context, &ucp_listener_cxt, &init_rpc) != 0) {
+        printf("recv data failed!\n");
       }
-      rte_mbuf *mb = rte_pktmbuf_alloc(global_dpdk_context->mempools[me_queue]);
-      if(mb == NULL) {
-	BOOST_LOG_TRIVIAL(fatal) << "no mbufs for client rcv";
-	exit(-1);
-      }
-      client2server_tunnel(server, quorum)->copy_out(mb);
-      int payload_offset = sizeof(struct ether_hdr) + sizeof(struct ipv4_hdr);
-      void *payload = rte_pktmbuf_mtod_offset(mb, void *, payload_offset);
-      resp_sz = mb->data_len - payload_offset;
-      rte_memcpy(packet_in, payload, resp_sz);
-      rte_pktmbuf_free(mb);
-      if(packet_in->channel_seq != (channel_seq - 1)) {
-	BOOST_LOG_TRIVIAL(warning) << "Channel seq mismatch";
-	continue;
-      }
-      BOOST_LOG_TRIVIAL(info) << "msg rcv in common loop";
-      break;
+      BOOST_LOG_TRIVIAL(info) << "initial msg rcv channel " << packet_in->channel_seq << " common loop";
+      return 1;
     }
-    return resp_sz;
+    }
+    // return resp_sz;
   }
 
   void send_to_server(rpc_t *pkt, int sz, int quorum_id)
@@ -134,6 +146,7 @@ typedef struct rpc_client_st {
 				    mb,
 				    pkt,
 				    sz);
+    printf("initial send channel %lu\n", pkt->channel_seq);
     client2server_tunnel(server, quorum_id)->send(mb);
     /*
     int e = cyclone_tx(global_dpdk_context, mb, me_queue);
@@ -166,6 +179,7 @@ typedef struct rpc_client_st {
                 BOOST_LOG_TRIVIAL(fatal) << "Failed to enqueue listner queue";  
                 exit(-1);
             }
+            printf("enqueued packet with channel %lu\n", comm_pkt->channel_seq);
 			client2server_tunnel(server, quorum_id)->send(mb);
            /* 
 			int e = cyclone_tx(global_dpdk_context, mb, me_aqueue);
@@ -366,6 +380,7 @@ int64_t get_inflight()
 
 	  send_to_server_async(packet_out, sizeof(rpc_t) + sz, quorum_id, ASYNC_REQUEST, comm_pkt);
 	  add_inflight();
+    printf("sent async rpc\n");
 			//	get_inflight();
 			//	BOOST_LOG_TRIVIAL(info)<< "async message sent, seq no : " 
 			//		<<std::to_string(packet_out->channel_seq) << " queue : "
@@ -396,6 +411,7 @@ int exec(){
 	async_comm_t *lookedup_m = NULL;
 	async_comm_t *cur_m = NULL;
 	std::map<unsigned long, async_comm_t *>::iterator it;
+  rpc_t recv_rpc;
 
 
 	//The server and quorum should be set/updated based on probing step
@@ -427,7 +443,7 @@ int exec(){
 	for(; ;){
 		/* store, sent request contexts in our lookup structure */
 		while(!rte_ring_sc_dequeue(clnt->to_lstnr,(void **)&cur_m)){
-			//BOOST_LOG_TRIVIAL(info) << "Message sent : " << std::to_string(cur_m->channel_seq);
+			BOOST_LOG_TRIVIAL(info) << "Message sent : " << std::to_string(cur_m->channel_seq);
 			clnt->pendresponse_map->insert(std::pair<unsigned long, async_comm_t *>(cur_m->channel_seq,cur_m));
 		}
 
@@ -441,75 +457,80 @@ int exec(){
 		int seen_events = epoll_wait(epoll_fd, &events[0], 1,0);
 
 		int available = 0;
-		if(seen_events && tun->receive()){ // we don't go through seen indexes. We only have one port to monitor
-			rte_mbuf *mb = rte_pktmbuf_alloc(global_dpdk_context->mempools[clnt->me_queue]);
-			if(mb == NULL){
-				BOOST_LOG_TRIVIAL(fatal) << "no mbufs for receive async client";
-				exit(-1);
-			}		
-			tun->copy_out(mb);
-			pkt_array[available++] = mb;
-		}	
+		// if(seen_events && tun->receive()){ // we don't go through seen indexes. We only have one port to monitor
+    //   printf("tcp recv packet!\n");
+		// 	rte_mbuf *mb = rte_pktmbuf_alloc(global_dpdk_context->mempools[clnt->me_queue]);
+		// 	if(mb == NULL){
+		// 		BOOST_LOG_TRIVIAL(fatal) << "no mbufs for receive async client";
+		// 		exit(-1);
+		// 	}		
+		// 	tun->copy_out(mb);
+		// 	pkt_array[available++] = mb;
+		// }	
 
     if (clnt->ucp_listener_cxt.conn_request == NULL) {
       ucp_worker_progress(clnt->ucp_conn_worker);
     } else {
-      if (client_recv_data(clnt->ucp_conn_worker, clnt->ucp_context, &(clnt->ucp_listener_cxt)) != 0) {
+      if (client_recv_data(clnt->ucp_conn_worker, clnt->ucp_context, &(clnt->ucp_listener_cxt), &recv_rpc) != 0) {
         printf("recv data failed!\n");
       }
-      clnt->ucp_listener_cxt.conn_request = NULL;
+      available++;
     }
 
 		if(available ){
-			//BOOST_LOG_TRIVIAL(info) << "received " << available << "messages";
+			BOOST_LOG_TRIVIAL(info) << "received " << available << "messages";
 			for(int i=0;i<available;i++) {
-			m = pkt_array[i];
-			struct ether_hdr *e = rte_pktmbuf_mtod(m, struct ether_hdr *); 
-			struct ipv4_hdr *ip = (struct ipv4_hdr *)(e + 1); 
-			if(e->ether_type != rte_cpu_to_be_16(ETHER_TYPE_IPv4)) {
-				BOOST_LOG_TRIVIAL(warning) << "Dropping junk. Protocol mismatch";
-				rte_pktmbuf_free(m);
-				return -1; 
-			}   
-			else if(ip->src_addr != magic_src_ip) {
-				BOOST_LOG_TRIVIAL(warning) << "Dropping junk. non magic ip";
-				rte_pktmbuf_free(m);
-				return -1; 
-			}   
-			else if(m->data_len <= sizeof(struct ether_hdr) + sizeof(struct ipv4_hdr)) {
-				BOOST_LOG_TRIVIAL(warning) << "Dropping junk = pkt size too small";
-				rte_pktmbuf_free(m);
-				return -1; 
-			}
-			int payload_offset = sizeof(struct ether_hdr) + sizeof(struct ipv4_hdr);
-			rpc_t *resp = (rpc_t *)rte_pktmbuf_mtod_offset(m, void *, payload_offset);
-			int msg_size = m->data_len - payload_offset;
+			// m = pkt_array[i];
+			// struct ether_hdr *e = rte_pktmbuf_mtod(m, struct ether_hdr *); 
+			// struct ipv4_hdr *ip = (struct ipv4_hdr *)(e + 1); 
+			// if(e->ether_type != rte_cpu_to_be_16(ETHER_TYPE_IPv4)) {
+			// 	BOOST_LOG_TRIVIAL(warning) << "Dropping junk. Protocol mismatch";
+			// 	rte_pktmbuf_free(m);
+			// 	return -1; 
+			// }   
+			// else if(ip->src_addr != magic_src_ip) {
+			// 	BOOST_LOG_TRIVIAL(warning) << "Dropping junk. non magic ip";
+			// 	rte_pktmbuf_free(m);
+			// 	return -1; 
+			// }   
+			// else if(m->data_len <= sizeof(struct ether_hdr) + sizeof(struct ipv4_hdr)) {
+			// 	BOOST_LOG_TRIVIAL(warning) << "Dropping junk = pkt size too small";
+			// 	rte_pktmbuf_free(m);
+			// 	return -1; 
+			// }
+			// int payload_offset = sizeof(struct ether_hdr) + sizeof(struct ipv4_hdr);
+			// rpc_t *resp = (rpc_t *)rte_pktmbuf_mtod_offset(m, void *, payload_offset);
+			// int msg_size = m->data_len - payload_offset;
 
-			//BOOST_LOG_TRIVIAL(info) << "Response received : " << std::to_string(resp->channel_seq);
+      rpc_t *resp = &recv_rpc;
+      printf("handling response\n");
+
+			BOOST_LOG_TRIVIAL(info) << "Response received : " << std::to_string(resp->channel_seq);
 			it = clnt->pendresponse_map->find(resp->channel_seq);
 			if(it != clnt->pendresponse_map->end()){	
 				lookedup_m = it->second;
-				//BOOST_LOG_TRIVIAL(warning) << "we have a message";
+				BOOST_LOG_TRIVIAL(info) << "we have a message";
 				lookedup_m->cb(lookedup_m->cb_args, resp->code == RPC_REP_OK? REP_SUCCESS:REP_FAILED,
 				rtc_clock::current_time() - lookedup_m->timestamp);
 				clnt->pendresponse_map->erase(it);	
 				rte_free(lookedup_m);
-				rte_pktmbuf_free(m);
+				// rte_pktmbuf_free(m);
 				clnt->sub_inflight();
 				__sync_synchronize();
-			}else{
-				// drop the packet	
-				//BOOST_LOG_TRIVIAL(info) << "Message not found  : " << std::to_string(resp->channel_seq);
-				rte_pktmbuf_free(m);
-			}	
-			}
+      }
+			// }else{
+			// 	// drop the packet	
+			// 	//BOOST_LOG_TRIVIAL(info) << "Message not found  : " << std::to_string(resp->channel_seq);
+			// 	rte_pktmbuf_free(m);
+			// }
+      }
 		}
 			/* check the pendingresponse_map for timeouts. We travers an ordered map. The ordering can go wrong
 			 * when the seq get wrapped around at the ulong_max. But, there is no correctness issue and we are 
 			 * unlikely hit it as a performance issue during benchmark runs */
 			for(it = clnt->pendresponse_map->begin(); it != clnt->pendresponse_map->end(); it++){	
 				if(rtc_clock::current_time() - it->second->timestamp >= async_timeout_msec){
-						//BOOST_LOG_TRIVIAL(info) << "Message removed : " << it->first;
+						BOOST_LOG_TRIVIAL(info) << "Message removed : " << it->first;
 						it->second->cb(it->second->cb_args, REP_TIMEDOUT,async_timeout_msec); 
 						rte_free(it->second);
 						clnt->pendresponse_map->erase(it);

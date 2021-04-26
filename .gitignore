@@ -1,0 +1,7 @@
+utils-global/test/**
+core/*.o
+test/echo_async_client
+test/echo_server
+.vscode/**
+core/libcyclone.a
+utils-global/*.sh

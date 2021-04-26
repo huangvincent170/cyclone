@@ -297,7 +297,7 @@ static ucs_status_t request_wait(ucp_worker_h ucp_worker, test_req_t *request)
     return status;
 }
 
-int client_recv_data(ucp_worker_h ucp_conn_worker, ucp_context_h ucp_context, ucp_listener_context_t *ucp_listener_cxt) {
+int client_recv_data(ucp_worker_h ucp_conn_worker, ucp_context_h ucp_context, ucp_listener_context_t *ucp_listener_cxt, rpc_t *buf) {
 
     ucp_worker_h     ucp_data_worker;
     ucp_ep_h         server_ep;
@@ -305,7 +305,7 @@ int client_recv_data(ucp_worker_h ucp_conn_worker, ucp_context_h ucp_context, uc
     int              ret;
     size_t length;
 
-    char recv_message[TEST_STRING_LEN]= "";
+    // char recv_message[TEST_STRING_LEN]= "";
     test_req_t *request;
 
     /* Create a data worker (to be used for data exchange between the server
@@ -326,17 +326,25 @@ int client_recv_data(ucp_worker_h ucp_conn_worker, ucp_context_h ucp_context, uc
     }
 
     
-    request = (test_req_t *) ucp_stream_recv_nb(server_ep, &recv_message, 1,
-                                     ucp_dt_make_contig(TEST_STRING_LEN),
+    // request = (test_req_t *) ucp_stream_recv_nb(server_ep, &recv_message, 1,
+    //                                  ucp_dt_make_contig(TEST_STRING_LEN),
+    //                                  stream_recv_cb, &length,
+    //                                  UCP_STREAM_RECV_FLAG_WAITALL);
+
+    request = (test_req_t *) ucp_stream_recv_nb(server_ep, buf, 1,
+                                     ucp_dt_make_contig(sizeof(rpc_t)),
                                      stream_recv_cb, &length,
                                      UCP_STREAM_RECV_FLAG_WAITALL);
+
+
     status = request_wait(ucp_data_worker, request);
     if (status != UCS_OK) {
         fprintf(stderr, "unable to receive UCX message (%s)\n", ucs_status_string(status));
         ret = -1;
         goto err_ep;
     }
-    printf("Received message %s\n", recv_message);
+    // printf("Received message %s\n", recv_message);
+    printf("recv rpc: %d %d %d %lu\n", buf->code, buf->flags, buf->payload_sz, buf->channel_seq);
 
     /* Reinitialize the server's context to be used for the next client */
     ucp_listener_cxt->conn_request = NULL;
@@ -438,7 +446,7 @@ static void send_cb(void *request, ucs_status_t status)
     req->complete = 1;
 }
 
-int send_client_ucp() {
+int send_client_ucp(rpc_t *pkt) {
     ucp_ep_h     client_ep;
     ucs_status_t status;
     int          ret = 0;
@@ -460,7 +468,9 @@ int send_client_ucp() {
         goto err;
     }
 
-    request = (test_req_t *) ucp_stream_send_nb(client_ep, test_message, 1, ucp_dt_make_contig(TEST_STRING_LEN), send_cb, 0);
+    printf("send rpc: %d %d %d %lu\n", pkt->code, pkt->flags, pkt->payload_sz, pkt->channel_seq);
+    request = (test_req_t *) ucp_stream_send_nb(client_ep, pkt, 1, ucp_dt_make_contig(sizeof(rpc_t)), send_cb, 0);
+
     status = request_wait(ucp_worker, request);
     if (status != UCS_OK) {
         fprintf(stderr, "unable to send UCX message (%s)\n", ucs_status_string(status));
