@@ -474,7 +474,15 @@ struct cyclone_monitor {
 	  continue;
 	}
       }
-      printf("server recv rpc with channel %lu, status %d, flags %d\n", rpc->channel_seq, rpc->code, rpc->flags);
+      printf("server recv rpc with " 
+      "code %d flags %d payload_sz %d " 
+      "core_mask %lu " 
+      "client_id %d requestor %d client_port %d quorum_term %d " 
+      "channel_seq %lu timestamp %lu\n" ,
+      rpc->code, rpc->flags, rpc->payload_sz,
+      rpc->core_mask,
+      rpc->client_id, rpc->requestor, rpc->client_port, rpc->quorum_term,
+      rpc->channel_seq, rpc->timestamp);
       if(!multicore && is_multicore_rpc(rpc)) {
         printf("multicore rpc\n");
 	// Received a multi-core operation

@@ -117,17 +117,20 @@ typedef struct rpc_client_st {
   // BOOST_LOG_TRIVIAL(info) << "initial msg rcv channel " << packet_in->channel_seq << " common loop";
   //     break;
 
-  //todo implement timeout
-  rpc_t init_rpc;
-  if (ucp_listener_cxt.conn_request == NULL) {
-      ucp_worker_progress(ucp_conn_worker);
-    } else {
-      if (client_recv_data(ucp_conn_worker, ucp_context, &ucp_listener_cxt, &init_rpc) != 0) {
-        printf("recv data failed!\n");
+      //todo implement timeout
+      if (ucp_listener_cxt.conn_request == NULL) {
+          ucp_worker_progress(ucp_conn_worker);
+      } else {
+        if (client_recv_data(ucp_conn_worker, ucp_context, &ucp_listener_cxt, packet_in) != 0) {
+          printf("recv data failed!\n");
+        }
+        if(packet_in->channel_seq != (channel_seq - 1)) {
+          BOOST_LOG_TRIVIAL(warning) << "Channel seq mismatch";
+          continue;
+        }
+        BOOST_LOG_TRIVIAL(info) << "initial msg rcv channel " << packet_in->channel_seq << " common loop";
+        return 1; // not sure how to calculate resp_sz, doesn't look like it's used anyways outside of a check for not -1
       }
-      BOOST_LOG_TRIVIAL(info) << "initial msg rcv channel " << packet_in->channel_seq << " common loop";
-      return 1;
-    }
     }
     // return resp_sz;
   }
@@ -146,7 +149,17 @@ typedef struct rpc_client_st {
 				    mb,
 				    pkt,
 				    sz);
-    printf("initial send channel %lu\n", pkt->channel_seq);
+    printf("client init send rpc with " 
+    "quorum_id %d " 
+      "code %d flags %d payload_sz %d " 
+      "core_mask %lu " 
+      "client_id %d requestor %d client_port %d quorum_term %d " 
+      "channel_seq %lu timestamp %lu\n" ,
+      quorum_id,
+      pkt->code, pkt->flags, pkt->payload_sz,
+      pkt->core_mask,
+      pkt->client_id, pkt->requestor, pkt->client_port, pkt->quorum_term,
+      pkt->channel_seq, pkt->timestamp);
     client2server_tunnel(server, quorum_id)->send(mb);
     /*
     int e = cyclone_tx(global_dpdk_context, mb, me_queue);
@@ -179,7 +192,15 @@ typedef struct rpc_client_st {
                 BOOST_LOG_TRIVIAL(fatal) << "Failed to enqueue listner queue";  
                 exit(-1);
             }
-            printf("enqueued packet with channel %lu\n", comm_pkt->channel_seq);
+            printf("client send rpc with " 
+      "code %d flags %d payload_sz %d " 
+      "core_mask %lu " 
+      "client_id %d requestor %d client_port %d quorum_term %d " 
+      "channel_seq %lu timestamp %lu\n" ,
+      pkt->code, pkt->flags, pkt->payload_sz,
+      pkt->core_mask,
+      pkt->client_id, pkt->requestor, pkt->client_port, pkt->quorum_term,
+      pkt->channel_seq, pkt->timestamp);
 			client2server_tunnel(server, quorum_id)->send(mb);
            /* 
 			int e = cyclone_tx(global_dpdk_context, mb, me_aqueue);
@@ -206,6 +227,7 @@ typedef struct rpc_client_st {
     if(resp_sz != -1) {
       memcpy(terms, packet_in + 1, num_quorums*sizeof(unsigned int));
       for(int i=0;i<num_quorums;i++) {
+        printf("terms %d set to %d\n", i, terms[i]);
 	terms[i] = terms[i] >> 1;
       }
       return 1;
@@ -380,7 +402,6 @@ int64_t get_inflight()
 
 	  send_to_server_async(packet_out, sizeof(rpc_t) + sz, quorum_id, ASYNC_REQUEST, comm_pkt);
 	  add_inflight();
-    printf("sent async rpc\n");
 			//	get_inflight();
 			//	BOOST_LOG_TRIVIAL(info)<< "async message sent, seq no : " 
 			//		<<std::to_string(packet_out->channel_seq) << " queue : "

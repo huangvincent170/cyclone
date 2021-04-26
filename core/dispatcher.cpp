@@ -60,8 +60,8 @@ static void client_reply(rpc_t *req,
     BOOST_LOG_TRIVIAL(warning) << "Failed to send response to client";
   }
   */
-  tunnel_t *tun = server2client_tunnel(req->client_id, quorum);
-  tun->send(m);
+  // tunnel_t *tun = server2client_tunnel(req->client_id, quorum);
+  // tun->send(m);
   if (send_client_ucp(rep) != 0) {
     printf("send client failed\n");
   }
