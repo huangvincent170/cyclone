@@ -13,9 +13,7 @@
 #define IP_STRING_LEN          50
 #define PORT_STRING_LEN        8
 #define DEFAULT_PORT           13337
-// #define TEST_STRING_LEN        sizeof(test_message)
 
-// const  char test_message[]           = "UCX Client-Server Hello World";
 static uint16_t server_port          = DEFAULT_PORT;
 
 /**
@@ -56,7 +54,7 @@ static int init_worker(ucp_context_h ucp_context, ucp_worker_h *ucp_worker) {
     return ret;
 }
 
-int init_context(ucp_context_h *ucp_context, ucp_worker_h *ucp_worker) {
+int cyclone_ucp_init_context(ucp_context_h *ucp_context, ucp_worker_h *ucp_worker) {
     ucp_params_t ucp_params;
     ucs_status_t status;
     int ret = 0;
@@ -92,7 +90,7 @@ err:
 }
 
 static void client_conn_handle_cb(ucp_conn_request_h conn_request, void *arg) {
-    ucp_listener_context_t *context = (ucp_listener_context_t *) arg;
+    cyclone_ucp_listener_context_t *context = (cyclone_ucp_listener_context_t *) arg;
     ucs_status_t status;
 
     if (context->conn_request == NULL) {
@@ -148,7 +146,7 @@ static char* sockaddr_get_port_str(const struct sockaddr_storage *sock_addr,
     }
 }
 
-ucs_status_t init_listener(ucp_worker_h *ucp_worker, ucp_listener_context_t *listener_ctx, ucp_listener_h *listener_p) {
+ucs_status_t cyclone_ucp_init_listener(ucp_worker_h *ucp_worker, cyclone_ucp_listener_context_t *listener_ctx, ucp_listener_h *listener_p) {
     struct sockaddr_in listen_addr;
     ucp_listener_params_t params;
     ucp_listener_attr_t attr;
@@ -259,17 +257,6 @@ static ucs_status_t server_create_ep(ucp_worker_h data_worker,
 }
 
 /**
- * The callback on the receiving side, which is invoked upon receiving the
- * stream message.
- */
-static void stream_recv_cb(void *request, ucs_status_t status, size_t length)
-{
-    test_req_t *req = (test_req_t *) request;
-
-    req->complete = 1;
-}
-
-/**
  * Progress the request until it completes.
  */
 static ucs_status_t request_wait(ucp_worker_h ucp_worker, test_req_t *request)
@@ -297,7 +284,7 @@ static ucs_status_t request_wait(ucp_worker_h ucp_worker, test_req_t *request)
     return status;
 }
 
-int client_recv_data(ucp_worker_h ucp_conn_worker, ucp_context_h ucp_context, ucp_listener_context_t *ucp_listener_cxt, rpc_t *buf) {
+int cyclone_ucp_recv(ucp_worker_h ucp_conn_worker, ucp_context_h ucp_context, cyclone_ucp_listener_context_t *ucp_listener_cxt, rpc_t *buf) {
 
     ucp_worker_h     ucp_data_worker;
     ucp_ep_h         server_ep;
@@ -305,8 +292,6 @@ int client_recv_data(ucp_worker_h ucp_conn_worker, ucp_context_h ucp_context, uc
     int              ret;
     size_t length;
 
-    // char recv_message[TEST_STRING_LEN]= "";
-    // test_req_t *request;
     void *data_ptr = NULL;
 
     /* Create a data worker (to be used for data exchange between the server
@@ -326,25 +311,6 @@ int client_recv_data(ucp_worker_h ucp_conn_worker, ucp_context_h ucp_context, uc
         goto err_worker;
     }
 
-    
-    // request = (test_req_t *) ucp_stream_recv_nb(server_ep, &recv_message, 1,
-    //                                  ucp_dt_make_contig(TEST_STRING_LEN),
-    //                                  stream_recv_cb, &length,
-    //                                  UCP_STREAM_RECV_FLAG_WAITALL);
-
-    // request = (test_req_t *) ucp_stream_recv_nb(server_ep, buf, 1,
-    //                                  ucp_dt_make_contig(sizeof(rpc_t)),
-    //                                  stream_recv_cb, &length,
-    //                                  UCP_STREAM_RECV_FLAG_WAITALL);
-
-    // status = request_wait(ucp_data_worker, request);
-    // if (status != UCS_OK) {
-    //     fprintf(stderr, "unable to receive UCX message (%s)\n", ucs_status_string(status));
-    //     ret = -1;
-    //     goto err_ep;
-    // }
-
-
     while ((data_ptr = ucp_stream_recv_data_nb(server_ep, &length)) == NULL) {
         ucp_worker_progress(ucp_data_worker);
     }
@@ -359,10 +325,8 @@ int client_recv_data(ucp_worker_h ucp_conn_worker, ucp_context_h ucp_context, uc
     memcpy(buf, UCS_STATUS_PTR(data_ptr), length);
     ucp_request_free(data_ptr);
 
-    // printf("Received message %s\n", recv_message);
     printf("recv rpc: %d %d %d %lu\n", buf->code, buf->flags, buf->payload_sz, buf->channel_seq);
 
-    /* Reinitialize the server's context to be used for the next client */
     ucp_listener_cxt->conn_request = NULL;
 
 
@@ -462,7 +426,7 @@ static void send_cb(void *request, ucs_status_t status)
     req->complete = 1;
 }
 
-int send_client_ucp(rpc_t *pkt, int sz) {
+int cyclone_ucp_send(const char *ip, rpc_t *pkt, int sz) {
     ucp_ep_h     client_ep;
     ucs_status_t status;
     int          ret = 0;
@@ -472,12 +436,12 @@ int send_client_ucp(rpc_t *pkt, int sz) {
 
     test_req_t *request;
 
-    ret = init_context(&ucp_context, &ucp_worker);
+    ret = cyclone_ucp_init_context(&ucp_context, &ucp_worker);
     if (ret != 0) {
         goto err;
     }
 
-    status = start_client(ucp_worker, "192.168.12.63", &client_ep);
+    status = start_client(ucp_worker, ip, &client_ep);
     if (status != UCS_OK) {
         fprintf(stderr, "failed to start client (%s)\n", ucs_status_string(status));
         ret = -1;

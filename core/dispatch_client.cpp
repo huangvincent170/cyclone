@@ -57,7 +57,7 @@ typedef struct rpc_client_st {
   //ucp stuff
   ucp_worker_h ucp_conn_worker;
   ucp_context_h ucp_context;
-  ucp_listener_context_t ucp_listener_cxt;
+  cyclone_ucp_listener_context_t ucp_listener_cxt;
 
 
   tunnel_t* client2server_tunnel(int server, int quorum)
@@ -121,7 +121,7 @@ typedef struct rpc_client_st {
       if (ucp_listener_cxt.conn_request == NULL) {
           ucp_worker_progress(ucp_conn_worker);
       } else {
-        if (client_recv_data(ucp_conn_worker, ucp_context, &ucp_listener_cxt, packet_in) != 0) {
+        if (cyclone_ucp_recv(ucp_conn_worker, ucp_context, &ucp_listener_cxt, packet_in) != 0) {
           printf("recv data failed!\n");
         }
         if(packet_in->channel_seq != (channel_seq - 1)) {
@@ -492,7 +492,7 @@ int exec(){
     if (clnt->ucp_listener_cxt.conn_request == NULL) {
       ucp_worker_progress(clnt->ucp_conn_worker);
     } else {
-      if (client_recv_data(clnt->ucp_conn_worker, clnt->ucp_context, &(clnt->ucp_listener_cxt), &recv_rpc) != 0) {
+      if (cyclone_ucp_recv(clnt->ucp_conn_worker, clnt->ucp_context, &(clnt->ucp_listener_cxt), &recv_rpc) != 0) {
         printf("recv data failed!\n");
       }
       available++;
@@ -669,12 +669,12 @@ void* cyclone_client_init(int client_id,
   }
 
   //UCP init stuff
-  if (init_context(&(client->ucp_context), &(client->ucp_conn_worker)) != 0) {
+  if (cyclone_ucp_init_context(&(client->ucp_context), &(client->ucp_conn_worker)) != 0) {
     BOOST_LOG_TRIVIAL(fatal) << "ucp client context init failed!";
     exit(-1);
   }
 
-  if (init_listener(&(client->ucp_conn_worker), &(client->ucp_listener_cxt), &(client->ucp_listener_cxt.listener)) != UCS_OK) {
+  if (cyclone_ucp_init_listener(&(client->ucp_conn_worker), &(client->ucp_listener_cxt), &(client->ucp_listener_cxt.listener)) != UCS_OK) {
     BOOST_LOG_TRIVIAL(fatal) << "ucp client listener init failed!";
     exit(-1);
   }
