@@ -18,6 +18,7 @@ extern "C" {
 #include <rte_cycles.h>
 #include "tcp_tunnel.hpp"
 #include <sys/epoll.h>
+#include "cyclone_ucp.hpp"
 
 extern volatile unsigned long accepts_complete;
 
@@ -674,6 +675,10 @@ struct cyclone_monitor {
     rte_mbuf *m;
     cyclone_handle->RAFT_NACK_TIMEOUT_CYCLES = RAFT_NACK_TIMEOUT*tsc_mhz;
 
+    ucp_worker_h ucp_conn_worker;
+    ucp_context_h ucp_context;
+    cyclone_ucp_listener_context_t ucp_listener_cxt;
+
     snapshot = (unsigned int *)malloc(num_quorums*sizeof(unsigned int));
     cyclone_handle->snapshot = ~1L;
     cyclone_handle->ae_nack_term = -1;
@@ -712,6 +717,19 @@ struct cyclone_monitor {
 	exit(-1);
       }
     }
+
+    //UCP init stuff
+    if (cyclone_ucp_init_context(&ucp_context, &ucp_conn_worker) != 0) {
+      BOOST_LOG_TRIVIAL(fatal) << "ucp server context init failed!";
+      exit(-1);
+    }
+
+    if (cyclone_ucp_init_listener(&ucp_conn_worker, &ucp_listener_cxt, &(ucp_listener_cxt.listener)) != UCS_OK) {
+      BOOST_LOG_TRIVIAL(fatal) << "ucp server listener init failed!";
+      exit(-1);
+    }
+
+    ucp_listener_cxt.conn_request = NULL;
 
     while(!terminate) {
       unsigned long replicas_active_flag = 0;

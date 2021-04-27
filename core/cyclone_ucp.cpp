@@ -284,12 +284,12 @@ static ucs_status_t request_wait(ucp_worker_h ucp_worker, test_req_t *request)
     return status;
 }
 
-int cyclone_ucp_recv(ucp_worker_h ucp_conn_worker, ucp_context_h ucp_context, cyclone_ucp_listener_context_t *ucp_listener_cxt, void *buf) {
+size_t cyclone_ucp_recv(ucp_worker_h ucp_conn_worker, ucp_context_h ucp_context, cyclone_ucp_listener_context_t *ucp_listener_cxt, void *buf) {
 
     ucp_worker_h     ucp_data_worker;
     ucp_ep_h         server_ep;
     ucs_status_t     status;
-    int              ret;
+    int              ret = 0;
     size_t length;
 
     void *data_ptr = NULL;
@@ -332,7 +332,7 @@ err_ep:
 err_worker:
     ucp_worker_destroy(ucp_data_worker);
 err:
-    return ret;
+    return (ret < 0) ? 0 : length;
 }
 
 

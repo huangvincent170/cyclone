@@ -121,7 +121,8 @@ typedef struct rpc_client_st {
       if (ucp_listener_cxt.conn_request == NULL) {
           ucp_worker_progress(ucp_conn_worker);
       } else {
-        if (cyclone_ucp_recv(ucp_conn_worker, ucp_context, &ucp_listener_cxt, packet_in) != 0) {
+        size_t len;
+        if ((len = cyclone_ucp_recv(ucp_conn_worker, ucp_context, &ucp_listener_cxt, packet_in)) == 0) {
           printf("recv data failed!\n");
         }
         if(packet_in->channel_seq != (channel_seq - 1)) {
@@ -492,7 +493,8 @@ int exec(){
     if (clnt->ucp_listener_cxt.conn_request == NULL) {
       ucp_worker_progress(clnt->ucp_conn_worker);
     } else {
-      if (cyclone_ucp_recv(clnt->ucp_conn_worker, clnt->ucp_context, &(clnt->ucp_listener_cxt), &recv_rpc) != 0) {
+      size_t len;
+      if ((len = cyclone_ucp_recv(clnt->ucp_conn_worker, clnt->ucp_context, &(clnt->ucp_listener_cxt), &recv_rpc)) == 0) {
         printf("recv data failed!\n");
       }
       available++;
