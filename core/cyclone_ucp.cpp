@@ -284,7 +284,7 @@ static ucs_status_t request_wait(ucp_worker_h ucp_worker, test_req_t *request)
     return status;
 }
 
-int cyclone_ucp_recv(ucp_worker_h ucp_conn_worker, ucp_context_h ucp_context, cyclone_ucp_listener_context_t *ucp_listener_cxt, rpc_t *buf) {
+int cyclone_ucp_recv(ucp_worker_h ucp_conn_worker, ucp_context_h ucp_context, cyclone_ucp_listener_context_t *ucp_listener_cxt, void *buf) {
 
     ucp_worker_h     ucp_data_worker;
     ucp_ep_h         server_ep;
@@ -320,12 +320,9 @@ int cyclone_ucp_recv(ucp_worker_h ucp_conn_worker, ucp_context_h ucp_context, cy
         ret = -1;
         goto err_ep;
     }
-    printf("ucp done recv msg\n");
     
     memcpy(buf, UCS_STATUS_PTR(data_ptr), length);
     ucp_request_free(data_ptr);
-
-    printf("recv rpc: %d %d %d %lu\n", buf->code, buf->flags, buf->payload_sz, buf->channel_seq);
 
     ucp_listener_cxt->conn_request = NULL;
 
@@ -426,7 +423,7 @@ static void send_cb(void *request, ucs_status_t status)
     req->complete = 1;
 }
 
-int cyclone_ucp_send(const char *ip, rpc_t *pkt, int sz) {
+int cyclone_ucp_send(const char *ip, void *pkt, int sz) {
     ucp_ep_h     client_ep;
     ucs_status_t status;
     int          ret = 0;
@@ -448,7 +445,6 @@ int cyclone_ucp_send(const char *ip, rpc_t *pkt, int sz) {
         goto err;
     }
 
-    printf("send rpc: %d %d %d %lu\n", pkt->code, pkt->flags, pkt->payload_sz, pkt->channel_seq);
     request = (test_req_t *) ucp_stream_send_nb(client_ep, pkt, 1, ucp_dt_make_contig(sizeof(rpc_t) + sz), send_cb, 0);
 
     status = request_wait(ucp_worker, request);
@@ -457,7 +453,6 @@ int cyclone_ucp_send(const char *ip, rpc_t *pkt, int sz) {
         ret = -1;
         goto err;
     }
-    printf("successfully sent message!\n");
 
     ep_close(ucp_worker, client_ep);
     ucp_worker_destroy(ucp_worker);
