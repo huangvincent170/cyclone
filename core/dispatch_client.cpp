@@ -161,7 +161,10 @@ typedef struct rpc_client_st {
       pkt->core_mask,
       pkt->client_id, pkt->requestor, pkt->client_port, pkt->quorum_term,
       pkt->channel_seq, pkt->timestamp);
-    client2server_tunnel(server, quorum_id)->send(mb);
+      // cyclone_ucp_send("192.168.12.62", pkt, sz);
+      cyclone_ucp_send("192.168.12.62", rte_pktmbuf_mtod(mb, void*), mb->pkt_len);
+      printf("sent packet with len %d\n", mb->pkt_len);
+    // client2server_tunnel(server, quorum_id)->send(mb);
     /*
     int e = cyclone_tx(global_dpdk_context, mb, me_queue);
     if(e) {
@@ -202,7 +205,10 @@ typedef struct rpc_client_st {
       pkt->core_mask,
       pkt->client_id, pkt->requestor, pkt->client_port, pkt->quorum_term,
       pkt->channel_seq, pkt->timestamp);
-			client2server_tunnel(server, quorum_id)->send(mb);
+      // cyclone_ucp_send("192.168.12.62", pkt, sz);
+      cyclone_ucp_send("192.168.12.62", rte_pktmbuf_mtod(mb, void*), mb->pkt_len);
+      printf("sent packet with len %d\n", mb->pkt_len);
+			// client2server_tunnel(server, quorum_id)->send(mb);
            /* 
 			int e = cyclone_tx(global_dpdk_context, mb, me_aqueue);
             if(e) 

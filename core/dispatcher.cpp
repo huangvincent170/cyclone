@@ -62,7 +62,7 @@ static void client_reply(rpc_t *req,
   */
   // tunnel_t *tun = server2client_tunnel(req->client_id, quorum);
   // tun->send(m);
-  if (cyclone_ucp_send("192.168.12.63", rep, sz) != 0) {
+  if (cyclone_ucp_send("192.168.12.63", rep, sizeof(rpc_t) + sz) != 0) {
     printf("send client failed\n");
   }
   printf("continue server\n");

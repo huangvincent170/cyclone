@@ -747,6 +747,14 @@ struct cyclone_monitor {
 	  clients_active_flag |= (1UL << (x - cyclone_handle->replicas));
 	}
       }
+
+      // temporary ucp clients count
+      if (ucp_listener_cxt.conn_request == NULL) {
+        ucp_worker_progress(ucp_conn_worker);
+      } else {
+        clients_active_flag = 1;
+      }
+
 #ifdef WORKAROUND0
       // Clean queue 0
       for(int i=0;i < global_dpdk_context->ports;i++) {
@@ -857,16 +865,39 @@ struct cyclone_monitor {
       for(int i=0;i<num_clients;i++) {
 	if((clients_active_flag & (1UL << i)) == 0)
 	  continue;
-	tunnel_t *tun = server2client_tunnel(i, cyclone_handle->me_quorum);
-	if(tun->receive()) {
-	  rte_mbuf *mb = rte_pktmbuf_alloc(global_dpdk_context->mempools[monitor_queue]);
-	  if(mb == NULL) {
-	    BOOST_LOG_TRIVIAL(fatal) << "no mbufs for rcv q_dispatcher";
-	    exit(-1);
-	  }
-	  tun->copy_out(mb);
-	  pkt_array[available++] = mb;
-	}
+	// tunnel_t *tun = server2client_tunnel(i, cyclone_handle->me_quorum);
+	// if(tun->receive()) {
+	//   rte_mbuf *mb = rte_pktmbuf_alloc(global_dpdk_context->mempools[monitor_queue]);
+	//   if(mb == NULL) {
+	//     BOOST_LOG_TRIVIAL(fatal) << "no mbufs for rcv q_dispatcher";
+	//     exit(-1);
+	//   }
+	//   tun->copy_out(mb);
+	//   pkt_array[available++] = mb;
+	// }
+
+        if (ucp_listener_cxt.conn_request == NULL) {
+          ucp_worker_progress(ucp_conn_worker);
+        } else {
+          printf("server recv conn!\n");
+          
+          size_t len;
+
+          rte_mbuf *mb = rte_pktmbuf_alloc(global_dpdk_context->mempools[monitor_queue]);
+          if(mb == NULL) {
+            BOOST_LOG_TRIVIAL(fatal) << "no mbufs for rcv q_dispatcher";
+            exit(-1);
+          }
+
+          if ((len = cyclone_ucp_recv(ucp_conn_worker, ucp_context, &(ucp_listener_cxt), rte_pktmbuf_mtod(mb, void *))) == 0) {
+            printf("recv data failed!\n");
+          }
+           
+          mb->pkt_len = len;
+          mb->data_len = len;
+
+          pkt_array[available++] = mb;
+        }
       }
       accept(available, 0);
       // Check for transactions

@@ -293,6 +293,8 @@ size_t cyclone_ucp_recv(ucp_worker_h ucp_conn_worker, ucp_context_h ucp_context,
     size_t length;
 
     void *data_ptr = NULL;
+    char *ucs_data_ptr;
+    int pkt_sz;
 
     /* Create a data worker (to be used for data exchange between the server
      * and the client after the connection between them was established) */
@@ -320,19 +322,20 @@ size_t cyclone_ucp_recv(ucp_worker_h ucp_conn_worker, ucp_context_h ucp_context,
         ret = -1;
         goto err_ep;
     }
-    
-    memcpy(buf, UCS_STATUS_PTR(data_ptr), length);
+
+    ucs_data_ptr = (char*) UCS_STATUS_PTR(data_ptr);
+    pkt_sz = *(int*)ucs_data_ptr - sizeof(int);
+    memcpy(buf, ((int*)ucs_data_ptr) + 1, pkt_sz);
     ucp_request_free(data_ptr);
 
     ucp_listener_cxt->conn_request = NULL;
-
 
 err_ep:
     ep_close(ucp_data_worker, server_ep);
 err_worker:
     ucp_worker_destroy(ucp_data_worker);
 err:
-    return (ret < 0) ? 0 : length;
+    return (ret < 0) ? 0 : pkt_sz;
 }
 
 
@@ -433,6 +436,10 @@ int cyclone_ucp_send(const char *ip, void *pkt, int sz) {
 
     test_req_t *request;
 
+    char send_buf[8000];
+    *(int*) send_buf = sizeof(int) + sz; //first sizeof(int) bytes are the number of bytes we send
+    memcpy(send_buf + sizeof(int), pkt, sz); // copy the packet into the buffer
+
     ret = cyclone_ucp_init_context(&ucp_context, &ucp_worker);
     if (ret != 0) {
         goto err;
@@ -445,7 +452,8 @@ int cyclone_ucp_send(const char *ip, void *pkt, int sz) {
         goto err;
     }
 
-    request = (test_req_t *) ucp_stream_send_nb(client_ep, pkt, 1, ucp_dt_make_contig(sizeof(rpc_t) + sz), send_cb, 0);
+    printf("sending sz %d\n", sz);
+    request = (test_req_t *) ucp_stream_send_nb(client_ep, send_buf, 1, ucp_dt_make_contig(sizeof(int) + sz), send_cb, 0);
 
     status = request_wait(ucp_worker, request);
     if (status != UCS_OK) {
