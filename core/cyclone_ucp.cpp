@@ -183,9 +183,9 @@ ucs_status_t cyclone_ucp_init_listener(ucp_worker_h *ucp_worker, cyclone_ucp_lis
         goto out;
     }
 
-    fprintf(stderr, "server is listening on IP %s port %s\n",
-            sockaddr_get_ip_str(&attr.sockaddr, ip_str, IP_STRING_LEN),
-            sockaddr_get_port_str(&attr.sockaddr, port_str, PORT_STRING_LEN));
+    // fprintf(stderr, "server is listening on IP %s port %s\n",
+    //         sockaddr_get_ip_str(&attr.sockaddr, ip_str, IP_STRING_LEN),
+    //         sockaddr_get_port_str(&attr.sockaddr, port_str, PORT_STRING_LEN));
 
 out:
     return status;
@@ -452,7 +452,7 @@ int cyclone_ucp_send(const char *ip, void *pkt, int sz) {
         goto err;
     }
 
-    printf("sending sz %d\n", sz);
+    // printf("sending sz %d\n", sz);
     request = (test_req_t *) ucp_stream_send_nb(client_ep, send_buf, 1, ucp_dt_make_contig(sizeof(int) + sz), send_cb, 0);
 
     status = request_wait(ucp_worker, request);

@@ -475,17 +475,17 @@ struct cyclone_monitor {
 	  continue;
 	}
       }
-      printf("server recv rpc with " 
-      "code %d flags %d payload_sz %d " 
-      "core_mask %lu " 
-      "client_id %d requestor %d client_port %d quorum_term %d " 
-      "channel_seq %lu timestamp %lu\n" ,
-      rpc->code, rpc->flags, rpc->payload_sz,
-      rpc->core_mask,
-      rpc->client_id, rpc->requestor, rpc->client_port, rpc->quorum_term,
-      rpc->channel_seq, rpc->timestamp);
+      // printf("server recv rpc with " 
+      // "code %d flags %d payload_sz %d " 
+      // "core_mask %lu " 
+      // "client_id %d requestor %d client_port %d quorum_term %d " 
+      // "channel_seq %lu timestamp %lu\n" ,
+      // rpc->code, rpc->flags, rpc->payload_sz,
+      // rpc->core_mask,
+      // rpc->client_id, rpc->requestor, rpc->client_port, rpc->quorum_term,
+      // rpc->channel_seq, rpc->timestamp);
       if(!multicore && is_multicore_rpc(rpc)) {
-        printf("multicore rpc\n");
+        // printf("multicore rpc\n");
 	// Received a multi-core operation
 	// Check that I am quorum 0
 	if(cyclone_handle->me_quorum != 0) {
@@ -514,7 +514,7 @@ struct cyclone_monitor {
 	  exit(-1);
 	}
 	while(quorum_mask) {
-    printf("multicore enqueue\n");
+    // printf("multicore enqueue\n");
 	  int q = __builtin_ffsl(quorum_mask) - 1;
 	  rte_mbuf_refcnt_update(m, 1);
 	  if(rte_ring_sp_enqueue(to_quorums[q], (void *)m) == -ENOBUFS) {
@@ -527,7 +527,7 @@ struct cyclone_monitor {
 	continue;
       }
       if(rpc->code == RPC_REQ_STABLE) {
-        printf("req stable\n");
+        // printf("req stable\n");
 	if(take_snapshot(snapshot)) {
 	  rte_pktmbuf_append(m, num_quorums*sizeof(unsigned int));
 	  memcpy(rpc + 1, snapshot, num_quorums*sizeof(unsigned int));
@@ -536,7 +536,7 @@ struct cyclone_monitor {
 	  triple[1] = m;
 	  triple[2] = rpc;
 	  cyclone_handle->add_inflight(rpc->client_id);
-    printf("req stable enqueue\n");
+    // printf("req stable enqueue\n");
 	  if(rte_ring_mp_enqueue_bulk(to_cores[core], triple, 3) == -ENOBUFS) {
 	    BOOST_LOG_TRIVIAL(fatal) << "raft->core comm ring is full (req stable)";
 	    exit(-1);
@@ -570,14 +570,14 @@ struct cyclone_monitor {
 	msg_size = pktadj2rpcsz(m);
       }
       if(rpc->flags & RPC_FLAG_RO) {
-        printf("rpc flag ro\n");
+        // printf("rpc flag ro\n");
 	if(is_leader) {
 	  void *triple[3];
 	  triple[0] = (void *)(unsigned long)cyclone_handle->me_quorum;
 	  triple[1] = m;
 	  triple[2] = rpc;
 	  cyclone_handle->add_inflight(rpc->client_id);
-    printf("rpc flag ro enqueue\n");
+    // printf("rpc flag ro enqueue\n");
 	  if(rte_ring_mp_enqueue_bulk(to_cores[core], triple, 3) == -ENOBUFS) {
 	    BOOST_LOG_TRIVIAL(fatal) << "raft->core comm ring is full (req ro)";
 	    exit(-1);
@@ -879,7 +879,7 @@ struct cyclone_monitor {
         if (ucp_listener_cxt.conn_request == NULL) {
           ucp_worker_progress(ucp_conn_worker);
         } else {
-          printf("server recv conn!\n");
+          // printf("server recv conn!\n");
           
           size_t len;
 

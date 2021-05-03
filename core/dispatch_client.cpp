@@ -150,20 +150,20 @@ typedef struct rpc_client_st {
 				    mb,
 				    pkt,
 				    sz);
-    printf("client init send rpc with " 
-    "quorum_id %d " 
-      "code %d flags %d payload_sz %d " 
-      "core_mask %lu " 
-      "client_id %d requestor %d client_port %d quorum_term %d " 
-      "channel_seq %lu timestamp %lu\n" ,
-      quorum_id,
-      pkt->code, pkt->flags, pkt->payload_sz,
-      pkt->core_mask,
-      pkt->client_id, pkt->requestor, pkt->client_port, pkt->quorum_term,
-      pkt->channel_seq, pkt->timestamp);
+    // printf("client init send rpc with " 
+    // "quorum_id %d " 
+    //   "code %d flags %d payload_sz %d " 
+    //   "core_mask %lu " 
+    //   "client_id %d requestor %d client_port %d quorum_term %d " 
+    //   "channel_seq %lu timestamp %lu\n" ,
+    //   quorum_id,
+    //   pkt->code, pkt->flags, pkt->payload_sz,
+    //   pkt->core_mask,
+    //   pkt->client_id, pkt->requestor, pkt->client_port, pkt->quorum_term,
+    //   pkt->channel_seq, pkt->timestamp);
       // cyclone_ucp_send("192.168.12.62", pkt, sz);
       cyclone_ucp_send("192.168.12.62", rte_pktmbuf_mtod(mb, void*), mb->pkt_len);
-      printf("sent packet with len %d\n", mb->pkt_len);
+      // printf("sent packet with len %d\n", mb->pkt_len);
     // client2server_tunnel(server, quorum_id)->send(mb);
     /*
     int e = cyclone_tx(global_dpdk_context, mb, me_queue);
@@ -196,18 +196,18 @@ typedef struct rpc_client_st {
                 BOOST_LOG_TRIVIAL(fatal) << "Failed to enqueue listner queue";  
                 exit(-1);
             }
-            printf("client send rpc with " 
-      "code %d flags %d payload_sz %d " 
-      "core_mask %lu " 
-      "client_id %d requestor %d client_port %d quorum_term %d " 
-      "channel_seq %lu timestamp %lu\n" ,
-      pkt->code, pkt->flags, pkt->payload_sz,
-      pkt->core_mask,
-      pkt->client_id, pkt->requestor, pkt->client_port, pkt->quorum_term,
-      pkt->channel_seq, pkt->timestamp);
+      //       printf("client send rpc with " 
+      // "code %d flags %d payload_sz %d " 
+      // "core_mask %lu " 
+      // "client_id %d requestor %d client_port %d quorum_term %d " 
+      // "channel_seq %lu timestamp %lu\n" ,
+      // pkt->code, pkt->flags, pkt->payload_sz,
+      // pkt->core_mask,
+      // pkt->client_id, pkt->requestor, pkt->client_port, pkt->quorum_term,
+      // pkt->channel_seq, pkt->timestamp);
       // cyclone_ucp_send("192.168.12.62", pkt, sz);
       cyclone_ucp_send("192.168.12.62", rte_pktmbuf_mtod(mb, void*), mb->pkt_len);
-      printf("sent packet with len %d\n", mb->pkt_len);
+      // printf("sent packet with len %d\n", mb->pkt_len);
 			// client2server_tunnel(server, quorum_id)->send(mb);
            /* 
 			int e = cyclone_tx(global_dpdk_context, mb, me_aqueue);
@@ -471,7 +471,7 @@ int exec(){
 	for(; ;){
 		/* store, sent request contexts in our lookup structure */
 		while(!rte_ring_sc_dequeue(clnt->to_lstnr,(void **)&cur_m)){
-			BOOST_LOG_TRIVIAL(info) << "Message sent : " << std::to_string(cur_m->channel_seq);
+			// BOOST_LOG_TRIVIAL(info) << "Message sent : " << std::to_string(cur_m->channel_seq);
 			clnt->pendresponse_map->insert(std::pair<unsigned long, async_comm_t *>(cur_m->channel_seq,cur_m));
 		}
 
@@ -507,7 +507,7 @@ int exec(){
     }
 
 		if(available ){
-			BOOST_LOG_TRIVIAL(info) << "received " << available << "messages";
+			// BOOST_LOG_TRIVIAL(info) << "received " << available << "messages";
 			for(int i=0;i<available;i++) {
 			// m = pkt_array[i];
 			// struct ether_hdr *e = rte_pktmbuf_mtod(m, struct ether_hdr *); 
@@ -532,13 +532,13 @@ int exec(){
 			// int msg_size = m->data_len - payload_offset;
 
       rpc_t *resp = &recv_rpc;
-      printf("handling response\n");
+      // printf("handling response\n");
 
-			BOOST_LOG_TRIVIAL(info) << "Response received : " << std::to_string(resp->channel_seq);
+			// BOOST_LOG_TRIVIAL(info) << "Response received : " << std::to_string(resp->channel_seq);
 			it = clnt->pendresponse_map->find(resp->channel_seq);
 			if(it != clnt->pendresponse_map->end()){	
 				lookedup_m = it->second;
-				BOOST_LOG_TRIVIAL(info) << "we have a message";
+				// BOOST_LOG_TRIVIAL(info) << "we have a message";
 				lookedup_m->cb(lookedup_m->cb_args, resp->code == RPC_REP_OK? REP_SUCCESS:REP_FAILED,
 				rtc_clock::current_time() - lookedup_m->timestamp);
 				clnt->pendresponse_map->erase(it);	

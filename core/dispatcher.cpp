@@ -65,7 +65,7 @@ static void client_reply(rpc_t *req,
   if (cyclone_ucp_send("192.168.12.63", rep, sizeof(rpc_t) + sz) != 0) {
     printf("send client failed\n");
   }
-  printf("continue server\n");
+  // printf("continue server\n");
 }
 
 void init_rpc_cookie_info(rpc_cookie_t *cookie, 
